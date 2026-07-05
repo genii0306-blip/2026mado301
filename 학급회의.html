@@ -1068,7 +1068,7 @@ const DEFAULT_STUDENTS=['채은','조이한','정유리','서유리','배홍리'
 
 // 학생 → 캐릭터 이미지 매핑 (기본: 명단 순서)
 const DEFAULT_STUDENT_CHARS={};
-DEFAULT_STUDENTS.forEach((n,i)=>DEFAULT_STUDENT_CHARS[n]=`char_${String(i+1).padStart(2,'0')}.png`);
+DEFAULT_STUDENTS.forEach((n,i)=>DEFAULT_STUDENT_CHARS[n]=`card/char_${String(i+1).padStart(2,'0')}_nobg.png`);
 function getCharImg(name){return DEFAULT_STUDENT_CHARS[name]||null;}
 // 아이템 이미지 경로: item_{id}.png 없으면 null
 function itemImgPath(id){return id?`item_${id}.png`:null;}

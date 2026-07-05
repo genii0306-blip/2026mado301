@@ -372,6 +372,9 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
 .theme-cherry{background:linear-gradient(135deg,#831843,#ec4899,#fda4af)!important;}
 .theme-forest{background:linear-gradient(135deg,#14532d,#16a34a,#86efac)!important;}
 </style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.2/lib/three-vrm.module.js"}}
+</script>
 </head>
 <body>
 
@@ -2991,6 +2994,45 @@ function equipShopItem(itemId,type){
 // ── Card Preview ──
 const BG_NAMES=['지혜의 도서관','자연의 정원','바람의 훈련장','불꽃의 경기장','빛의 광장'];
 const BG_EMOJIS=['🏛️','🌿','💨','🔥','✨'];
+// 캐릭터 신체 기준점 (카드 400×540, 캐릭터 H=351px top=184 centerX=200 기준)
+const CARD_ITEM_POS={
+  hair:  {x:200,y:202,s:78},  // 머리 위
+  face:  {x:200,y:220,s:65},  // 얼굴
+  neck:  {x:200,y:266,s:56},  // 목
+  back:  {x:142,y:280,s:100}, // 등 (왼쪽 뒤)
+  weapon:{x:272,y:380,s:92},  // 오른손
+  shoes: {x:200,y:508,s:72},  // 발
+  brooch:{x:230,y:314,s:52},  // 가슴 오른쪽
+  spirit:{x:110,y:310,s:74},  // 정령 (왼쪽 공중)
+  badge: {x:164,y:324,s:60},  // 가슴 왼쪽
+  cape:  {x:200,y:268,s:132}, // 망토 (등 전체)
+};
+function _loadImg(src){
+  return new Promise(function(res){var i=new Image();i.onload=function(){res(i);};i.onerror=function(){res(null);};i.src=src;});
+}
+// 스프라이트 셀 배경을 코너 홍수채우기로 투명화 → 배경 없는 캔버스 반환
+function _extractSpriteBg(spriteImg,sp){
+  var cw=Math.round(sp.imgW/sp.cols),ch2=Math.round((sp.imgH-sp.headerH)/sp.rows);
+  var sx=sp.col*(sp.imgW/sp.cols),sy=sp.headerH+sp.row*((sp.imgH-sp.headerH)/sp.rows);
+  var oc=document.createElement('canvas');oc.width=cw;oc.height=ch2;
+  var ox=oc.getContext('2d');
+  ox.drawImage(spriteImg,sx,sy,sp.imgW/sp.cols,(sp.imgH-sp.headerH)/sp.rows,0,0,cw,ch2);
+  var idata=ox.getImageData(0,0,cw,ch2),d=idata.data;
+  var bgR=d[0],bgG=d[1],bgB=d[2],tol=32;
+  var vis=new Uint8Array(cw*ch2);
+  var q=[0,cw-1,cw*(ch2-1),cw*ch2-1]; // 네 모서리에서 시작
+  while(q.length){
+    var pos=q.pop();if(vis[pos])continue;vis[pos]=1;
+    var pi=pos*4;
+    if(Math.abs(d[pi]-bgR)>tol||Math.abs(d[pi+1]-bgG)>tol||Math.abs(d[pi+2]-bgB)>tol)continue;
+    d[pi+3]=0; // 투명
+    var x=pos%cw,y=pos/cw|0;
+    if(x>0)q.push(pos-1);if(x<cw-1)q.push(pos+1);
+    if(y>0)q.push(pos-cw);if(y<ch2-1)q.push(pos+cw);
+  }
+  ox.putImageData(idata,0,0);
+  return oc;
+}
 function renderCardPreview(){
   const el=document.getElementById('cardPreviewWrap');if(!el)return;
   if(!me||me==='선생님'){el.innerHTML='';return;}
@@ -3000,32 +3042,78 @@ function renderCardPreview(){
   const bgNum=ch.bgTheme||1;
   const charNum=String(charIdx+1).padStart(2,'0');
   const bgPad=String(bgNum).padStart(2,'0');
-  // 아이템 슬롯 위치 (카드 400×540 기준 %)
-  const SP={
-    hair:  {l:'36%',t:'36%'},face:{l:'36%',t:'43%'},neck:{l:'38%',t:'51%'},
-    back:  {l:'9%', t:'40%'},weapon:{l:'64%',t:'62%'},shoes:{l:'35%',t:'86%'},
-    brooch:{l:'53%',t:'55%'},spirit:{l:'5%', t:'45%'},badge:{l:'19%',t:'54%'},
-    cape:  {l:'32%',t:'33%'}
-  };
-  let itemsHtml='';
-  ITEM_CATALOG.forEach(function(item){
-    if(ch[item.slot]!==item.id)return;
-    const pos=SP[item.slot];if(!pos)return;
-    itemsHtml+='<div style="position:absolute;left:'+pos.l+';top:'+pos.t+';transform:translate(-50%,-50%);pointer-events:none;">'+itemImgTag(item,34)+'</div>';
-  });
   const lvInfo=getLevel((xpData[me]||{}).total||0);
   const nick=ch.nick||me;
   const bgBtns=BG_NAMES.map(function(n,i){
     const sel=(bgNum===i+1);
     return'<button onclick="setCardBg('+(i+1)+')" style="flex:1;padding:5px 2px;border:2px solid '+(sel?'var(--primary)':'var(--border)')+';border-radius:8px;background:'+(sel?'#EEF2FF':'#fff')+';cursor:pointer;font-size:1.15rem;" title="'+n+'">'+BG_EMOJIS[i]+'</button>';
   }).join('');
-  el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>'
-    +'<div style="position:relative;width:240px;height:324px;margin:0 auto;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.22);">'
-    +'<img src="card/char_'+charNum+'_bg_'+bgPad+'.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.querySelector(\'img\').style.background=\'#eee\'">'
-    +'<div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">'+itemsHtml+'</div>'
-    +'<div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.72));">'
-    +'<div style="color:#fff;font-weight:900;font-size:1rem;text-shadow:0 1px 4px rgba(0,0,0,.5);">'+nick+'</div>'
-    +'<div style="color:rgba(255,255,255,.88);font-size:.75rem;">'+lvInfo.emoji+' Lv.'+lvInfo.lv+' '+lvInfo.name+'</div></div></div>';
+  const equipped=ITEM_CATALOG.filter(function(item){return ch[item.slot]===item.id;});
+  const isHTTP=window.location.protocol==='http:'||window.location.protocol==='https:';
+
+  // ── ① VRM 3D 렌더링 (HTTP + 모듈 준비 완료) ──
+  if(isHTTP&&typeof window.renderVRMCard==='function'){
+    const wrap=document.createElement('div');
+    wrap.style.cssText='position:relative;width:240px;height:324px;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.22);margin:0 auto;';
+    const bgI=document.createElement('img');
+    bgI.src='card/bg_'+bgPad+'_crop.png';
+    bgI.style.cssText='position:absolute;width:100%;height:100%;object-fit:cover;top:0;left:0;';
+    wrap.appendChild(bgI);
+    const vc=document.createElement('canvas');
+    vc.width=400;vc.height=540;
+    vc.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
+    wrap.appendChild(vc);
+    el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>';
+    el.appendChild(wrap);
+    window.renderVRMCard(vc,wrap,{equippedItems:equipped,nick:nick,lvInfo:lvInfo,charIdx:charIdx});
+    return;
+  }
+
+  // ── ② VRM 모듈 로딩 중 (HTTP지만 아직 모듈 미준비) ──
+  if(isHTTP&&!window._vrmModuleReady){
+    el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>'
+      +'<div style="text-align:center;color:var(--tl);font-size:.82rem;padding:16px;">3D 캐릭터 로딩 중…</div>';
+    document.addEventListener('vrmReady',function(){renderCardPreview();},{once:true});
+    return;
+  }
+
+  // ── ③ 폴백: 기존 Canvas 이미지 방식 (file:// 또는 VRM 오류) ──
+  const canvas=document.createElement('canvas');
+  canvas.width=400;canvas.height=540;
+  canvas.style.cssText='width:240px;height:324px;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.22);display:block;margin:0 auto;';
+  el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>';
+  el.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  async function _drawItem(item,spriteImg){
+    var pos=CARD_ITEM_POS[item.slot];if(!pos)return;
+    var sz=pos.s,dx=Math.round(pos.x-sz/2),dy=Math.round(pos.y-sz/2);
+    var sp=SPRITE_MAPS[item.id];
+    if(sp&&spriteImg){var cleanSp=_extractSpriteBg(spriteImg,sp);ctx.drawImage(cleanSp,0,0,cleanSp.width,cleanSp.height,dx,dy,sz,sz);}
+    else{var iImg=await _loadImg('item_'+item.id+'.png');
+      if(iImg){ctx.drawImage(iImg,dx,dy,sz,sz);}
+      else{ctx.font=Math.round(sz*.75)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillText(item.emoji,pos.x,pos.y);ctx.shadowBlur=0;}}
+  }
+  (async function drawCard(){
+    const baseImg=await _loadImg('card/char_'+charNum+'_bg_'+bgPad+'.png');
+    if(baseImg)ctx.drawImage(baseImg,0,0,400,540);else{ctx.fillStyle='#4F6EF7';ctx.fillRect(0,0,400,540);}
+    var spriteImg=null;
+    if(equipped.some(function(i){return!!SPRITE_MAPS[i.id];}))spriteImg=await _loadImg('items_lv2.png');
+    const BACKS=['back','cape'];
+    const bk=equipped.filter(function(i){return BACKS.indexOf(i.slot)>=0;});
+    const fr=equipped.filter(function(i){return BACKS.indexOf(i.slot)<0;});
+    for(var i=0;i<bk.length;i++)await _drawItem(bk[i],spriteImg);
+    if(bk.length>0){var cImg=await _loadImg('card/char_'+charNum+'_nobg.png');
+      if(cImg){var CH=351,CW=Math.round(cImg.naturalWidth*CH/cImg.naturalHeight);ctx.drawImage(cImg,Math.round((400-CW)/2),184,CW,CH);}}
+    for(var i=0;i<fr.length;i++)await _drawItem(fr[i],spriteImg);
+    var grad=ctx.createLinearGradient(0,430,0,540);
+    grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.75)');
+    ctx.fillStyle=grad;ctx.fillRect(0,430,400,110);
+    ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=6;ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    ctx.font='900 26px "Noto Sans KR",sans-serif';ctx.fillText(nick,24,500);
+    ctx.font='600 18px "Noto Sans KR",sans-serif';ctx.fillStyle='rgba(255,255,255,.9)';
+    ctx.fillText(lvInfo.emoji+' Lv.'+lvInfo.lv+' '+lvInfo.name,24,524);ctx.shadowBlur=0;
+  })();
 }
 function setCardBg(bgNum){
   if(!me||me==='선생님')return;
@@ -3483,6 +3571,143 @@ function renderActivityTable(){
       +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
   }).join('');
 }
+</script>
+<script type="module">
+// ── VRM 3D 카드 미리보기 모듈 ──
+import*as THREE from'three';
+import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';
+import{VRMLoaderPlugin,VRMUtils}from'@pixiv/three-vrm';
+
+// VRM 캐시 (한 번만 로드)
+let _vrm=null,_vrmProm=null;
+async function getVRM(){
+  if(_vrm)return _vrm;
+  if(!_vrmProm)_vrmProm=new Promise((res,rej)=>{
+    const l=new GLTFLoader();
+    l.register(p=>new VRMLoaderPlugin(p));
+    l.load('AvatarSample_Y.vrm',g=>{
+      _vrm=g.userData.vrm;
+      VRMUtils.removeUnnecessaryJoints(g.scene);
+      VRMUtils.rotateVRM0(_vrm);
+      res(_vrm);
+    },undefined,rej);
+  });
+  return _vrmProm;
+}
+
+// 슬롯 → VRM 본 이름
+const SLOT_BONE={hair:'head',face:'head',neck:'neck',back:'chest',cape:'upperChest',weapon:'rightHand',spirit:'leftHand',badge:'chest',brooch:'chest',shoes:'leftFoot'};
+
+// 아이템 색상
+function iColor(item){
+  if(item.capeColor)return new THREE.Color(item.capeColor);
+  const s=item.slot;
+  if(s==='hair'||s==='face')return new THREE.Color(0xFFD700);
+  if(s==='weapon')return new THREE.Color(0x8B6914);
+  if(s==='shoes')return new THREE.Color(0xEEEEDD);
+  if(s==='badge'||s==='brooch')return new THREE.Color(0xDAA520);
+  if(s==='neck')return new THREE.Color(0x87CEEB);
+  if(s==='spirit')return new THREE.Color(0x88FFAA);
+  return new THREE.Color(0x8888FF);
+}
+
+// 슬롯별 3D 메시 생성
+function makeMesh(item){
+  const c=iColor(item);
+  const ms=n=>new THREE.MeshStandardMaterial({color:c,metalness:n,roughness:0.65});
+  switch(item.slot){
+    case'hair':{
+      const g=new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.055,0.04,6),ms(0.7)));
+      const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.025),new THREE.MeshStandardMaterial({color:0xFF77AA,metalness:0.9}));
+      gem.position.y=0.04;g.add(gem);g.position.set(0,0.13,0.01);return g;
+    }
+    case'face':{
+      const g=new THREE.Group(),lm=ms(0.5);
+      for(const x of[-0.035,0.035]){const t=new THREE.Mesh(new THREE.TorusGeometry(0.028,0.006,6,12),lm);t.position.set(x,0,0.09);g.add(t);}
+      const br=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.004,0.004),lm);br.position.set(0,0,0.09);g.add(br);
+      g.position.set(0,0.02,0);return g;
+    }
+    case'neck':{
+      const m=new THREE.Mesh(new THREE.TorusGeometry(0.055,0.007,8,20),ms(0.6));
+      m.rotation.x=Math.PI/2;m.position.set(0,-0.03,0.02);return m;
+    }
+    case'cape':case'back':{
+      const sh=new THREE.Shape();
+      sh.moveTo(-0.18,0);sh.lineTo(0.18,0);sh.lineTo(0.13,-0.37);sh.lineTo(-0.13,-0.37);sh.closePath();
+      const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshStandardMaterial({color:c,side:THREE.DoubleSide,metalness:0.05,roughness:0.85}));
+      m.position.set(0,0.02,-0.13);m.rotation.x=0.12;return m;
+    }
+    case'weapon':{
+      const g=new THREE.Group();
+      const st=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.013,0.35,8),ms(0.3));st.position.y=-0.12;g.add(st);
+      const hd=new THREE.Mesh(new THREE.OctahedronGeometry(0.03),new THREE.MeshStandardMaterial({color:0x99AAFF,metalness:0.85}));hd.position.y=0.07;g.add(hd);
+      g.rotation.z=0.25;g.position.set(0.04,-0.05,0.04);return g;
+    }
+    case'spirit':{
+      const m=new THREE.Mesh(new THREE.SphereGeometry(0.05,10,10),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.6,transparent:true,opacity:0.85}));
+      m.position.set(-0.18,0.12,0.08);return m;
+    }
+    case'badge':case'brooch':{
+      const g=new THREE.Group();
+      const disc=new THREE.Mesh(new THREE.CircleGeometry(0.03,10),new THREE.MeshStandardMaterial({color:c,metalness:0.9,side:THREE.DoubleSide}));
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.03,0.005,6,10),ms(0.8));
+      disc.position.set(0.08,0.06,0.11);ring.position.set(0.08,0.06,0.11);g.add(disc);g.add(ring);return g;
+    }
+    case'shoes':{
+      const m=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.035,0.14),ms(0.2));m.position.set(0,-0.01,0.04);return m;
+    }
+    default:return null;
+  }
+}
+
+window.renderVRMCard=async function(vrmCanvas,wrapper,opts){
+  const{equippedItems=[],nick='',lvInfo={}}=opts;
+  const W=400,H=540;
+  const renderer=new THREE.WebGLRenderer({canvas:vrmCanvas,alpha:true,antialias:true});
+  renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(16,W/H,0.1,20);
+  cam.position.set(0,1.1,4.0);cam.lookAt(0,0.85,0);
+  scene.add(new THREE.AmbientLight(0xffffff,1.2));
+  const kl=new THREE.DirectionalLight(0xFFFFEE,2.0);kl.position.set(0.5,2,1.5);scene.add(kl);
+  const fl=new THREE.DirectionalLight(0xBBCCFF,0.8);fl.position.set(-1,0.5,0.5);scene.add(fl);
+  let vrm;
+  try{vrm=await getVRM();}
+  catch(e){console.warn('VRM 로드 실패:',e);return;}
+  if(vrm.scene.parent)vrm.scene.parent.remove(vrm.scene);
+  scene.add(vrm.scene);
+  // 이전 아이템 메시 제거
+  const toRm=[];vrm.scene.traverse(n=>{if(n.userData._item)toRm.push(n);});
+  toRm.forEach(n=>n.parent&&n.parent.remove(n));
+  // 아이템 본에 부착
+  equippedItems.forEach(item=>{
+    const bn=SLOT_BONE[item.slot];if(!bn)return;
+    const bone=vrm.humanoid.getRawBoneNode(bn);if(!bone)return;
+    const mesh=makeMesh(item);if(!mesh)return;
+    mesh.userData._item=true;bone.add(mesh);
+  });
+  renderer.render(scene,cam);
+  // 이름/레벨 2D 오버레이 캔버스
+  const oc=document.createElement('canvas');oc.width=W;oc.height=H;
+  const ox=oc.getContext('2d');
+  const gr=ox.createLinearGradient(0,420,0,540);
+  gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.78)');
+  ox.fillStyle=gr;ox.fillRect(0,420,W,120);
+  ox.shadowColor='rgba(0,0,0,.6)';ox.shadowBlur=6;
+  ox.fillStyle='#fff';ox.textAlign='left';ox.textBaseline='alphabetic';
+  ox.font='900 26px "Noto Sans KR",sans-serif';ox.fillText(nick||'',24,498);
+  ox.font='600 17px "Noto Sans KR",sans-serif';ox.fillStyle='rgba(255,255,255,.9)';
+  ox.fillText((lvInfo.emoji||'⭐')+' Lv.'+(lvInfo.lv||1)+' '+(lvInfo.name||''),24,522);
+  ox.shadowBlur=0;
+  const ovl=document.createElement('canvas');ovl.width=W;ovl.height=H;
+  ovl.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+  ovl.getContext('2d').drawImage(oc,0,0);
+  wrapper.appendChild(ovl);
+};
+window._vrmModuleReady=true;
+document.dispatchEvent(new Event('vrmReady'));
 </script>
 </body>
 </html>

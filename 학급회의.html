@@ -372,9 +372,6 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
 .theme-cherry{background:linear-gradient(135deg,#831843,#ec4899,#fda4af)!important;}
 .theme-forest{background:linear-gradient(135deg,#14532d,#16a34a,#86efac)!important;}
 </style>
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.2/lib/three-vrm.module.js"}}
-</script>
 </head>
 <body>
 
@@ -1079,18 +1076,9 @@ function itemImgPath(id){return id?`item_${id}.png`:null;}
 // ── 스프라이트 시트 맵 ──
 // {src, imgW, imgH, cols, rows, headerH, col(0-based), row(0-based)}
 // items_lv2.png: 1536×1024, 5열×2행, 상단 헤더 약 128px
-const SPRITE_MAPS={
-  guild_belt:       {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:0,row:0},
-  guild_pouch:      {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:1,row:0},
-  adventure_note:   {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:2,row:0},
-  guild_pen:        {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:3,row:0},
-  apprentice_cape:  {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:4,row:0},
-  small_bottle:     {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:0,row:1},
-  energy_biscuit:   {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:1,row:1},
-  beginner_compass: {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:2,row:1},
-  badge_bronze:     {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:3,row:1},
-  white_sandals:    {src:'items_lv2.png',imgW:1536,imgH:1024,cols:5,rows:2,headerH:128,col:4,row:1},
-};
+// 아이템 이미지: equipment/{slot}/{id}.png (풀캔버스 투명 오버레이 방식)
+// 파일 없으면 이모지 폴백. 스프라이트 시트 방식 제거됨.
+const SPRITE_MAPS={};
 
 function spriteCss(sp, size){
   // scale so that 1 cell-width = size px
@@ -1145,127 +1133,119 @@ const JOB_CLASSES=[
 function getJob(jobId){return JOB_CLASSES.find(j=>j.id===jobId)||null;}
 const TIER_EMOJI={지식:'📚',탐구:'🔬',예술:'🎨',체육:'⚔️',인성:'🤝'};
 
-// ══ 아카데미아 아이템 카탈로그 ══
-// unlock: {lv: 최소레벨, job: 직업ID(선택)}
-// slot: 'hair'|'face'|'neck'|'back'|'weapon'|'spirit'|'badge'|'cape'|'brooch'
+// ══ 마도 아카데미아 아이템 카탈로그 ══
+// slot: 'hair'|'face'|'neck'|'chest'|'waist'|'back'|'cape'|'leftHand'|'rightHand'|'pet'|'foot'|'badge'
+// 이미지: equipment/{slot}/{id}.png (풀캔버스 투명 오버레이)
+// set: 'starter'|'apprentice'|'explorer'|'job'|'common'
 const ITEM_CATALOG=[
-  // ── 헤어 액세서리 (Lv.1~) ──
-  {id:'star_pin',      name:'별핀',         emoji:'⭐', slot:'hair',  unlock:{lv:1}, desc:'반짝이는 별 모양 머리핀'},
-  {id:'moon_pin',      name:'달핀',         emoji:'🌙', slot:'hair',  unlock:{lv:1}, desc:'달 모양 머리핀'},
-  {id:'leaf_pin',      name:'나뭇잎핀',    emoji:'🍃', slot:'hair',  unlock:{lv:1}, desc:'작은 나뭇잎 핀'},
-  {id:'feather_pin',   name:'깃털핀',      emoji:'🪶', slot:'hair',  unlock:{lv:1}, desc:'새의 깃털 핀'},
-  {id:'guild_band',    name:'길드 머리띠', emoji:'🎀', slot:'hair',  unlock:{lv:2}, desc:'길드 문양 머리띠'},
-  {id:'mini_crown',    name:'미니 왕관',   emoji:'👑', slot:'hair',  unlock:{lv:4}, desc:'작은 왕관 머리 장식'},
-  // ── 얼굴 액세서리 (Lv.1~) ──
-  {id:'round_glasses', name:'동그란 안경', emoji:'👓', slot:'face',  unlock:{lv:1}, desc:'동그란 안경'},
-  {id:'bandage',       name:'반창고',       emoji:'🩹', slot:'face',  unlock:{lv:1}, desc:'귀여운 반창고'},
-  {id:'magic_lens',    name:'마법 렌즈',   emoji:'🔮', slot:'face',  unlock:{lv:2}, desc:'마법이 깃든 렌즈'},
-  {id:'explorer_goggles',name:'탐험가 고글',emoji:'🥽',slot:'face',  unlock:{lv:3}, desc:'탐험가의 고글'},
-  // ── 공통 장비 (레벨 해금) ──
-  // ── 견습 모험가 공통장비 (Lv.2) ──
-  {id:'guild_belt',      name:'길드 허리벨트',  emoji:'🟫', slot:'neck',  unlock:{lv:2}, desc:'갈색 가죽 벨트 + 작은 주머니'},
-  {id:'guild_pouch',     name:'길드 파우치',    emoji:'👝', slot:'brooch',unlock:{lv:2}, desc:'허리에 차는 가죽 파우치'},
-  {id:'adventure_note',  name:'모험 수첩',      emoji:'📓', slot:'back',  unlock:{lv:2}, desc:'허리에 걸 수 있는 메모장'},
-  {id:'guild_pen',       name:'길드 펜',        emoji:'✒️', slot:'brooch',unlock:{lv:2}, desc:'모험 기록용 길드 공식 펜'},
-  {id:'apprentice_cape', name:'견습 망토',      emoji:'🧣', slot:'cape',  unlock:{lv:2}, desc:'아주 짧은 망토'},
-  {id:'small_bottle',    name:'작은 물병',      emoji:'🧴', slot:'brooch',unlock:{lv:2}, desc:'여행용 작은 물병'},
-  {id:'energy_biscuit',  name:'에너지 비스킷', emoji:'🍪', slot:'brooch',unlock:{lv:2}, desc:'모험가용 에너지 보충 비스킷'},
-  {id:'beginner_compass',name:'초보자 나침반',  emoji:'🧭', slot:'neck',  unlock:{lv:2}, desc:'모험을 시작하는 초보자용 나침반'},
-  {id:'white_sandals',   name:'흰색 샌달',      emoji:'👟', slot:'shoes', unlock:{lv:2}, desc:'가볍고 편안한 흰색 샌달'},
-  {id:'adventure_bag', name:'모험가 가방', emoji:'🎒', slot:'back',  unlock:{lv:3}, desc:'작은 크기의 배낭'},
-  {id:'guild_compass', name:'길드 나침반', emoji:'🧭', slot:'neck',  unlock:{lv:3}, desc:'목걸이 형태의 나침반'},
-  {id:'training_gloves',name:'훈련용 장갑',emoji:'🧤', slot:'brooch',unlock:{lv:3}, desc:'손등을 보호하는 장갑'},
-  {id:'wing_badge',    name:'마력 날개 배지',emoji:'🪽',slot:'back', unlock:{lv:6}, desc:'등 뒤의 작은 마력 날개'},
-  // ── 직업별 장비 (Lv.4 + 해당 직업) ──
+  // ─────────────────────────────────────
+  // LV.1 STARTER SET – 신입 모험가
+  // ─────────────────────────────────────
+  {id:'guild_badge',      name:'길드 배지',    emoji:'🛡️', slot:'chest',    unlock:{lv:1},  set:'starter',    desc:'마도 아카데미아의 상징. 신입 모험가의 증표.'},
+
+  // ─────────────────────────────────────
+  // LV.5 APPRENTICE SET – 견습 모험가
+  // ─────────────────────────────────────
+  {id:'belt_apprentice',  name:'허리벨트',     emoji:'🟫', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'다양한 장비를 착용할 수 있는 가죽 허리벨트'},
+  {id:'pouch_small',      name:'작은 파우치',  emoji:'👝', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'소지품을 보관하는 가죽 파우치'},
+  {id:'notebook_adventure',name:'모험 수첩',   emoji:'📓', slot:'leftHand', unlock:{lv:5},  set:'apprentice', desc:'퀘스트와 발견을 기록하는 수첩'},
+  {id:'cape_apprentice',  name:'견습 망토',    emoji:'🧣', slot:'cape',     unlock:{lv:5},  set:'apprentice', desc:'짧지만 보온과 멋을 겸비한 견습생의 망토'},
+
+  // ─────────────────────────────────────
+  // LV.10 EXPLORER SET – 초급 모험가
+  // ─────────────────────────────────────
+  {id:'bag_explorer',     name:'탐험가 가방',  emoji:'🎒', slot:'back',     unlock:{lv:10}, set:'explorer',   desc:'탐험에 필요한 모든 것을 담는 가방'},
+  {id:'gloves_explorer',  name:'탐험용 장갑',  emoji:'🧤', slot:'rightHand',unlock:{lv:10}, set:'explorer',   desc:'손을 보호하는 가죽 장갑'},
+  {id:'compass_neck',     name:'탐험가 나침반',emoji:'🧭', slot:'neck',     unlock:{lv:10}, set:'explorer',   desc:'목에 거는 나침반 목걸이'},
+  {id:'bottle_water',     name:'물병',         emoji:'💧', slot:'waist',    unlock:{lv:10}, set:'explorer',   desc:'긴 여정을 위한 물병'},
+
+  // ─────────────────────────────────────
+  // LV.20 JOB SET – 직업별 장비
+  // ─────────────────────────────────────
   // 독서 마도사
-  {id:'magic_tome',    name:'마도서',       emoji:'📚', slot:'weapon',unlock:{lv:4,job:'book_mage'},    desc:'작은 마도서'},
-  {id:'star_brooch',   name:'별 브로치',    emoji:'⭐', slot:'brooch',unlock:{lv:4,job:'book_mage'},    desc:'별 모양 브로치'},
+  {id:'magic_tome',       name:'마도서',       emoji:'📚', slot:'leftHand', unlock:{lv:20,job:'book_mage'},    set:'job', desc:'지식이 담긴 마도서'},
+  {id:'star_brooch',      name:'별 브로치',    emoji:'⭐', slot:'chest',    unlock:{lv:20,job:'book_mage'},    set:'job', desc:'별 모양 브로치'},
+  {id:'cape_book_mage',   name:'마도사 망토',  emoji:'🟣', slot:'cape',     unlock:{lv:20,job:'book_mage'},    set:'job', desc:'보라색 마도사 망토', capeColor:'#8B5CF6'},
   // 기록 사서
-  {id:'scroll_acc',    name:'두루마리 핀', emoji:'📜', slot:'brooch',unlock:{lv:4,job:'record_lib'},   desc:'두루마리 모양 핀'},
+  {id:'scroll_acc',       name:'두루마리 핀',  emoji:'📜', slot:'chest',    unlock:{lv:20,job:'record_lib'},   set:'job', desc:'두루마리 브로치'},
+  {id:'cape_record_lib',  name:'사서 망토',    emoji:'🔵', slot:'cape',     unlock:{lv:20,job:'record_lib'},   set:'job', desc:'남색 기록 사서 망토', capeColor:'#6366F1'},
   // 역사 탐험가
-  {id:'compass_pin',   name:'탐험가 지도핀',emoji:'🗺️',slot:'hair',  unlock:{lv:4,job:'history_exp'},  desc:'지도 모양 머리핀'},
+  {id:'map_scroll',       name:'고지도',       emoji:'🗺️', slot:'leftHand', unlock:{lv:20,job:'history_exp'},  set:'job', desc:'오래된 탐험 지도'},
+  {id:'cape_history_exp', name:'탐험가 망토',  emoji:'🟠', slot:'cape',     unlock:{lv:20,job:'history_exp'},  set:'job', desc:'주황색 탐험가 망토', capeColor:'#F97316'},
   // 과학 연금술사
-  {id:'lab_bag',       name:'실험 가방',   emoji:'🧪', slot:'back',  unlock:{lv:4,job:'sci_alchemist'},desc:'실험 도구 가방'},
-  {id:'sci_goggles',   name:'연금술 고글', emoji:'🥽', slot:'face',  unlock:{lv:4,job:'sci_alchemist'},desc:'눈 보호 고글'},
+  {id:'goggles_sci',      name:'연금술 고글',  emoji:'🥽', slot:'face',     unlock:{lv:20,job:'sci_alchemist'},set:'job', desc:'연금술사 고글'},
+  {id:'bottle_sci',       name:'약병',         emoji:'🧪', slot:'waist',    unlock:{lv:20,job:'sci_alchemist'},set:'job', desc:'신비한 약이 담긴 병'},
+  {id:'cape_sci_alch',    name:'연금술사 망토',emoji:'🩵', slot:'cape',     unlock:{lv:20,job:'sci_alchemist'},set:'job', desc:'청록색 연금술사 망토', capeColor:'#10B981'},
   // 자연 연구원
-  {id:'nature_leaf',   name:'자연 나뭇잎핀',emoji:'🌿',slot:'hair',  unlock:{lv:4,job:'nature_res'},   desc:'자연 연구원 나뭇잎 핀'},
+  {id:'nature_staff',     name:'자연 지팡이',  emoji:'🌿', slot:'rightHand',unlock:{lv:20,job:'nature_res'},   set:'job', desc:'자연의 힘이 깃든 지팡이'},
+  {id:'cape_nature_res',  name:'자연 연구원 망토',emoji:'🟢',slot:'cape',   unlock:{lv:20,job:'nature_res'},   set:'job', desc:'초록 자연 연구원 망토', capeColor:'#059669'},
   // 발명 공학자
-  {id:'blueprint_acc', name:'설계도',       emoji:'📐', slot:'brooch',unlock:{lv:4,job:'inventor'},     desc:'발명 설계도'},
+  {id:'blueprint_acc',    name:'설계도',       emoji:'📐', slot:'leftHand', unlock:{lv:20,job:'inventor'},     set:'job', desc:'발명 설계도'},
+  {id:'cape_inventor',    name:'공학자 망토',  emoji:'🔵', slot:'cape',     unlock:{lv:20,job:'inventor'},     set:'job', desc:'파란 공학자 망토', capeColor:'#0EA5E9'},
   // 아트 소환사
-  {id:'magic_brush',   name:'마법 붓',      emoji:'🖌️', slot:'weapon',unlock:{lv:4,job:'art_summoner'}, desc:'마법 붓'},
-  {id:'palette_brooch',name:'팔레트 브로치',emoji:'🎨',slot:'brooch',unlock:{lv:4,job:'art_summoner'}, desc:'물감 팔레트 브로치'},
+  {id:'magic_brush',      name:'마법 붓',      emoji:'🖌️', slot:'rightHand',unlock:{lv:20,job:'art_summoner'}, set:'job', desc:'마법 붓'},
+  {id:'palette_brooch',   name:'팔레트 브로치',emoji:'🎨', slot:'chest',    unlock:{lv:20,job:'art_summoner'}, set:'job', desc:'팔레트 브로치'},
+  {id:'cape_art_summ',    name:'아트 소환사 망토',emoji:'🩷',slot:'cape',   unlock:{lv:20,job:'art_summoner'}, set:'job', desc:'분홍 망토', capeColor:'#F43F5E'},
   // 음률 연주가
-  {id:'music_brooch',  name:'음표 브로치', emoji:'🎵', slot:'brooch',unlock:{lv:4,job:'music_player'}, desc:'음표 모양 브로치'},
+  {id:'music_instrument', name:'악기',         emoji:'🎵', slot:'rightHand',unlock:{lv:20,job:'music_player'}, set:'job', desc:'작은 악기'},
+  {id:'cape_music',       name:'연주가 망토',  emoji:'🩷', slot:'cape',     unlock:{lv:20,job:'music_player'}, set:'job', desc:'핑크색 연주가 망토', capeColor:'#EC4899'},
   // 환상 디자이너
-  {id:'sparkle_pin',   name:'반짝이 핀',   emoji:'💫', slot:'hair',  unlock:{lv:4,job:'fantasy_des'},  desc:'반짝이는 마법 핀'},
+  {id:'sparkle_wand',     name:'반짝이 완드',  emoji:'💫', slot:'rightHand',unlock:{lv:20,job:'fantasy_des'},  set:'job', desc:'마법 완드'},
+  {id:'cape_fantasy',     name:'디자이너 망토',emoji:'🟣', slot:'cape',     unlock:{lv:20,job:'fantasy_des'},  set:'job', desc:'연보라 디자이너 망토', capeColor:'#A78BFA'},
   // 체육 기사
-  {id:'training_shield',name:'훈련용 방패',emoji:'🛡️', slot:'weapon',unlock:{lv:4,job:'ath_knight'},   desc:'훈련용 방패'},
-  {id:'lion_crest',    name:'사자 문장',    emoji:'🦁', slot:'brooch',unlock:{lv:4,job:'ath_knight'},   desc:'사자 문장 배지'},
+  {id:'shield_training',  name:'훈련용 방패',  emoji:'🛡️', slot:'leftHand', unlock:{lv:20,job:'ath_knight'},   set:'job', desc:'단단한 훈련용 방패'},
+  {id:'lion_brooch',      name:'사자 문장',    emoji:'🦁', slot:'chest',    unlock:{lv:20,job:'ath_knight'},   set:'job', desc:'사자 문장 배지'},
+  {id:'cape_ath_knight',  name:'기사 망토',    emoji:'🔴', slot:'cape',     unlock:{lv:20,job:'ath_knight'},   set:'job', desc:'빨간 기사 망토', capeColor:'#EF4444'},
   // 질풍 러너
-  {id:'wind_pin',      name:'바람 핀',      emoji:'💨', slot:'hair',  unlock:{lv:4,job:'wind_runner'},  desc:'바람 모양 머리핀'},
+  {id:'wind_bracer',      name:'바람 팔찌',    emoji:'💨', slot:'rightHand',unlock:{lv:20,job:'wind_runner'},  set:'job', desc:'바람의 힘이 담긴 팔찌'},
+  {id:'cape_wind_runner', name:'러너 망토',    emoji:'🩵', slot:'cape',     unlock:{lv:20,job:'wind_runner'},  set:'job', desc:'하늘색 러너 망토', capeColor:'#06B6D4'},
   // 수호 전사
-  {id:'flame_brooch',  name:'불꽃 브로치', emoji:'🔥', slot:'brooch',unlock:{lv:4,job:'guard_warrior'},desc:'불꽃 문양 브로치'},
+  {id:'flame_sword',      name:'불꽃 검',      emoji:'🔥', slot:'rightHand',unlock:{lv:20,job:'guard_warrior'},set:'job', desc:'불꽃이 깃든 검'},
+  {id:'cape_guard',       name:'전사 망토',    emoji:'🟥', slot:'cape',     unlock:{lv:20,job:'guard_warrior'},set:'job', desc:'진빨간 전사 망토', capeColor:'#DC2626'},
   // 힐러
-  {id:'heal_staff',    name:'치유 스태프', emoji:'💚', slot:'weapon',unlock:{lv:4,job:'healer'},       desc:'치유 스태프'},
-  {id:'green_ribbon',  name:'초록 리본',   emoji:'🎀', slot:'hair',  unlock:{lv:4,job:'healer'},       desc:'초록 리본 머리 장식'},
+  {id:'heal_staff',       name:'치유 스태프',  emoji:'💚', slot:'rightHand',unlock:{lv:20,job:'healer'},       set:'job', desc:'치유의 스태프'},
+  {id:'green_ribbon',     name:'초록 리본',    emoji:'🎀', slot:'hair',     unlock:{lv:20,job:'healer'},       set:'job', desc:'초록 리본 머리 장식'},
+  {id:'cape_healer',      name:'힐러 망토',    emoji:'🟢', slot:'cape',     unlock:{lv:20,job:'healer'},       set:'job', desc:'연두색 힐러 망토', capeColor:'#34D399'},
   // 길드 대표
-  {id:'guild_ring',    name:'길드 반지',   emoji:'💍', slot:'brooch',unlock:{lv:4,job:'guild_leader'},  desc:'길드 대표 반지'},
+  {id:'guild_ring',       name:'길드 반지',    emoji:'💍', slot:'chest',    unlock:{lv:20,job:'guild_leader'}, set:'job', desc:'길드 대표 반지'},
+  {id:'cape_guild_leader',name:'대표 망토',    emoji:'🟡', slot:'cape',     unlock:{lv:20,job:'guild_leader'}, set:'job', desc:'금색 대표 망토', capeColor:'#D97706'},
   // 협력 마스터
-  {id:'rainbow_brooch',name:'무지개 브로치',emoji:'🌈',slot:'brooch',unlock:{lv:4,job:'coop_master'},  desc:'무지개 문양 브로치'},
-  // ── 직업별 망토 (Lv.5 + 해당 직업) ──
-  {id:'cape_book_mage',   name:'마도사 망토',   emoji:'🟣', slot:'cape',unlock:{lv:5,job:'book_mage'},    desc:'보라색 독서 마도사 망토',  capeColor:'#8B5CF6'},
-  {id:'cape_record_lib',  name:'사서 망토',     emoji:'🔵', slot:'cape',unlock:{lv:5,job:'record_lib'},   desc:'남색 기록 사서 망토',       capeColor:'#6366F1'},
-  {id:'cape_history_exp', name:'탐험가 망토',   emoji:'🟠', slot:'cape',unlock:{lv:5,job:'history_exp'},  desc:'주황색 탐험가 망토',         capeColor:'#F97316'},
-  {id:'cape_sci_alch',    name:'연금술사 망토', emoji:'🩵', slot:'cape',unlock:{lv:5,job:'sci_alchemist'},desc:'청록색 연금술사 망토',       capeColor:'#10B981'},
-  {id:'cape_nature_res',  name:'자연 연구원 망토',emoji:'🟢',slot:'cape',unlock:{lv:5,job:'nature_res'}, desc:'초록 자연 연구원 망토',      capeColor:'#059669'},
-  {id:'cape_inventor',    name:'공학자 망토',   emoji:'🔵', slot:'cape',unlock:{lv:5,job:'inventor'},     desc:'파란 발명 공학자 망토',      capeColor:'#0EA5E9'},
-  {id:'cape_art_summ',    name:'아트 소환사 망토',emoji:'🩷',slot:'cape',unlock:{lv:5,job:'art_summoner'},desc:'분홍색 아트 소환사 망토',   capeColor:'#F43F5E'},
-  {id:'cape_music',       name:'연주가 망토',   emoji:'🩷', slot:'cape',unlock:{lv:5,job:'music_player'}, desc:'핑크색 음률 연주가 망토',    capeColor:'#EC4899'},
-  {id:'cape_fantasy',     name:'디자이너 망토', emoji:'🟣', slot:'cape',unlock:{lv:5,job:'fantasy_des'},  desc:'연보라 환상 디자이너 망토', capeColor:'#A78BFA'},
-  {id:'cape_ath_knight',  name:'기사 망토',     emoji:'🔴', slot:'cape',unlock:{lv:5,job:'ath_knight'},   desc:'빨간 체육 기사 망토',        capeColor:'#EF4444'},
-  {id:'cape_wind_runner', name:'러너 망토',     emoji:'🩵', slot:'cape',unlock:{lv:5,job:'wind_runner'},  desc:'하늘색 질풍 러너 망토',      capeColor:'#06B6D4'},
-  {id:'cape_guard',       name:'전사 망토',     emoji:'🟥', slot:'cape',unlock:{lv:5,job:'guard_warrior'},desc:'진빨간 수호 전사 망토',      capeColor:'#DC2626'},
-  {id:'cape_healer',      name:'힐러 망토',     emoji:'🟢', slot:'cape',unlock:{lv:5,job:'healer'},       desc:'연두색 힐러 망토',           capeColor:'#34D399'},
-  {id:'cape_guild_leader',name:'대표 망토',     emoji:'🟡', slot:'cape',unlock:{lv:5,job:'guild_leader'}, desc:'금색 길드 대표 망토',        capeColor:'#D97706'},
-  {id:'cape_coop',        name:'협력 망토',     emoji:'🟣', slot:'cape',unlock:{lv:5,job:'coop_master'},  desc:'보라색 협력 마스터 망토',   capeColor:'#8B5CF6'},
-  // ── 정령 동반자 ──
-  // 자연계 (Lv.1~)
-  {id:'sprout_spirit', name:'새싹 정령',   emoji:'🌱', slot:'spirit',unlock:{lv:1}, desc:'귀여운 새싹 정령'},
-  {id:'flower_spirit', name:'꽃 정령',     emoji:'🌸', slot:'spirit',unlock:{lv:2}, desc:'예쁜 꽃 정령'},
-  {id:'tree_spirit',   name:'나무 정령',   emoji:'🌳', slot:'spirit',unlock:{lv:3}, desc:'든든한 나무 정령'},
-  // 동물계 (Lv.1~)
-  {id:'rabbit_spirit', name:'토끼 정령',   emoji:'🐰', slot:'spirit',unlock:{lv:1}, desc:'폴짝폴짝 토끼 정령'},
-  {id:'cat_spirit',    name:'고양이 정령', emoji:'😺', slot:'spirit',unlock:{lv:2}, desc:'야옹~ 고양이 정령'},
-  {id:'fox_spirit',    name:'여우 정령',   emoji:'🦊', slot:'spirit',unlock:{lv:3}, desc:'영리한 여우 정령'},
-  // 마법계 (Lv.2~)
-  {id:'cloud_spirit',  name:'구름 정령',   emoji:'☁️', slot:'spirit',unlock:{lv:2}, desc:'포실포실 구름 정령'},
-  {id:'star_spirit',   name:'별 정령',     emoji:'⭐', slot:'spirit',unlock:{lv:3}, desc:'반짝반짝 별 정령'},
-  // 직업별 정령 (Lv.4 + 해당 직업)
-  {id:'book_spirit',   name:'책 정령',     emoji:'📖', slot:'spirit',unlock:{lv:4,job:'book_mage'},    desc:'떠다니는 책 정령'},
-  {id:'mini_drone',    name:'미니 드론',   emoji:'🤖', slot:'spirit',unlock:{lv:4,job:'sci_alchemist'},desc:'작은 마법 드론'},
-  {id:'drone_spirit',  name:'드론 정령',   emoji:'⚙️', slot:'spirit',unlock:{lv:4,job:'inventor'},     desc:'드론 형태의 정령'},
-  {id:'paint_spirit',  name:'물감 정령',   emoji:'🎨', slot:'spirit',unlock:{lv:4,job:'art_summoner'}, desc:'알록달록 물감 정령'},
-  {id:'mini_lion',     name:'미니 사자 정령',emoji:'🦁',slot:'spirit',unlock:{lv:4,job:'ath_knight'},  desc:'미니 사자 정령'},
-  {id:'light_spirit',  name:'빛 정령',     emoji:'✨', slot:'spirit',unlock:{lv:4,job:'healer'},       desc:'따뜻한 빛의 정령'},
-  {id:'rainbow_spirit',name:'무지개 정령', emoji:'🌈', slot:'spirit',unlock:{lv:4,job:'coop_master'},  desc:'무지개 정령'},
-  {id:'castle_spirit', name:'성 정령',     emoji:'🏰', slot:'spirit',unlock:{lv:4,job:'guild_leader'}, desc:'성 모양 정령'},
-  {id:'scroll_spirit', name:'두루마리 정령',emoji:'📜',slot:'spirit',unlock:{lv:4,job:'record_lib'},   desc:'두루마리 정령'},
-  {id:'map_spirit',    name:'지도 정령',   emoji:'🗺️', slot:'spirit',unlock:{lv:4,job:'history_exp'},  desc:'지도 모양 정령'},
-  {id:'leaf_spirit',   name:'나뭇잎 정령', emoji:'🌿', slot:'spirit',unlock:{lv:4,job:'nature_res'},   desc:'나뭇잎 정령'},
-  {id:'music_spirit',  name:'음표 정령',   emoji:'🎶', slot:'spirit',unlock:{lv:4,job:'music_player'}, desc:'음표 정령'},
-  {id:'sparkle_spirit',name:'반짝이 정령', emoji:'💫', slot:'spirit',unlock:{lv:4,job:'fantasy_des'},  desc:'반짝이 정령'},
-  {id:'wind_spirit',   name:'바람 정령',   emoji:'🌪️', slot:'spirit',unlock:{lv:4,job:'wind_runner'},  desc:'바람 정령'},
-  {id:'fire_spirit',   name:'불꽃 정령',   emoji:'🔥', slot:'spirit',unlock:{lv:4,job:'guard_warrior'},desc:'불꽃 정령'},
-  // 진화 정령 (Lv.6 + 해당 직업)
-  {id:'ancient_spirit',name:'고대서 정령', emoji:'📜', slot:'spirit',unlock:{lv:6,job:'book_mage'},    desc:'진화한 고대 서적 정령',evolved:true},
-  {id:'arcane_drone',  name:'아케인 드론', emoji:'🔮', slot:'spirit',unlock:{lv:6,job:'sci_alchemist'},desc:'마법 에너지 드론',       evolved:true},
-  {id:'golden_lion',   name:'황금 사자',   emoji:'👑', slot:'spirit',unlock:{lv:6,job:'ath_knight'},   desc:'황금빛 사자 정령',       evolved:true},
-  {id:'guardian_angel',name:'수호천사 정령',emoji:'👼',slot:'spirit',unlock:{lv:6,job:'healer'},       desc:'수호천사 치유 정령',     evolved:true},
-  // ── 배지 (자동 해금) ──
-  {id:'badge_bronze',   name:'Bronze 배지',  emoji:'🥉', slot:'badge',unlock:{lv:1}, desc:'신입 모험가 배지'},
-  {id:'badge_silver',   name:'Silver 배지',  emoji:'🥈', slot:'badge',unlock:{lv:3}, desc:'초급 모험가 배지'},
-  {id:'badge_gold',     name:'Gold 배지',    emoji:'🥇', slot:'badge',unlock:{lv:4}, desc:'우수 모험가 배지'},
-  {id:'badge_platinum', name:'Platinum 배지',emoji:'💎', slot:'badge',unlock:{lv:5}, desc:'길드 대표 배지'},
+  {id:'rainbow_banner',   name:'무지개 깃발',  emoji:'🌈', slot:'leftHand', unlock:{lv:20,job:'coop_master'},  set:'job', desc:'협력의 상징 깃발'},
+  {id:'cape_coop',        name:'협력 망토',    emoji:'🟣', slot:'cape',     unlock:{lv:20,job:'coop_master'},  set:'job', desc:'보라색 협력 망토', capeColor:'#8B5CF6'},
+
+  // ─────────────────────────────────────
+  // 정령 동반자 (PET)
+  // ─────────────────────────────────────
+  // 공통 (레벨별)
+  {id:'sprout_spirit',    name:'새싹 정령',    emoji:'🌱', slot:'pet', unlock:{lv:1},  set:'common', desc:'귀여운 새싹 정령'},
+  {id:'rabbit_spirit',    name:'토끼 정령',    emoji:'🐰', slot:'pet', unlock:{lv:1},  set:'common', desc:'폴짝폴짝 토끼 정령'},
+  {id:'cat_spirit',       name:'고양이 정령',  emoji:'😺', slot:'pet', unlock:{lv:5},  set:'common', desc:'야옹~ 고양이 정령'},
+  {id:'fox_spirit',       name:'여우 정령',    emoji:'🦊', slot:'pet', unlock:{lv:10}, set:'common', desc:'영리한 여우 정령'},
+  {id:'star_spirit',      name:'별 정령',      emoji:'⭐', slot:'pet', unlock:{lv:10}, set:'common', desc:'반짝반짝 별 정령'},
+  // 직업별 (Lv.20+)
+  {id:'book_spirit',      name:'책 정령',      emoji:'📖', slot:'pet', unlock:{lv:20,job:'book_mage'},    set:'job', desc:'떠다니는 책 정령'},
+  {id:'scroll_spirit',    name:'두루마리 정령', emoji:'📜', slot:'pet', unlock:{lv:20,job:'record_lib'},   set:'job', desc:'두루마리 정령'},
+  {id:'map_spirit',       name:'지도 정령',    emoji:'🗺️', slot:'pet', unlock:{lv:20,job:'history_exp'},  set:'job', desc:'지도 모양 정령'},
+  {id:'drone_spirit',     name:'미니 드론',    emoji:'🤖', slot:'pet', unlock:{lv:20,job:'sci_alchemist'},set:'job', desc:'마법 드론 정령'},
+  {id:'leaf_spirit',      name:'나뭇잎 정령',  emoji:'🌿', slot:'pet', unlock:{lv:20,job:'nature_res'},   set:'job', desc:'나뭇잎 정령'},
+  {id:'gear_spirit',      name:'톱니 정령',    emoji:'⚙️', slot:'pet', unlock:{lv:20,job:'inventor'},     set:'job', desc:'톱니바퀴 정령'},
+  {id:'paint_spirit',     name:'물감 정령',    emoji:'🎨', slot:'pet', unlock:{lv:20,job:'art_summoner'}, set:'job', desc:'물감 정령'},
+  {id:'music_spirit',     name:'음표 정령',    emoji:'🎶', slot:'pet', unlock:{lv:20,job:'music_player'}, set:'job', desc:'음표 정령'},
+  {id:'sparkle_spirit',   name:'반짝이 정령',  emoji:'💫', slot:'pet', unlock:{lv:20,job:'fantasy_des'},  set:'job', desc:'반짝이 정령'},
+  {id:'lion_spirit',      name:'사자 정령',    emoji:'🦁', slot:'pet', unlock:{lv:20,job:'ath_knight'},   set:'job', desc:'미니 사자 정령'},
+  {id:'wind_spirit',      name:'바람 정령',    emoji:'🌪️', slot:'pet', unlock:{lv:20,job:'wind_runner'},  set:'job', desc:'바람 정령'},
+  {id:'fire_spirit',      name:'불꽃 정령',    emoji:'🔥', slot:'pet', unlock:{lv:20,job:'guard_warrior'},set:'job', desc:'불꽃 정령'},
+  {id:'light_spirit',     name:'빛 정령',      emoji:'✨', slot:'pet', unlock:{lv:20,job:'healer'},       set:'job', desc:'빛의 정령'},
+  {id:'castle_spirit',    name:'성 정령',      emoji:'🏰', slot:'pet', unlock:{lv:20,job:'guild_leader'}, set:'job', desc:'성 모양 정령'},
+  {id:'rainbow_spirit',   name:'무지개 정령',  emoji:'🌈', slot:'pet', unlock:{lv:20,job:'coop_master'},  set:'job', desc:'무지개 정령'},
+
+  // ─────────────────────────────────────
+  // 자동 성취 배지 (_auto:true → 장비 UI 숨김)
+  // ─────────────────────────────────────
+  {id:'badge_bronze',   name:'Bronze 배지',   emoji:'🥉', slot:'badge', unlock:{lv:1},  _auto:true, desc:'신입 모험가 배지'},
+  {id:'badge_silver',   name:'Silver 배지',   emoji:'🥈', slot:'badge', unlock:{lv:10}, _auto:true, desc:'초급 모험가 배지'},
+  {id:'badge_gold',     name:'Gold 배지',     emoji:'🥇', slot:'badge', unlock:{lv:20}, _auto:true, desc:'정식 모험가 배지'},
+  {id:'badge_platinum', name:'Platinum 배지', emoji:'💎', slot:'badge', unlock:{lv:30}, _auto:true, desc:'상급 모험가 배지'},
 ];
 
 function getItem(id){return ITEM_CATALOG.find(i=>i.id===id)||null;}
@@ -1282,7 +1262,7 @@ function isItemUnlocked(itemId,name){
 }
 
 function getUnlockedItems(name){
-  return ITEM_CATALOG.filter(i=>isItemUnlocked(i.id,name));
+  return ITEM_CATALOG.filter(i=>!i._auto&&isItemUnlocked(i.id,name));
 }
 
 function getEquip(name){
@@ -2995,17 +2975,20 @@ function equipShopItem(itemId,type){
 const BG_NAMES=['지혜의 도서관','자연의 정원','바람의 훈련장','불꽃의 경기장','빛의 광장'];
 const BG_EMOJIS=['🏛️','🌿','💨','🔥','✨'];
 // 캐릭터 신체 기준점 (카드 400×540, 캐릭터 H=351px top=184 centerX=200 기준)
+// 이모지 폴백용 앵커 (풀캔버스 PNG가 없을 때만 사용)
 const CARD_ITEM_POS={
-  hair:  {x:200,y:202,s:78},  // 머리 위
-  face:  {x:200,y:220,s:65},  // 얼굴
-  neck:  {x:200,y:266,s:56},  // 목
-  back:  {x:142,y:280,s:100}, // 등 (왼쪽 뒤)
-  weapon:{x:272,y:380,s:92},  // 오른손
-  shoes: {x:200,y:508,s:72},  // 발
-  brooch:{x:230,y:314,s:52},  // 가슴 오른쪽
-  spirit:{x:110,y:310,s:74},  // 정령 (왼쪽 공중)
-  badge: {x:164,y:324,s:60},  // 가슴 왼쪽
-  cape:  {x:200,y:268,s:132}, // 망토 (등 전체)
+  hair:      {x:200,y:200,s:78},  // 머리 위
+  face:      {x:200,y:222,s:68},  // 얼굴
+  neck:      {x:200,y:266,s:58},  // 목
+  chest:     {x:162,y:326,s:60},  // 가슴 (배지/브로치)
+  waist:     {x:200,y:372,s:90},  // 허리 (벨트/파우치)
+  back:      {x:142,y:278,s:105}, // 등
+  cape:      {x:200,y:268,s:136}, // 망토
+  leftHand:  {x:118,y:390,s:80},  // 왼손
+  rightHand: {x:282,y:382,s:90},  // 오른손
+  pet:       {x:108,y:310,s:78},  // 정령/동물
+  foot:      {x:200,y:505,s:78},  // 발
+  badge:     {x:162,y:326,s:60},  // 자동 배지 (chest와 동위치)
 };
 function _loadImg(src){
   return new Promise(function(res){var i=new Image();i.onload=function(){res(i);};i.onerror=function(){res(null);};i.src=src;});
@@ -3049,63 +3032,35 @@ function renderCardPreview(){
     return'<button onclick="setCardBg('+(i+1)+')" style="flex:1;padding:5px 2px;border:2px solid '+(sel?'var(--primary)':'var(--border)')+';border-radius:8px;background:'+(sel?'#EEF2FF':'#fff')+';cursor:pointer;font-size:1.15rem;" title="'+n+'">'+BG_EMOJIS[i]+'</button>';
   }).join('');
   const equipped=ITEM_CATALOG.filter(function(item){return ch[item.slot]===item.id;});
-  const isHTTP=window.location.protocol==='http:'||window.location.protocol==='https:';
 
-  // ── ① VRM 3D 렌더링 (HTTP + 모듈 준비 완료) ──
-  if(isHTTP&&typeof window.renderVRMCard==='function'){
-    const wrap=document.createElement('div');
-    wrap.style.cssText='position:relative;width:240px;height:324px;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.22);margin:0 auto;';
-    const bgI=document.createElement('img');
-    bgI.src='card/bg_'+bgPad+'_crop.png';
-    bgI.style.cssText='position:absolute;width:100%;height:100%;object-fit:cover;top:0;left:0;';
-    wrap.appendChild(bgI);
-    const vc=document.createElement('canvas');
-    vc.width=400;vc.height=540;
-    vc.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;';
-    wrap.appendChild(vc);
-    el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>';
-    el.appendChild(wrap);
-    window.renderVRMCard(vc,wrap,{equippedItems:equipped,nick:nick,lvInfo:lvInfo,charIdx:charIdx});
-    return;
-  }
-
-  // ── ② VRM 모듈 로딩 중 (HTTP지만 아직 모듈 미준비) ──
-  if(isHTTP&&!window._vrmModuleReady){
-    el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>'
-      +'<div style="text-align:center;color:var(--tl);font-size:.82rem;padding:16px;">3D 캐릭터 로딩 중…</div>';
-    document.addEventListener('vrmReady',function(){renderCardPreview();},{once:true});
-    return;
-  }
-
-  // ── ③ 폴백: 기존 Canvas 이미지 방식 (file:// 또는 VRM 오류) ──
+  // ── Canvas 이미지 합성 방식 ──
   const canvas=document.createElement('canvas');
   canvas.width=400;canvas.height=540;
   canvas.style.cssText='width:240px;height:324px;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.22);display:block;margin:0 auto;';
   el.innerHTML='<div style="display:flex;gap:5px;margin-bottom:10px;">'+bgBtns+'</div>';
   el.appendChild(canvas);
   const ctx=canvas.getContext('2d');
-  async function _drawItem(item,spriteImg){
+  async function _drawItem(item){
     var pos=CARD_ITEM_POS[item.slot];if(!pos)return;
-    var sz=pos.s,dx=Math.round(pos.x-sz/2),dy=Math.round(pos.y-sz/2);
-    var sp=SPRITE_MAPS[item.id];
-    if(sp&&spriteImg){var cleanSp=_extractSpriteBg(spriteImg,sp);ctx.drawImage(cleanSp,0,0,cleanSp.width,cleanSp.height,dx,dy,sz,sz);}
-    else{var iImg=await _loadImg('item_'+item.id+'.png');
-      if(iImg){ctx.drawImage(iImg,dx,dy,sz,sz);}
-      else{ctx.font=Math.round(sz*.75)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillText(item.emoji,pos.x,pos.y);ctx.shadowBlur=0;}}
+    // ① equipment/{slot}/{id}.png 풀캔버스 오버레이 시도
+    var eImg=await _loadImg('equipment/'+item.slot+'/'+item.id+'.png');
+    if(eImg){ctx.drawImage(eImg,0,0,400,540);return;}
+    // ② 이모지 폴백 (앵커 위치)
+    ctx.font=Math.round(pos.s*.75)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;ctx.fillStyle='rgba(255,255,255,.95)';
+    ctx.fillText(item.emoji,pos.x,pos.y);ctx.shadowBlur=0;
   }
   (async function drawCard(){
     const baseImg=await _loadImg('card/char_'+charNum+'_bg_'+bgPad+'.png');
     if(baseImg)ctx.drawImage(baseImg,0,0,400,540);else{ctx.fillStyle='#4F6EF7';ctx.fillRect(0,0,400,540);}
-    var spriteImg=null;
-    if(equipped.some(function(i){return!!SPRITE_MAPS[i.id];}))spriteImg=await _loadImg('items_lv2.png');
-    const BACKS=['back','cape'];
-    const bk=equipped.filter(function(i){return BACKS.indexOf(i.slot)>=0;});
-    const fr=equipped.filter(function(i){return BACKS.indexOf(i.slot)<0;});
-    for(var i=0;i<bk.length;i++)await _drawItem(bk[i],spriteImg);
+    // 레이어 순서: 뒤(cape,back) → 캐릭터 nobg → 앞(나머지)
+    const BEHIND=['back','cape'];
+    const bk=equipped.filter(function(i){return BEHIND.indexOf(i.slot)>=0;});
+    const fr=equipped.filter(function(i){return BEHIND.indexOf(i.slot)<0;});
+    for(var i=0;i<bk.length;i++)await _drawItem(bk[i]);
     if(bk.length>0){var cImg=await _loadImg('card/char_'+charNum+'_nobg.png');
       if(cImg){var CH=351,CW=Math.round(cImg.naturalWidth*CH/cImg.naturalHeight);ctx.drawImage(cImg,Math.round((400-CW)/2),184,CW,CH);}}
-    for(var i=0;i<fr.length;i++)await _drawItem(fr[i],spriteImg);
+    for(var i=0;i<fr.length;i++)await _drawItem(fr[i]);
     var grad=ctx.createLinearGradient(0,430,0,540);
     grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.75)');
     ctx.fillStyle=grad;ctx.fillRect(0,430,400,110);
@@ -3571,143 +3526,6 @@ function renderActivityTable(){
       +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
   }).join('');
 }
-</script>
-<script type="module">
-// ── VRM 3D 카드 미리보기 모듈 ──
-import*as THREE from'three';
-import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';
-import{VRMLoaderPlugin,VRMUtils}from'@pixiv/three-vrm';
-
-// VRM 캐시 (한 번만 로드)
-let _vrm=null,_vrmProm=null;
-async function getVRM(){
-  if(_vrm)return _vrm;
-  if(!_vrmProm)_vrmProm=new Promise((res,rej)=>{
-    const l=new GLTFLoader();
-    l.register(p=>new VRMLoaderPlugin(p));
-    l.load('AvatarSample_Y.vrm',g=>{
-      _vrm=g.userData.vrm;
-      VRMUtils.removeUnnecessaryJoints(g.scene);
-      VRMUtils.rotateVRM0(_vrm);
-      res(_vrm);
-    },undefined,rej);
-  });
-  return _vrmProm;
-}
-
-// 슬롯 → VRM 본 이름
-const SLOT_BONE={hair:'head',face:'head',neck:'neck',back:'chest',cape:'upperChest',weapon:'rightHand',spirit:'leftHand',badge:'chest',brooch:'chest',shoes:'leftFoot'};
-
-// 아이템 색상
-function iColor(item){
-  if(item.capeColor)return new THREE.Color(item.capeColor);
-  const s=item.slot;
-  if(s==='hair'||s==='face')return new THREE.Color(0xFFD700);
-  if(s==='weapon')return new THREE.Color(0x8B6914);
-  if(s==='shoes')return new THREE.Color(0xEEEEDD);
-  if(s==='badge'||s==='brooch')return new THREE.Color(0xDAA520);
-  if(s==='neck')return new THREE.Color(0x87CEEB);
-  if(s==='spirit')return new THREE.Color(0x88FFAA);
-  return new THREE.Color(0x8888FF);
-}
-
-// 슬롯별 3D 메시 생성
-function makeMesh(item){
-  const c=iColor(item);
-  const ms=n=>new THREE.MeshStandardMaterial({color:c,metalness:n,roughness:0.65});
-  switch(item.slot){
-    case'hair':{
-      const g=new THREE.Group();
-      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.055,0.04,6),ms(0.7)));
-      const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.025),new THREE.MeshStandardMaterial({color:0xFF77AA,metalness:0.9}));
-      gem.position.y=0.04;g.add(gem);g.position.set(0,0.13,0.01);return g;
-    }
-    case'face':{
-      const g=new THREE.Group(),lm=ms(0.5);
-      for(const x of[-0.035,0.035]){const t=new THREE.Mesh(new THREE.TorusGeometry(0.028,0.006,6,12),lm);t.position.set(x,0,0.09);g.add(t);}
-      const br=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.004,0.004),lm);br.position.set(0,0,0.09);g.add(br);
-      g.position.set(0,0.02,0);return g;
-    }
-    case'neck':{
-      const m=new THREE.Mesh(new THREE.TorusGeometry(0.055,0.007,8,20),ms(0.6));
-      m.rotation.x=Math.PI/2;m.position.set(0,-0.03,0.02);return m;
-    }
-    case'cape':case'back':{
-      const sh=new THREE.Shape();
-      sh.moveTo(-0.18,0);sh.lineTo(0.18,0);sh.lineTo(0.13,-0.37);sh.lineTo(-0.13,-0.37);sh.closePath();
-      const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshStandardMaterial({color:c,side:THREE.DoubleSide,metalness:0.05,roughness:0.85}));
-      m.position.set(0,0.02,-0.13);m.rotation.x=0.12;return m;
-    }
-    case'weapon':{
-      const g=new THREE.Group();
-      const st=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.013,0.35,8),ms(0.3));st.position.y=-0.12;g.add(st);
-      const hd=new THREE.Mesh(new THREE.OctahedronGeometry(0.03),new THREE.MeshStandardMaterial({color:0x99AAFF,metalness:0.85}));hd.position.y=0.07;g.add(hd);
-      g.rotation.z=0.25;g.position.set(0.04,-0.05,0.04);return g;
-    }
-    case'spirit':{
-      const m=new THREE.Mesh(new THREE.SphereGeometry(0.05,10,10),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.6,transparent:true,opacity:0.85}));
-      m.position.set(-0.18,0.12,0.08);return m;
-    }
-    case'badge':case'brooch':{
-      const g=new THREE.Group();
-      const disc=new THREE.Mesh(new THREE.CircleGeometry(0.03,10),new THREE.MeshStandardMaterial({color:c,metalness:0.9,side:THREE.DoubleSide}));
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.03,0.005,6,10),ms(0.8));
-      disc.position.set(0.08,0.06,0.11);ring.position.set(0.08,0.06,0.11);g.add(disc);g.add(ring);return g;
-    }
-    case'shoes':{
-      const m=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.035,0.14),ms(0.2));m.position.set(0,-0.01,0.04);return m;
-    }
-    default:return null;
-  }
-}
-
-window.renderVRMCard=async function(vrmCanvas,wrapper,opts){
-  const{equippedItems=[],nick='',lvInfo={}}=opts;
-  const W=400,H=540;
-  const renderer=new THREE.WebGLRenderer({canvas:vrmCanvas,alpha:true,antialias:true});
-  renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
-  const scene=new THREE.Scene();
-  const cam=new THREE.PerspectiveCamera(16,W/H,0.1,20);
-  cam.position.set(0,1.1,4.0);cam.lookAt(0,0.85,0);
-  scene.add(new THREE.AmbientLight(0xffffff,1.2));
-  const kl=new THREE.DirectionalLight(0xFFFFEE,2.0);kl.position.set(0.5,2,1.5);scene.add(kl);
-  const fl=new THREE.DirectionalLight(0xBBCCFF,0.8);fl.position.set(-1,0.5,0.5);scene.add(fl);
-  let vrm;
-  try{vrm=await getVRM();}
-  catch(e){console.warn('VRM 로드 실패:',e);return;}
-  if(vrm.scene.parent)vrm.scene.parent.remove(vrm.scene);
-  scene.add(vrm.scene);
-  // 이전 아이템 메시 제거
-  const toRm=[];vrm.scene.traverse(n=>{if(n.userData._item)toRm.push(n);});
-  toRm.forEach(n=>n.parent&&n.parent.remove(n));
-  // 아이템 본에 부착
-  equippedItems.forEach(item=>{
-    const bn=SLOT_BONE[item.slot];if(!bn)return;
-    const bone=vrm.humanoid.getRawBoneNode(bn);if(!bone)return;
-    const mesh=makeMesh(item);if(!mesh)return;
-    mesh.userData._item=true;bone.add(mesh);
-  });
-  renderer.render(scene,cam);
-  // 이름/레벨 2D 오버레이 캔버스
-  const oc=document.createElement('canvas');oc.width=W;oc.height=H;
-  const ox=oc.getContext('2d');
-  const gr=ox.createLinearGradient(0,420,0,540);
-  gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.78)');
-  ox.fillStyle=gr;ox.fillRect(0,420,W,120);
-  ox.shadowColor='rgba(0,0,0,.6)';ox.shadowBlur=6;
-  ox.fillStyle='#fff';ox.textAlign='left';ox.textBaseline='alphabetic';
-  ox.font='900 26px "Noto Sans KR",sans-serif';ox.fillText(nick||'',24,498);
-  ox.font='600 17px "Noto Sans KR",sans-serif';ox.fillStyle='rgba(255,255,255,.9)';
-  ox.fillText((lvInfo.emoji||'⭐')+' Lv.'+(lvInfo.lv||1)+' '+(lvInfo.name||''),24,522);
-  ox.shadowBlur=0;
-  const ovl=document.createElement('canvas');ovl.width=W;ovl.height=H;
-  ovl.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-  ovl.getContext('2d').drawImage(oc,0,0);
-  wrapper.appendChild(ovl);
-};
-window._vrmModuleReady=true;
-document.dispatchEvent(new Event('vrmReady'));
 </script>
 </body>
 </html>

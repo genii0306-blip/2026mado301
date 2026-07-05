@@ -31,15 +31,65 @@ git push
 - `vercel.json`은 모든 경로를 정적 파일로 서빙하도록만 설정돼 있습니다(라우팅 규칙 최소).
 - Firebase 설정 키(`firebaseConfig`)는 파일에 노출돼 있습니다. Realtime DB 웹앱 특성상 정상이지만, **보안 규칙은 Firebase 콘솔에서 관리**됩니다. 규칙을 넘어서는 접근 제어는 클라이언트에서 기대하지 마세요.
 
+## 세계관: 마도 아카데미아 모험학교 (Mado Academia Adventure School)
+
+이 앱의 RPG 세계관. 실제 마도초등학교 = 판타지 세계의 **마도 아카데미아 모험학교(1935년 설립)**.
+
+### 공식 색상 팔레트
+| 이름 | HEX | 용도 |
+|------|-----|------|
+| Academy Green | `#1E7D3B` | 학교 기본색, 배지 테두리 |
+| Academy Gold | `#FFD23C` | 길드 배지, 금장 장식 |
+| Leather Brown | `#8B5E34` | 벨트, 파우치, 신발 |
+| Ivory | `#F5F0E8` | 연습복 기본색 |
+| Silver Gray | `#B7BDC6` | 금속 버클, 장식 |
+
+직업 선택(Lv.20) 이후에는 직업 고유색을 위 팔레트 위에 더합니다.
+
+### 재질 스타일
+가죽 · 린넨/천 · 황동 · 금장 · 수정 · 나무.  
+광원 방향, 채도, 그림자, 모서리 라운딩 모두 일관되게 제작.
+
+### 길드 (House) 5종
+| 길드 | 상징 | 색 | 가치 |
+|------|------|----|------|
+| SAPIENTIA | 📖 | 보라 | 지혜 |
+| FORTIS | ⚔️ | 빨강 | 용기 |
+| NATURA | 🌱 | 초록 | 탐구 |
+| CREARE | 🎨 | 하늘 | 창조 |
+| LUMEN | 🤝 | 노랑 | 협력 |
+
+### 장비 슬롯 구조 (11슬롯 + 자동배지)
+```
+head | hair | face | neck | chest | waist
+back | cape | leftHand | rightHand | pet | foot
+badge (자동)
+```
+
+### 장비 이미지 규격
+- **형식**: 투명배경 PNG, 캔버스 크기(400×540) 맞춤
+- **경로**: `equipment/{slot}/{item_id}.png`
+- **렌더링**: 전체 캔버스에 drawImage → 위치가 이미지에 내장됨
+- **이모지 폴백**: PNG 없으면 `CARD_ITEM_POS`의 앵커 위치에 이모지 표시
+
+### 레벨 세트 구조
+| 레벨 | 세트 | 주요 아이템 |
+|------|------|-------------|
+| Lv.1 | Starter | 길드 배지(chest) |
+| Lv.5 | Apprentice | 허리벨트·파우치(waist), 모험수첩(leftHand), 견습망토(cape) |
+| Lv.10 | Explorer | 탐험가가방(back), 장갑(rightHand), 나침반(neck), 물병(waist) |
+| Lv.20 | Job Set | 직업별 무기·망토·정령(15종) |
+
+---
+
 ## 파일 구조
 
-- `학급회의.html` — **메인 앱**(약 3300줄). HTML + CSS + JS가 한 파일에 모두 들어 있습니다. 대부분의 작업은 여기서 이뤄집니다.
+- `학급회의.html` — **메인 앱**(약 3500줄). HTML + CSS + JS가 한 파일에 모두 들어 있습니다. 대부분의 작업은 여기서 이뤄집니다.
 - `index.html` — 별도의 캐릭터/아이템 미리보기용 페이지(참고용, 메인 앱과 분리).
 - `char_01.png ~ char_10.png` — 학생 기본 캐릭터 이미지(명단 순서와 1:1 매핑).
-- `item_*.png` — 개별 아이템 이미지(있으면 사용, 없으면 스프라이트→이모지로 폴백).
-- `items_lv2.png` — 견습(Lv.2) 공통 아이템 스프라이트 시트(5열×2행, 상단 헤더 약 128px).
-- `card/`, `nobg/` — 캐릭터 카드/배경 제거 이미지 등 리소스.
-- `아이템_이미지_파일명_목록.md` — 아이템 이미지 파일명 참조표.
+- `card/` — 캐릭터 카드 배경 이미지(`char_XX_bg_YY.png`, `char_XX_nobg.png`).
+- `equipment/` — **장비 이미지 폴더**. 슬롯별 하위 폴더(`badge/`, `waist/`, `cape/` 등). PNG는 400×540 투명배경 풀캔버스 오버레이.
+- `AvatarSample_Y.vrm` — VRM 캐릭터 파일(현재 미사용, 참조용으로 보관).
 
 ## 코드 구조 (`학급회의.html` 내부)
 
@@ -77,8 +127,8 @@ git push
 - `classInfo` — 회장/부회장 등 학급 정보.
 - `xpData` — 학생별 누적 XP(`{name:{total, ...}}`). 레벨의 근거.
 - `jobData` — 학생별 직업(`{name:{jobId}}`).
-- `customEquipData`(`customEquip`) — 학생별 착용 아이템(`{hair,face,spirit,badge,cape,extra:[...]}`).
-- `characterData` — 캐릭터 관련 데이터.
+- `customEquipData`(`customEquip`) — (구버전, 거의 미사용). 신규 장비는 `characterData`에 저장.
+- `characterData` — 학생별 착용 아이템. 슬롯 이름이 키: `{hair, face, neck, chest, waist, back, cape, leftHand, rightHand, pet, foot, badge}`. `selectCCItem(slot, itemId)`으로 저장.
 - `board`(게시판), `practiceBoard`(실천 후기), `proposals2`(안건/투표), `evaluation`(발언 평가),
   `meetingFlow`(회의 단계 상태), `classScore`(학급 점수), `stepActions`, `actionData`(실천),
   `speakRequests`/`speakCount`(발언 대기열·횟수), `homework`(숙제), `suggestions`(건의),
@@ -89,10 +139,9 @@ git push
   구간별 XP 증가: Lv.2~5 +4, Lv.6~10 +7, Lv.11~20 +10, Lv.21~30 +15, Lv.31~50 +14.
   등급명: 신입(Lv.1)/견습(5)/초급(10)/정식(20)/중급(30)/상급(50) 모험가.
 - **직업**: `JOB_CLASSES`(15종, 지식·탐구·예술·체육·인성 5계열). Lv.3 달성 시 선택 모달, Lv.4부터 직업 전용 장비 해금.
-- **아이템**: `ITEM_CATALOG`. 각 아이템은 `slot`(hair/face/neck/back/weapon/spirit/badge/cape/brooch/shoes)과
-  `unlock:{lv, job?}` 조건을 가집니다. `isItemUnlocked(itemId,name)`이 레벨+직업으로 해금 여부 판정.
-- **아이템 이미지 폴백 순서**: 스프라이트 시트(`SPRITE_MAPS`) → 개별 PNG(`item_{id}.png`) → 이모지.
-  스프라이트 좌표 계산은 `spriteCss(sp,size)` 참고.
+- **아이템**: `ITEM_CATALOG`. 각 아이템은 `slot`(`hair`/`face`/`neck`/`chest`/`waist`/`back`/`cape`/`leftHand`/`rightHand`/`pet`/`foot`/`badge`)과 `unlock:{lv, job?}` 조건을 가집니다. `isItemUnlocked(itemId,name)`이 레벨+직업으로 해금 여부 판정.  `_auto:true`인 배지는 장비 UI에서 숨김. `getUnlockedItems(name)`은 `_auto` 아이템 제외 반환.
+- **아이템 이미지 렌더링**: `equipment/{slot}/{id}.png` (400×540 투명 풀캔버스) 시도 → 없으면 이모지 폴백(`CARD_ITEM_POS` 앵커 사용). `SPRITE_MAPS`는 제거됨.
+- **캔버스 레이어 순서**: BEHIND슬롯(`back`, `cape`) 먼저 → 캐릭터 nobg PNG → 나머지 아이템 위에 그림.
 - **배지**: 레벨에 따라 자동 해금(bronze→silver→gold→platinum). `getBestBadge(name)`.
 
 ## 코딩 컨벤션 & 주의점
@@ -116,13 +165,36 @@ git push
 
 작업을 이어갈 때 참고할 후보입니다. **하나 처리하면 이 목록을 갱신**하세요.
 
-- [ ] (검토) `flow` 회의 진행 4단계 UX 다듬기 — 단계 이동/발언 대기열 흐름 사용성 점검.
-- [ ] (검토) 아이템 스프라이트/개별 PNG 정합성 — `아이템_이미지_파일명_목록.md`와 실제 파일·`SPRITE_MAPS` 일치 확인.
+### Phase 1 — 아트 가이드 & 브랜드 (진행중)
+- [x] 마도 아카데미아 IP 컨셉·색상·길드·슬롯 구조 확정
+- [x] `ITEM_CATALOG` 재설계 (새 슬롯 체계, `equipment/` 폴더 방식)
+- [x] VRM 3D 코드 제거, 풀캔버스 오버레이 방식으로 전환
+- [ ] `equipment/` 폴더 하위 디렉터리 생성 (placeholder)
+- [ ] 공식 학교 로고 디자인 (나침반+책+방패)
+
+### Phase 2 — 기본 캐릭터 재작업
+- [ ] `char_01~10.png` SD 3D 치비 스타일 리메이크 (머리:몸 = 2.5:1, 1024×1024, 투명배경)
+- [ ] `card/char_XX_nobg.png` 동일 스타일로 업데이트
+
+### Phase 3 — 장비 라이브러리 제작
+- [ ] `guild_badge.png` (chest) — 최우선
+- [ ] `belt_apprentice.png`, `pouch_small.png` (waist)
+- [ ] `notebook_adventure.png` (leftHand)
+- [ ] `cape_apprentice.png` (cape)
+- [ ] `bag_explorer.png` (back)
+- [ ] 나머지 Explorer·Job 세트 장비들
+
+### Phase 4 — 학생 개별 생성
+- [ ] 10명 학생 개별 SD 3D 캐릭터 카드 생성 (장비 오버레이 테스트 포함)
+
+### 유지보수
+- [ ] (검토) `flow` 회의 진행 4단계 UX 다듬기.
 - [ ] (검토) 모바일(좁은 화면)에서 nav 가로 스크롤·그리드 밀림 여부 점검.
 - [ ] (아이디어) 접근성: 버튼 `aria-label`, 색 대비, 포커스 스타일 보강.
-- [ ] (아이디어) 오프라인/네트워크 끊김 시 사용자 안내(현재 Firebase 연결 실패 처리 미약).
+- [ ] (아이디어) 오프라인/네트워크 끊김 시 사용자 안내.
 
 ## 변경 이력
 
-- 2026-07-04 — CLAUDE.md 신설(프로젝트 컨텍스트 문서화). `getLevel()`의 견습 모험가 레벨 이모지 오타(`emoji:'📖'` → `emoji='📖'`, 라벨문으로 오작동하던 버그) 수정.
+- 2026-07-05 — 마도 아카데미아 IP 도입. VRM 3D 제거. `ITEM_CATALOG` 전면 재설계(새 슬롯 11종: hair/face/neck/chest/waist/back/cape/leftHand/rightHand/pet/foot). `SPRITE_MAPS` 제거, `equipment/{slot}/{id}.png` 풀캔버스 오버레이 방식 도입. `_drawItem()`, `CARD_ITEM_POS` 업데이트. CLAUDE.md 대폭 갱신(세계관·장비 규격·로드맵).
+- 2026-07-04 — CLAUDE.md 신설(프로젝트 컨텍스트 문서화). `getLevel()` 이모지 오타 수정.
 - (이전) 실천 후기 게시판 추가.

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/", "dest": "/학급회의.html" },
+    { "src": "/", "dest": "/%ED%95%99%EA%B8%89%ED%9A%8C%EC%9D%98.html" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }

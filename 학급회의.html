@@ -3329,4 +3329,160 @@ function renderHwChart(name){
       +'<div style="flex:1;min-width:120px;background:#F0FDF4;border-radius:10px;padding:10px;text-align:center;">'
       +'<div style="font-size:.75rem;color:var(--tl);">총 XP</div>'
       +'<div style="font-size:1.4rem;font-weight:900;color:#16A34A;">'+totalXP+'</div>'
-      +'<div
+      +'<div style="font-size:.8rem;color:#15803D;">포인트</div></div>'
+      +'<div style="flex:1;min-width:120px;background:#FFF7ED;border-radius:10px;padding:10px;text-align:center;">'
+      +'<div style="font-size:.75rem;color:var(--tl);">숙제 달성률</div>'
+      +'<div style="font-size:1.4rem;font-weight:900;color:#EA580C;">'+(total?Math.round(done/total*100):0)+'%</div>'
+      +'<div style="font-size:.8rem;color:#C2410C;">'+done+'/'+total+'개</div></div>'
+      +'</div>';
+  }
+}
+function renderHomeworkStudentList(name){
+  const el=document.getElementById('hwStudentList');if(!el)return;
+  const target=(name||me)||(me==='선생님'?STUDENTS[0]||'':me);
+  if(!target){el.innerHTML='<div class="empty-state"><div class="ei">👤</div><div>학생을 선택해주세요</div></div>';return;}
+  const list=homeworkData._list||[];
+  const myHw=homeworkData[target]||{};
+  if(!list.length){el.innerHTML='<div class="empty-state"><div class="ei">📚</div><div>숙제가 없어요 🎉</div></div>';return;}
+  const isMe=(target===me&&me!=='선생님');
+  el.innerHTML='<div style="font-weight:800;margin-bottom:10px;color:var(--primary);">'+target+(isMe?' (나)':'')+'의 숙제</div>'
+    +list.map(function(hw,idx){
+      const done=myHw[idx]===true;
+      const clickable=isMe?'cursor:pointer;':'';
+      return'<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);'+clickable+'" '
+        +(isMe?'onclick="toggleMyHomework('+idx+')"':'')+' >'
+        +'<div style="width:24px;height:24px;border-radius:50%;border:2px solid '+(done?'var(--green)':'var(--border)')+';background:'+(done?'var(--green)':'#fff')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(done?'<span style="color:#fff;font-size:.8rem;">✓</span>':'')+'</div>'
+        +'<div style="flex:1;font-weight:'+(done?'400':'700')+';text-decoration:'+(done?'line-through':'none')+';color:'+(done?'var(--tl)':'var(--text)')+';">'+hw+'</div>'
+        +(me==='선생님'?'<button class="btn btn-outline btn-sm" style="font-size:.72rem;padding:3px 8px;" onclick="teacherToggleHw(\''+target+'\','+idx+','+!done+')">'+( done?'취소':'완료')+'</button>':'')
+        +'</div>';
+    }).join('');
+}
+function teacherToggleHw(name,idx,done){
+  var upd={};upd[idx]=done;
+  homeworkRef.child(name).update(upd);
+}
+function addHomework(){
+  const inp=document.getElementById('hwTitleInput');if(!inp)return;
+  const v=(inp.value||'').trim();
+  if(!v){showToast('숙제 내용을 입력하세요!','t-warn');return;}
+  const list=(homeworkData._list||[]).concat([v]);
+  homeworkRef.child('_list').set(list);
+  inp.value='';
+  showToast('📚 숙제 추가됨!','t-success');
+}
+function delHomework(idx){
+  if(!confirm('이 숙제를 삭제할까요?'))return;
+  const list=(homeworkData._list||[]).slice();
+  list.splice(idx,1);
+  homeworkRef.child('_list').set(list);
+}
+function toggleMyHomework(idx){
+  if(!me||me==='선생님')return;
+  const myHw=homeworkData[me]||{};
+  if(myHw[idx]>0)return; // 이미 점수 있으면 학생이 취소 불가
+  var upd={};upd[idx]=1;
+  homeworkRef.child(me).update(upd);
+  awardXP(me,1,'숙제 제출');
+  showToast('숙제 제출 완료! 선생님이 점수를 확인해요 📚','t-success');
+}
+
+// ══ Suggest ══
+function renderSuggestList(){
+  const el=document.getElementById('suggestList');if(!el)return;
+  const items=Object.values(suggestData||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  if(!items.length){el.innerHTML='<div style="color:var(--tl);text-align:center;padding:20px;">건의사항이 없어요.</div>';return;}
+  el.innerHTML=items.map(function(s){
+    const isMine=s.author===me;
+    return'<div style="padding:12px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="font-weight:700;margin-bottom:4px;">'+(s.text||s.content||'')+'</div>'
+      +'<div style="font-size:.78rem;color:var(--tl);display:flex;justify-content:space-between;">'
+      +'<span>'+(me==='선생님'?s.author:isMine?'나':'')+' '+(s.date||'')+'</span>'
+      +((me==='선생님'||isMine)?'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.78rem;" onclick="delSuggest(\''+s.id+'\')">삭제</button>':'')
+      +'</div></div>';
+  }).join('');
+  const ot=document.getElementById('suggestOnlyTeacher');
+  if(ot)ot.style.display=me==='선생님'?'inline':'none';
+}
+function filterSuggest(f){suggestFilter=f;renderSuggestList();}
+function submitSuggest(){
+  const inp=document.getElementById('suggestInput');if(!inp)return;
+  const v=(inp.value||'').trim();
+  if(!v){showToast('내용을 입력해주세요!','t-warn');return;}
+  const id='s'+Date.now();
+  suggestRef.child(id).set({id:id,text:v,author:me,date:new Date().toLocaleDateString('ko-KR')});
+  inp.value='';
+  showToast('📮 건의사항을 제출했어요!','t-success');
+  if(me&&me!=='선생님')awardXP(me,1,'건의사항 제출');
+}
+function delSuggest(id){
+  if(!confirm('삭제할까요?'))return;
+  suggestRef.child(id).remove();
+}
+
+
+function renderAdminCharGrid(){
+  const el=document.getElementById('adminCharGrid');if(!el)return;
+  el.innerHTML=STUDENTS.map(function(n){
+    const lv=getLevel((xpData[n]||{}).total||0);
+    const ch=characterData[n]||{};
+    const job=(jobData[n]||{}).jobId?getJob((jobData[n]||{}).jobId):null;
+    const charImg=getCharImg(n);
+    const equippedAvId=(shopData[n]||{}).equipped||'';
+    const themeId=(shopData[n]||{}).equippedTheme||'';
+    const shopAv=SHOP_ITEMS.find(function(i){return i.type==='avatar'&&i.id===equippedAvId;});
+    const themeItem=SHOP_ITEMS.find(function(i){return i.type==='color'&&i.id===themeId;});
+    const cardBg=themeItem?themeItem.bg:'linear-gradient(135deg,#4F6EF7,#8B5CF6)';
+    var av='';
+    if(charImg)av='<img src="'+charImg+'" style="width:54px;height:54px;object-fit:contain;" onerror="this.style.display=\'none\'">';
+    else av='<div style="font-size:2.4rem;">'+(shopAv?shopAv.v:(ch.avatar||'🧑'))+'</div>';
+    return '<div style="border-radius:16px;overflow:hidden;border:2px solid var(--border);">'
+      +'<div style="background:'+cardBg+';padding:14px 8px;text-align:center;">'+av+'</div>'
+      +'<div style="padding:8px 6px;text-align:center;background:#fff;">'
+      +'<div style="font-weight:800;font-size:.88rem;">'+n+'</div>'
+      +'<div style="font-size:.72rem;color:var(--tl);">'+lv.emoji+' Lv.'+lv.lv+'</div>'
+      +(job?'<div class="job-badge" style="background:'+job.color+';font-size:.68rem;margin-top:4px;justify-content:center;">'+job.emoji+' '+job.name+'</div>':'')
+      +(ch.nick&&ch.nick!==n?'<div style="font-size:.7rem;color:var(--primary);font-style:italic;">'+ch.nick+'</div>':'')
+      +'</div></div>';
+  }).join('');
+}
+
+// ══ Admin ══
+function renderAdminBoard(){
+  const el=document.getElementById('adminBoardList');if(!el)return;
+  const posts=Object.values(boardPosts||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  el.innerHTML=posts.slice(0,5).map(function(p){
+    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||p.content||'')+'</div>'
+      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||p.name||'')+' · '+(p.date||'')+'</div></div>';
+  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">게시글이 없어요.</div>';
+}
+function renderAdminProposals(){
+  const el=document.getElementById('adminProposalList');if(!el)return;
+  const props=Object.values(proposals||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  el.innerHTML=props.slice(0,5).map(function(p){
+    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||'')+'</div>'
+      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||'')+' · '+(p.date||'')+'</div></div>';
+  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">안건이 없어요.</div>';
+}
+function renderActivityTable(){
+  const el=document.getElementById('activityTable');if(!el)return;
+  el.innerHTML=STUDENTS.map(function(n){
+    const xp=xpData[n]||{};
+    const log=xp.log||[];
+    const propose=log.filter(function(l){return l.reason&&l.reason.indexOf('안건')>=0;}).length;
+    const board=log.filter(function(l){return l.reason&&l.reason.indexOf('게시판')>=0;}).length;
+    const speak=log.filter(function(l){return l.reason&&l.reason.indexOf('발표')>=0;}).length;
+    const checkin=log.filter(function(l){return l.reason&&l.reason.indexOf('체크인')>=0;}).length;
+    return'<div class="activity-row">'
+      +'<div class="activity-name">'+n+'</div>'
+      +'<div class="activity-cell">'+propose+'</div>'
+      +'<div class="activity-cell">'+board+'</div>'
+      +'<div class="activity-cell">'+speak+'</div>'
+      +'<div class="activity-cell">'+checkin+'</div>'
+      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
+  }).join('');
+}
+</script>
+</body>
+</html>

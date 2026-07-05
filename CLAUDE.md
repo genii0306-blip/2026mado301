@@ -35,61 +35,100 @@ git push
 
 이 앱의 RPG 세계관. 실제 마도초등학교 = 판타지 세계의 **마도 아카데미아 모험학교(1935년 설립)**.
 
-### 공식 색상 팔레트
+### 공식 색상 팔레트 (Art Bible v1.0 확정)
 | 이름 | HEX | 용도 |
 |------|-----|------|
 | Academy Green | `#1E7D3B` | 학교 기본색, 배지 테두리 |
 | Academy Gold | `#FFD23C` | 길드 배지, 금장 장식 |
-| Leather Brown | `#8B5E34` | 벨트, 파우치, 신발 |
-| Ivory | `#F5F0E8` | 연습복 기본색 |
-| Silver Gray | `#B7BDC6` | 금속 버클, 장식 |
+| Ivory | `#F6F3E6` | 연습복 기본색 |
+| Leather Brown | `#8B5A2B` | 벨트, 파우치, 신발 |
+| Silver Gray | `#C7C7C7` | 금속 버클, 장식 |
 
-직업 선택(Lv.20) 이후에는 직업 고유색을 위 팔레트 위에 더합니다.
+직업 색상(Lv.20+): 보라(독서/마도사), 초록(과학/탐구), 빨강(체육/전사), 하늘(예술/창조), 노랑(협력/빛), 남색(대표/REGIA)
 
 ### 재질 스타일
-가죽 · 린넨/천 · 황동 · 금장 · 수정 · 나무.  
-광원 방향, 채도, 그림자, 모서리 라운딩 모두 일관되게 제작.
+린넨(Linen) · 가죽(Leather) · 황동(Brass) · 나무(Wood) · 수정(Crystal) · 금장(Gold).  
+광원: 항상 좌측 상단. 접촉 그림자 필수, 의학 그림자는 최소화.  
+금지: 과도한 갑옷/무기, 날개/후광.
 
-### 길드 (House) 5종
-| 길드 | 상징 | 색 | 가치 |
+### 길드 (House) 6종
+| 길드 | 상징 | 색(HEX) | 가치 |
 |------|------|----|------|
-| SAPIENTIA | 📖 | 보라 | 지혜 |
-| FORTIS | ⚔️ | 빨강 | 용기 |
-| NATURA | 🌱 | 초록 | 탐구 |
-| CREARE | 🎨 | 하늘 | 창조 |
-| LUMEN | 🤝 | 노랑 | 협력 |
+| SAPIENTIA | 📖 | 보라 `#7C3AED` | 지혜 |
+| FORTIS | ⚔️ | 빨강 `#DC2626` | 용기 |
+| NATURA | 🌿 | 초록 `#16A34A` | 탐구 |
+| CREARE | 🎨 | 하늘 `#0284C7` | 창조 |
+| LUMEN | 🤝 | 노랑 `#CA8A04` | 협력 |
+| REGIA | 👑 | 남색 `#1E3A8A` | 대표 |
 
 ### 장비 슬롯 구조 (11슬롯 + 자동배지)
 ```
-head | hair | face | neck | chest | waist
+hair | face | neck | chest | waist
 back | cape | leftHand | rightHand | pet | foot
 badge (자동)
 ```
 
-### 장비 이미지 규격
-- **형식**: 투명배경 PNG, 캔버스 크기(400×540) 맞춤
-- **경로**: `equipment/{slot}/{item_id}.png`
-- **렌더링**: 전체 캔버스에 drawImage → 위치가 이미지에 내장됨
-- **이모지 폴백**: PNG 없으면 `CARD_ITEM_POS`의 앵커 위치에 이모지 표시
+### 장비 이미지 규격 (Art Bible v1.0)
 
-### 레벨 세트 구조
-| 레벨 | 세트 | 주요 아이템 |
-|------|------|-------------|
-| Lv.1 | Starter | 길드 배지(chest) |
-| Lv.5 | Apprentice | 허리벨트·파우치(waist), 모험수첩(leftHand), 견습망토(cape) |
-| Lv.10 | Explorer | 탐험가가방(back), 장갑(rightHand), 나침반(neck), 물병(waist) |
-| Lv.20 | Job Set | 직업별 무기·망토·정령(15종) |
+**마스터 파일** (`assets/equipment/`): 1024×1024 투명 PNG, 앵커 기준으로 아이템 배치
+**앱 배포 파일** (`equipment/{slot}/{id}.png`): 400×540 투명 PNG, 카드 캔버스 맞춤 오버레이
+
+| 아이템 ID | 파일명 | 마스터 크기 | 앵커 | 슬롯 |
+|-----------|--------|------------|------|------|
+| `badge_lv1` | badge_lv1.png | 400×400 | Chest Center | chest |
+| `shoes_lv1` | shoes_lv1.png | 800×500 | Foot Center | foot |
+| `belt_apprentice` | belt_apprentice.png | 700×180 | Waist Center | waist |
+| `pouch_apprentice` | pouch_apprentice.png | 300×350 | Waist Right | waist |
+| `notebook_adventure` | notebook_adventure.png | 300×380 | Waist Left | leftHand |
+| `cape_apprentice` | cape_apprentice.png | 900×900 | Shoulder Center (Behind) | cape |
+| `bag_explorer` | bag_explorer.png | 850×900 | Back Center (Behind) | back |
+
+### 레벨 세트 구조 & 세트 효과
+| 레벨 | 세트 | 아이템 | 세트 효과 |
+|------|------|--------|-----------|
+| Lv.1 | Starter | badge_lv1 + shoes_lv1 | 경험치 +10% |
+| Lv.5 | Apprentice | belt + pouch + notebook + cape | 퀘스트 수행 가능 |
+| Lv.10 | Explorer | bag + gloves + compass | 탐험 보너스 |
+| Lv.20 | Job Set | 직업별 무기·망토·정령(15종) | 직업 스킬 활성화 |
+| Lv.30 | Advanced Set | (미정) | (미정) |
+| Lv.50 | Master Set | (미정) | (미정) |
+
+> 세트 효과는 `ITEM_SETS` 상수에 정의, `getEquippedSetBonus(name)`으로 조회. 현재 데이터만 정의돼 있고 XP 실제 적용은 미구현.
+
+### NPC 캐릭터 (세계관 기준점, 학생보다 먼저 제작)
+| NPC | 역할 | 직함 |
+|-----|------|------|
+| 교장 | 학교장 | 대현자 |
+| 교감 | 부교장 | 길드 관리자 |
+| 담임 | 학급 담임 | 지도교관 |
+| 사서 | 도서관 | 대도서관 사서 |
+| 보건교사 | 보건실 | 힐러 마스터 |
+| 체육교사 | 체육 | 기사단 교관 |
 
 ---
 
 ## 파일 구조
 
+### 앱 파일 (배포 대상)
 - `학급회의.html` — **메인 앱**(약 3500줄). HTML + CSS + JS가 한 파일에 모두 들어 있습니다. 대부분의 작업은 여기서 이뤄집니다.
 - `index.html` — 별도의 캐릭터/아이템 미리보기용 페이지(참고용, 메인 앱과 분리).
 - `char_01.png ~ char_10.png` — 학생 기본 캐릭터 이미지(명단 순서와 1:1 매핑).
 - `card/` — 캐릭터 카드 배경 이미지(`char_XX_bg_YY.png`, `char_XX_nobg.png`).
-- `equipment/` — **장비 이미지 폴더**. 슬롯별 하위 폴더(`badge/`, `waist/`, `cape/` 등). PNG는 400×540 투명배경 풀캔버스 오버레이.
-- `AvatarSample_Y.vrm` — VRM 캐릭터 파일(현재 미사용, 참조용으로 보관).
+- `equipment/` — 앱용 장비 이미지. 슬롯별 하위 폴더. PNG는 400×540 투명배경 풀캔버스 오버레이.
+
+### 마스터 에셋 라이브러리 (`assets/`)
+게임 IP의 모든 원본 에셋. 앱 배포용이 아닌 제작 원본 보관소.
+```
+assets/
+├── character/    # 캐릭터 원본 (1024×1024)
+├── equipment/    # 장비 마스터 (1024×1024, 앵커 기준)
+├── background/   # 배경 일러스트
+├── effects/      # 레벨업·아이템 획득 효과
+├── pet/          # 정령 캐릭터
+├── ui/           # UI 요소 (버튼, 프레임 등)
+├── card/         # 캐릭터 카드 템플릿
+└── icon/         # 아이콘 (엠블럼, 배지 등)
+```
 
 ## 코드 구조 (`학급회의.html` 내부)
 
@@ -195,6 +234,7 @@ badge (자동)
 
 ## 변경 이력
 
+- 2026-07-05 — Art Bible v1.0 반영. GUILDS 상수 6종(REGIA 신규 추가) 코드 추가. `assets/` 마스터 에셋 라이브러리 폴더 구조 생성. 학교 엠블럼 SVG(`assets/icon/school_emblem.svg`) + 길드 배지 6종 SVG(`assets/icon/guild_badges.svg`) 제작. 색상 팔레트·장비 규격·NPC 시스템 CLAUDE.md 갱신.
 - 2026-07-05 — 마도 아카데미아 IP 도입. VRM 3D 제거. `ITEM_CATALOG` 전면 재설계(새 슬롯 11종: hair/face/neck/chest/waist/back/cape/leftHand/rightHand/pet/foot). `SPRITE_MAPS` 제거, `equipment/{slot}/{id}.png` 풀캔버스 오버레이 방식 도입. `_drawItem()`, `CARD_ITEM_POS` 업데이트. CLAUDE.md 대폭 갱신(세계관·장비 규격·로드맵).
 - 2026-07-04 — CLAUDE.md 신설(프로젝트 컨텍스트 문서화). `getLevel()` 이모지 오타 수정.
 - (이전) 실천 후기 게시판 추가.

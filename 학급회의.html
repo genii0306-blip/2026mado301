@@ -1133,21 +1133,41 @@ const JOB_CLASSES=[
 function getJob(jobId){return JOB_CLASSES.find(j=>j.id===jobId)||null;}
 const TIER_EMOJI={지식:'📚',탐구:'🔬',예술:'🎨',체육:'⚔️',인성:'🤝'};
 
+// ══ 길드 (House) 시스템 ══
+// 학년 초 학생이 선택하는 소속 길드. guildData Firebase ref에 저장 예정.
+const GUILDS=[
+  {id:'sapientia', name:'SAPIENTIA', korean:'지혜',  emoji:'📖', color:'#7C3AED', bg:'linear-gradient(135deg,#5B21B6,#7C3AED)'},
+  {id:'fortis',    name:'FORTIS',    korean:'용기',  emoji:'⚔️', color:'#DC2626', bg:'linear-gradient(135deg,#991B1B,#DC2626)'},
+  {id:'natura',    name:'NATURA',    korean:'탐구',  emoji:'🌿', color:'#16A34A', bg:'linear-gradient(135deg,#14532D,#16A34A)'},
+  {id:'creare',    name:'CREARE',    korean:'창조',  emoji:'🎨', color:'#0284C7', bg:'linear-gradient(135deg,#075985,#0284C7)'},
+  {id:'lumen',     name:'LUMEN',     korean:'협력',  emoji:'🤝', color:'#CA8A04', bg:'linear-gradient(135deg,#713F12,#CA8A04)'},
+  {id:'regia',     name:'REGIA',     korean:'대표',  emoji:'👑', color:'#1D4ED8', bg:'linear-gradient(135deg,#1E3A8A,#1D4ED8)'},
+];
+function getGuild(guildId){return GUILDS.find(g=>g.id===guildId)||null;}
+
 // ══ 마도 아카데미아 아이템 카탈로그 ══
 // slot: 'hair'|'face'|'neck'|'chest'|'waist'|'back'|'cape'|'leftHand'|'rightHand'|'pet'|'foot'|'badge'
-// 이미지: equipment/{slot}/{id}.png (풀캔버스 투명 오버레이)
+// 이미지: equipment/{slot}/{id}.png (풀캔버스 투명 오버레이, 400×540)
+// 마스터 파일: assets/equipment/{id}.png (1024×1024 기준)
 // set: 'starter'|'apprentice'|'explorer'|'job'|'common'
 const ITEM_CATALOG=[
   // ─────────────────────────────────────
   // LV.1 STARTER SET – 신입 모험가
+  // badge_lv1.png (400×400, Chest Center)
+  // shoes_lv1.png (800×500, Foot Center)
   // ─────────────────────────────────────
-  {id:'guild_badge',      name:'길드 배지',    emoji:'🛡️', slot:'chest',    unlock:{lv:1},  set:'starter',    desc:'마도 아카데미아의 상징. 신입 모험가의 증표.'},
+  {id:'badge_lv1',        name:'학교 배지',    emoji:'🛡️', slot:'chest',    unlock:{lv:1},  set:'starter',    desc:'마도 아카데미아의 상징. 신입 모험가의 증표.'},
+  {id:'shoes_lv1',        name:'기본 신발',    emoji:'👟', slot:'foot',     unlock:{lv:1},  set:'starter',    desc:'견고한 훈련용 신발. 모든 모험의 첫걸음.'},
 
   // ─────────────────────────────────────
   // LV.5 APPRENTICE SET – 견습 모험가
+  // belt_apprentice.png (700×180, Waist Center)
+  // pouch_apprentice.png (300×350, Waist Right)
+  // notebook_adventure.png (300×380, Waist Left)
+  // cape_apprentice.png (900×900, Shoulder Center Behind)
   // ─────────────────────────────────────
-  {id:'belt_apprentice',  name:'허리벨트',     emoji:'🟫', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'다양한 장비를 착용할 수 있는 가죽 허리벨트'},
-  {id:'pouch_small',      name:'작은 파우치',  emoji:'👝', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'소지품을 보관하는 가죽 파우치'},
+  {id:'belt_apprentice',  name:'견습 벨트',    emoji:'🟫', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'다양한 장비를 착용할 수 있는 가죽 허리벨트'},
+  {id:'pouch_apprentice', name:'모험 파우치',  emoji:'👝', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'소지품을 보관하는 가죽 파우치'},
   {id:'notebook_adventure',name:'모험 수첩',   emoji:'📓', slot:'leftHand', unlock:{lv:5},  set:'apprentice', desc:'퀘스트와 발견을 기록하는 수첩'},
   {id:'cape_apprentice',  name:'견습 망토',    emoji:'🧣', slot:'cape',     unlock:{lv:5},  set:'apprentice', desc:'짧지만 보온과 멋을 겸비한 견습생의 망토'},
 
@@ -1247,6 +1267,20 @@ const ITEM_CATALOG=[
   {id:'badge_gold',     name:'Gold 배지',     emoji:'🥇', slot:'badge', unlock:{lv:20}, _auto:true, desc:'정식 모험가 배지'},
   {id:'badge_platinum', name:'Platinum 배지', emoji:'💎', slot:'badge', unlock:{lv:30}, _auto:true, desc:'상급 모험가 배지'},
 ];
+
+// ══ 세트 효과 정의 ══
+// 해당 세트 아이템을 모두 착용하면 bonus 효과가 활성화됩니다 (미래 기능)
+const ITEM_SETS={
+  starter:    {name:'스타터 세트',    name_en:'Starter Set',    lv:1,  bonus:'경험치 +10%',  items:['badge_lv1','shoes_lv1'],                                              effect:'XP_BOOST_10'},
+  apprentice: {name:'견습 모험가 세트',name_en:'Apprentice Set', lv:5,  bonus:'퀘스트 수행 가능', items:['belt_apprentice','pouch_apprentice','notebook_adventure','cape_apprentice'], effect:'QUEST_UNLOCK'},
+  explorer:   {name:'탐험가 세트',    name_en:'Explorer Set',   lv:10, bonus:'탐험 보너스',  items:['bag_explorer','gloves_explorer','compass_neck'],                       effect:'EXPLORE_BONUS'},
+};
+function getItemSet(setId){return ITEM_SETS[setId]||null;}
+function getEquippedSetBonus(name){
+  // 착용 중인 세트를 확인하고 완성된 세트 효과 반환
+  const equip=characterData[name]||{};
+  return Object.entries(ITEM_SETS).filter(([,s])=>s.items.every(id=>equip[ITEM_CATALOG.find(i=>i.id===id)?.slot]===id)).map(([k])=>k);
+}
 
 function getItem(id){return ITEM_CATALOG.find(i=>i.id===id)||null;}
 

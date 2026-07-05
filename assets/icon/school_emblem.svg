@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Gold gradient for rim -->
+    <linearGradient id="goldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE87A"/>
+      <stop offset="40%" style="stop-color:#FFD23C"/>
+      <stop offset="70%" style="stop-color:#D4A017"/>
+      <stop offset="100%" style="stop-color:#FFD23C"/>
+    </linearGradient>
+    <!-- Inner green gradient -->
+    <radialGradient id="greenBg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#2A9450"/>
+      <stop offset="100%" style="stop-color:#1E7D3B"/>
+    </radialGradient>
+    <!-- Ivory shield gradient -->
+    <linearGradient id="ivoryShield" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" style="stop-color:#FEFCF5"/>
+      <stop offset="100%" style="stop-color:#EDE8D5"/>
+    </linearGradient>
+    <!-- Gold star gradient -->
+    <linearGradient id="goldStar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE87A"/>
+      <stop offset="100%" style="stop-color:#C8940A"/>
+    </linearGradient>
+    <!-- Text arc paths -->
+    <path id="topTextPath" d="M 70,200 A 130,130 0 0,1 330,200"/>
+    <path id="bottomTextPath" d="M 72,215 A 130,130 0 0,0 328,215"/>
+  </defs>
+
+  <!-- ── Outermost gold ring ── -->
+  <circle cx="200" cy="200" r="197" fill="url(#goldRim)"/>
+
+  <!-- Thin dark separator -->
+  <circle cx="200" cy="200" r="183" fill="#1E4A29"/>
+
+  <!-- Main green field -->
+  <circle cx="200" cy="200" r="178" fill="url(#greenBg)"/>
+
+  <!-- Inner gold circle line -->
+  <circle cx="200" cy="200" r="160" fill="none" stroke="#FFD23C" stroke-width="2.5"/>
+
+  <!-- ── Laurel wreaths (left & right) ── -->
+  <!-- Left laurel branch -->
+  <g fill="#4CAF6A" opacity="0.95">
+    <!-- stem -->
+    <ellipse cx="88" cy="200" rx="3" ry="55" transform="rotate(-5 88 200)"/>
+    <!-- leaves left side -->
+    <ellipse cx="78" cy="175" rx="10" ry="6" transform="rotate(-40 78 175)"/>
+    <ellipse cx="72" cy="190" rx="10" ry="6" transform="rotate(-30 72 190)"/>
+    <ellipse cx="70" cy="207" rx="10" ry="6" transform="rotate(-20 70 207)"/>
+    <ellipse cx="72" cy="223" rx="10" ry="6" transform="rotate(-10 72 223)"/>
+    <ellipse cx="78" cy="237" rx="10" ry="6" transform="rotate(5 78 237)"/>
+    <!-- leaves right side -->
+    <ellipse cx="98" cy="172" rx="10" ry="6" transform="rotate(-135 98 172)"/>
+    <ellipse cx="100" cy="187" rx="10" ry="6" transform="rotate(-150 100 187)"/>
+    <ellipse cx="100" cy="204" rx="10" ry="6" transform="rotate(-160 100 204)"/>
+    <ellipse cx="98" cy="220" rx="10" ry="6" transform="rotate(-170 98 220)"/>
+    <ellipse cx="93" cy="234" rx="10" ry="6" transform="rotate(175 93 234)"/>
+  </g>
+  <!-- Gold vein highlight on left leaves -->
+  <g fill="#FFD23C" opacity="0.5">
+    <ellipse cx="78" cy="175" rx="4" ry="1.5" transform="rotate(-40 78 175)"/>
+    <ellipse cx="72" cy="207" rx="4" ry="1.5" transform="rotate(-20 72 207)"/>
+    <ellipse cx="78" cy="237" rx="4" ry="1.5" transform="rotate(5 78 237)"/>
+  </g>
+
+  <!-- Right laurel branch (mirror) -->
+  <g fill="#4CAF6A" opacity="0.95" transform="scale(-1,1) translate(-400,0)">
+    <ellipse cx="88" cy="200" rx="3" ry="55" transform="rotate(-5 88 200)"/>
+    <ellipse cx="78" cy="175" rx="10" ry="6" transform="rotate(-40 78 175)"/>
+    <ellipse cx="72" cy="190" rx="10" ry="6" transform="rotate(-30 72 190)"/>
+    <ellipse cx="70" cy="207" rx="10" ry="6" transform="rotate(-20 70 207)"/>
+    <ellipse cx="72" cy="223" rx="10" ry="6" transform="rotate(-10 72 223)"/>
+    <ellipse cx="78" cy="237" rx="10" ry="6" transform="rotate(5 78 237)"/>
+    <ellipse cx="98" cy="172" rx="10" ry="6" transform="rotate(-135 98 172)"/>
+    <ellipse cx="100" cy="187" rx="10" ry="6" transform="rotate(-150 100 187)"/>
+    <ellipse cx="100" cy="204" rx="10" ry="6" transform="rotate(-160 100 204)"/>
+    <ellipse cx="98" cy="220" rx="10" ry="6" transform="rotate(-170 98 220)"/>
+    <ellipse cx="93" cy="234" rx="10" ry="6" transform="rotate(175 93 234)"/>
+  </g>
+  <g fill="#FFD23C" opacity="0.5" transform="scale(-1,1) translate(-400,0)">
+    <ellipse cx="78" cy="175" rx="4" ry="1.5" transform="rotate(-40 78 175)"/>
+    <ellipse cx="72" cy="207" rx="4" ry="1.5" transform="rotate(-20 72 207)"/>
+    <ellipse cx="78" cy="237" rx="4" ry="1.5" transform="rotate(5 78 237)"/>
+  </g>
+
+  <!-- ── Central shield ── -->
+  <!-- Shield shadow -->
+  <path d="M204,128 L256,150 L256,218 C256,248 204,272 204,272 C204,272 152,248 152,218 L152,150 Z" fill="rgba(0,0,0,0.25)"/>
+  <!-- Shield body -->
+  <path d="M200,124 L252,146 L252,214 C252,244 200,268 200,268 C200,268 148,244 148,214 L148,146 Z" fill="url(#ivoryShield)"/>
+  <!-- Shield gold border -->
+  <path d="M200,124 L252,146 L252,214 C252,244 200,268 200,268 C200,268 148,244 148,214 L148,146 Z" fill="none" stroke="#FFD23C" stroke-width="3"/>
+  <!-- Shield green header band -->
+  <path d="M200,124 L252,146 L252,160 L148,160 L148,146 Z" fill="#1E7D3B"/>
+  <!-- Book icon in header -->
+  <g transform="translate(189,134)">
+    <rect x="0" y="0" width="22" height="16" rx="2" fill="#FFD23C"/>
+    <line x1="11" y1="0" x2="11" y2="16" stroke="#1E7D3B" stroke-width="1.5"/>
+    <line x1="3" y1="5" x2="8" y2="5" stroke="#1E7D3B" stroke-width="1"/>
+    <line x1="3" y1="8" x2="8" y2="8" stroke="#1E7D3B" stroke-width="1"/>
+    <line x1="3" y1="11" x2="8" y2="11" stroke="#1E7D3B" stroke-width="1"/>
+    <line x1="14" y1="5" x2="19" y2="5" stroke="#1E7D3B" stroke-width="1"/>
+    <line x1="14" y1="8" x2="19" y2="8" stroke="#1E7D3B" stroke-width="1"/>
+    <line x1="14" y1="11" x2="19" y2="11" stroke="#1E7D3B" stroke-width="1"/>
+  </g>
+
+  <!-- 마도 Korean text on shield -->
+  <text x="200" y="218" text-anchor="middle" font-family="'Noto Serif KR', 'Malgun Gothic', serif" font-size="44" font-weight="900" fill="#1E7D3B" letter-spacing="-1">마도</text>
+
+  <!-- Decorative dots on shield -->
+  <circle cx="165" cy="255" r="4" fill="#FFD23C" opacity="0.8"/>
+  <circle cx="200" cy="264" r="4" fill="#FFD23C" opacity="0.8"/>
+  <circle cx="235" cy="255" r="4" fill="#FFD23C" opacity="0.8"/>
+
+  <!-- ── Curved text (top) ── -->
+  <text font-family="'Times New Roman', 'Georgia', serif" font-size="15" font-weight="700" fill="#FFD23C" letter-spacing="3">
+    <textPath href="#topTextPath" startOffset="50%" text-anchor="middle">MADO  ACADEMIA</textPath>
+  </text>
+
+  <!-- ── Curved text (bottom) ── -->
+  <text font-family="'Times New Roman', 'Georgia', serif" font-size="13" font-weight="700" fill="#FFD23C" letter-spacing="2.5">
+    <textPath href="#bottomTextPath" startOffset="50%" text-anchor="middle">ADVENTURE  SCHOOL</textPath>
+  </text>
+
+  <!-- ── Top star decorations ── -->
+  <polygon points="200,42 204,56 218,56 207,65 211,79 200,70 189,79 193,65 182,56 196,56" fill="url(#goldStar)" opacity="0.95"/>
+
+  <!-- Small side stars -->
+  <polygon points="120,58 122,64 128,64 124,68 125,74 120,70 115,74 116,68 112,64 118,64" fill="url(#goldStar)" opacity="0.9"/>
+  <polygon points="280,58 282,64 288,64 284,68 285,74 280,70 275,74 276,68 272,64 278,64" fill="url(#goldStar)" opacity="0.9"/>
+
+  <!-- ── Bottom ribbon ── -->
+  <path d="M128,290 Q140,280 160,284 L200,278 L240,284 Q260,280 272,290 L268,302 Q250,296 230,300 L200,306 L170,300 Q150,296 132,302 Z" fill="#1E7D3B"/>
+  <path d="M128,290 Q140,280 160,284 L200,278 L240,284 Q260,280 272,290 L268,302 Q250,296 230,300 L200,306 L170,300 Q150,296 132,302 Z" fill="none" stroke="#FFD23C" stroke-width="1.5"/>
+  <!-- Ribbon tails -->
+  <path d="M128,290 L108,310 L132,302 Z" fill="#1E7D3B" stroke="#FFD23C" stroke-width="1"/>
+  <path d="M272,290 L292,310 L268,302 Z" fill="#1E7D3B" stroke="#FFD23C" stroke-width="1"/>
+  <!-- Ribbon text -->
+  <text x="200" y="298" text-anchor="middle" font-family="'Times New Roman', serif" font-size="11" font-weight="700" fill="#FFD23C" letter-spacing="1.5">1935  EST.</text>
+
+</svg>

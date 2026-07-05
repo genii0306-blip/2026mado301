@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마도 아카데미아 공식 에셋 팩 Vol.1 — Starter Set</title>
+<style>
+:root{
+  --g:#1E7D3B; --g2:#145228; --g3:#0D3B1C;
+  --gold:#FFD23C; --gold-l:#FFE87A; --gold-d:#B8860B; --gold-dd:#7A5A08;
+  --iv:#F6F3E6; --iv2:#EDE7D0; --iv3:#DDD3B0;
+  --br:#8B5A2B; --br2:#6B4020; --br3:#4A2A10;
+  --text:#2A1A06; --line:#C8B87A; --line2:#A89050;
+  --shadow:rgba(0,0,0,0.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#8B7840;font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--text);}
+.page{max-width:1280px;margin:20px auto;background:var(--iv);border:3px solid var(--gold-d);box-shadow:0 12px 60px rgba(0,0,0,0.55);overflow:hidden;}
+
+/* ═══ HEADER ═══ */
+header{display:grid;grid-template-columns:110px 1fr 290px;background:var(--g3);border-bottom:4px solid var(--gold);}
+.hd-left{display:flex;align-items:center;justify-content:center;padding:14px;border-right:2px solid rgba(255,210,60,0.35);}
+.hd-center{text-align:center;padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.hd-center h1{font-size:28px;color:var(--gold);font-weight:900;letter-spacing:3px;text-shadow:0 2px 8px rgba(0,0,0,0.5);}
+.hd-center .sub{font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:5px;}
+.hd-center .divl{display:flex;align-items:center;gap:10px;color:rgba(255,210,60,0.5);font-size:14px;}
+.hd-center .divl span{height:1px;width:40px;background:linear-gradient(90deg,transparent,var(--gold));}
+.hd-center .divl span:last-child{background:linear-gradient(90deg,var(--gold),transparent);}
+.hd-center .vol{background:var(--gold);color:var(--g3);font-size:15px;font-weight:800;padding:5px 26px;border-radius:20px;margin-top:2px;letter-spacing:2px;box-shadow:0 3px 10px rgba(0,0,0,0.4);}
+.hd-right{background:var(--iv2);border-left:2px solid var(--gold-d);padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+.hd-right .lbl{font-size:9px;color:var(--g);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:1px;}
+.hd-right .motto{font-size:14px;font-weight:700;color:var(--text);line-height:1.5;}
+.hd-right .motto-en{font-size:10px;color:#888;letter-spacing:1px;}
+.hd-right hr{border:none;border-top:1px solid var(--line);margin:2px 0;}
+.hd-right .desc{font-size:11px;color:#5a3d1a;line-height:1.7;}
+
+/* ═══ CONTENT GRID ═══ */
+.row{display:grid;border-bottom:2px solid var(--line2);}
+.r1{grid-template-columns:200px 195px 1fr;}
+.r2{grid-template-columns:200px 1fr;}
+.r3{grid-template-columns:repeat(4,1fr);}
+.cell{border-right:1px solid var(--line);display:flex;flex-direction:column;}
+.cell:last-child{border-right:none;}
+.sec-hd{background:var(--g);color:var(--gold);font-size:11px;font-weight:700;padding:6px 14px;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;flex-shrink:0;border-bottom:1px solid var(--gold-d);}
+.sec-hd .en{color:rgba(255,255,255,0.55);font-weight:400;font-size:10px;}
+.cb{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px;}
+
+/* ═══ ART BOXES ═══ */
+.art{background:white;border:1.5px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.art::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,transparent 50%);pointer-events:none;border-radius:8px;}
+.art .sz{position:absolute;bottom:5px;right:7px;background:rgba(30,85,40,0.88);color:var(--gold);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;}
+
+.views{display:flex;gap:6px;}
+.vw{flex:1;text-align:center;}
+.vw .vb{background:white;border:1.5px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;padding:8px 4px;overflow:hidden;}
+.vw .vl{font-size:8px;color:#999;margin-top:3px;letter-spacing:0.5px;}
+
+/* ═══ SPEC BLOCK ═══ */
+.spec{font-size:10.5px;line-height:1.95;color:#4a3520;}
+.spec .fn{display:inline-block;background:var(--br3);color:var(--gold);font-family:'Courier New',monospace;font-size:9.5px;padding:1px 7px;border-radius:3px;margin-bottom:3px;}
+.spec strong{color:var(--g);font-weight:700;}
+.spec .dot::before{content:'■ ';color:var(--gold-d);font-size:8px;}
+
+/* ═══ PALETTE ═══ */
+.palette{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.sw{text-align:center;}
+.sw-c{width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,0.1);box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.sw-n{font-size:8px;color:#777;margin-top:3px;}
+
+/* ═══ CHARACTER VIEWS ═══ */
+.char-views{display:flex;gap:12px;}
+.gender-grp{flex:1;}
+.g-lbl{font-size:10px;color:var(--g);font-weight:700;text-align:center;margin-bottom:5px;letter-spacing:0.5px;}
+.char-row{display:flex;gap:5px;justify-content:center;}
+.char-f{text-align:center;}
+.char-f .lbl{font-size:8px;color:#aaa;margin-top:2px;}
+
+/* ═══ PREVIEW PANEL ═══ */
+.prev-cell .sec-hd{background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,210,60,0.3);}
+.prev-cell{background:linear-gradient(145deg,var(--g3) 0%,var(--g2) 50%,var(--g) 100%)!important;}
+.prev-cell .cb{flex-direction:row;align-items:stretch;gap:16px;}
+.prev-chars{flex:1;display:flex;gap:16px;align-items:center;justify-content:center;}
+.cc{background:rgba(255,255,255,0.09);border:1px solid rgba(255,210,60,0.35);border-radius:12px;padding:14px 16px;text-align:center;min-width:105px;}
+.cc .cn{font-size:10px;color:var(--gold);margin-top:8px;letter-spacing:1px;font-weight:700;}
+.prev-side{width:205px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding-left:16px;border-left:1px solid rgba(255,210,60,0.25);}
+.prev-label{font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:1px;text-transform:uppercase;}
+.set-box{background:rgba(255,210,60,0.1);border:1px solid rgba(255,210,60,0.45);border-radius:8px;padding:11px 13px;font-size:11px;color:rgba(255,255,255,0.88);}
+.set-box .st{color:var(--gold);font-weight:700;font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.set-box li{list-style:none;padding-left:14px;position:relative;line-height:1.9;}
+.set-box li::before{content:'✦';position:absolute;left:0;color:var(--gold);font-size:8px;top:3px;}
+
+/* ═══ FOOTER ═══ */
+footer{background:var(--g3);border-top:2px solid var(--gold);display:flex;justify-content:space-between;align-items:center;padding:10px 28px;font-size:10.5px;color:rgba(255,255,255,0.45);}
+footer strong{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header>
+  <div class="hd-left">
+    <!-- School Emblem (small) -->
+    <svg viewBox="0 0 90 90" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="hg1" cx="38%" cy="32%" r="72%"><stop offset="0%" stop-color="#FFE87A"/><stop offset="55%" stop-color="#FFD23C"/><stop offset="100%" stop-color="#9E7400"/></radialGradient>
+        <radialGradient id="hg2" cx="38%" cy="32%" r="72%"><stop offset="0%" stop-color="#279048"/><stop offset="100%" stop-color="#1A6332"/></radialGradient>
+        <filter id="hsh"><feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.4"/></filter>
+      </defs>
+      <circle cx="47" cy="47" r="42" fill="rgba(0,0,0,0.3)"/>
+      <circle cx="45" cy="45" r="42" fill="url(#hg1)" filter="url(#hsh)"/>
+      <circle cx="45" cy="45" r="36" fill="url(#hg2)"/>
+      <circle cx="45" cy="45" r="32" fill="none" stroke="rgba(255,210,60,0.5)" stroke-width="1.5"/>
+      <circle cx="45" cy="45" r="27" fill="#F6F3E6"/>
+      <text x="45" y="52" text-anchor="middle" font-family="serif" font-size="17" font-weight="900" fill="#1E7D3B">마도</text>
+      <polygon points="45,10 46.8,16 53,16 48,20 50,26 45,22 40,26 42,20 37,16 43.2,16" fill="#FFD23C"/>
+      <g fill="#3A8A4A" opacity="0.9">
+        <ellipse cx="10" cy="40" rx="6" ry="3.5" transform="rotate(-40 10 40)"/>
+        <ellipse cx="8" cy="50" rx="6" ry="3.5" transform="rotate(-18 8 50)"/>
+        <ellipse cx="9" cy="60" rx="6" ry="3.5" transform="rotate(8 9 60)"/>
+        <ellipse cx="80" cy="40" rx="6" ry="3.5" transform="rotate(40 80 40)"/>
+        <ellipse cx="82" cy="50" rx="6" ry="3.5" transform="rotate(18 82 50)"/>
+        <ellipse cx="81" cy="60" rx="6" ry="3.5" transform="rotate(-8 81 60)"/>
+      </g>
+      <ellipse cx="34" cy="32" rx="8" ry="5" fill="rgba(255,255,255,0.28)" transform="rotate(-30 34 32)"/>
+    </svg>
+  </div>
+  <div class="hd-center">
+    <div class="sub">MADO ACADEMIA OFFICIAL ASSET PACK</div>
+    <h1>마도 아카데미아 공식 에셋 팩</h1>
+    <div class="divl"><span></span> ✦ <span></span></div>
+    <div class="vol">Vol.1 · STARTER SET</div>
+  </div>
+  <div class="hd-right">
+    <div>
+      <div class="lbl">교훈 (MOTTO)</div>
+      <div class="motto">배우고, 도전하고, 함께 성장한다.</div>
+      <div class="motto-en">Learn · Explore · Grow Together</div>
+    </div>
+    <hr>
+    <div>
+      <div class="lbl">설정</div>
+      <div class="desc">모험학교에 입학한 신입생에게 지급되는 기본 장비 세트.<br>모든 모험의 첫걸음!</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ ROW 1: EMBLEM · BADGE · UNIFORM ═══════════════ -->
+<div class="row r1">
+
+  <!-- ① 학교 엠블럼 -->
+  <div class="cell">
+    <div class="sec-hd"><span>1.</span> 학교 엠블럼 <span class="en">(SCHOOL EMBLEM)</span></div>
+    <div class="cb">
+      <div class="art" style="height:170px;">
+        <svg viewBox="0 0 160 160" width="148" height="148" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="eg1" cx="36%" cy="30%" r="72%"><stop offset="0%" stop-color="#FFE87A"/><stop offset="50%" stop-color="#FFD23C"/><stop offset="100%" stop-color="#9A7000"/></radialGradient>
+            <radialGradient id="eg2" cx="38%" cy="32%" r="72%"><stop offset="0%" stop-color="#27904A"/><stop offset="100%" stop-color="#196032"/></radialGradient>
+            <filter id="esh"><feDropShadow dx="3" dy="4" stdDeviation="5" flood-opacity="0.4"/></filter>
+          </defs>
+          <circle cx="83" cy="83" r="72" fill="rgba(0,0,0,0.25)"/>
+          <circle cx="80" cy="80" r="72" fill="url(#eg1)" filter="url(#esh)"/>
+          <circle cx="80" cy="80" r="64" fill="url(#eg2)"/>
+          <circle cx="80" cy="80" r="59" fill="none" stroke="rgba(255,210,60,0.45)" stroke-width="2"/>
+          <circle cx="80" cy="80" r="52" fill="#F6F3E6"/>
+          <!-- Book icon -->
+          <g transform="translate(62,46)">
+            <rect width="36" height="28" rx="3" fill="#1E7D3B"/>
+            <line x1="18" y1="0" x2="18" y2="28" stroke="#F6F3E6" stroke-width="2"/>
+            <line x1="4" y1="8" x2="14" y2="8" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="4" y1="13" x2="14" y2="13" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="4" y1="18" x2="14" y2="18" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="22" y1="8" x2="32" y2="8" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="22" y1="13" x2="32" y2="13" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="22" y1="18" x2="32" y2="18" stroke="#F6F3E6" stroke-width="1.2"/>
+          </g>
+          <!-- 마도 -->
+          <text x="80" y="106" text-anchor="middle" font-family="'Malgun Gothic',serif" font-size="28" font-weight="900" fill="#1E7D3B">마도</text>
+          <!-- Top star -->
+          <polygon points="80,14 82.5,21 90,21 84,26 86.5,33 80,28 73.5,33 76,26 70,21 77.5,21" fill="#FFD23C"/>
+          <!-- Small side stars -->
+          <polygon points="32,58 33.5,63 39,63 35,66 36.5,71 32,68 27.5,71 29,66 25,63 30.5,63" fill="#FFD23C" opacity="0.75"/>
+          <polygon points="128,58 129.5,63 135,63 131,66 132.5,71 128,68 123.5,71 125,66 121,63 126.5,63" fill="#FFD23C" opacity="0.75"/>
+          <!-- Laurel left -->
+          <g fill="#358F4A" opacity="0.9">
+            <ellipse cx="18" cy="70" rx="10" ry="5.5" transform="rotate(-38 18 70)"/>
+            <ellipse cx="14" cy="83" rx="10" ry="5.5" transform="rotate(-16 14 83)"/>
+            <ellipse cx="14" cy="97" rx="10" ry="5.5" transform="rotate(8 14 97)"/>
+            <!-- Right -->
+            <ellipse cx="142" cy="70" rx="10" ry="5.5" transform="rotate(38 142 70)"/>
+            <ellipse cx="146" cy="83" rx="10" ry="5.5" transform="rotate(16 146 83)"/>
+            <ellipse cx="146" cy="97" rx="10" ry="5.5" transform="rotate(-8 146 97)"/>
+          </g>
+          <!-- Gold veins -->
+          <g fill="#FFD23C" opacity="0.45">
+            <ellipse cx="18" cy="70" rx="4.5" ry="2" transform="rotate(-38 18 70)"/>
+            <ellipse cx="14" cy="83" rx="4.5" ry="2" transform="rotate(-16 14 83)"/>
+            <ellipse cx="142" cy="70" rx="4.5" ry="2" transform="rotate(38 142 70)"/>
+            <ellipse cx="146" cy="83" rx="4.5" ry="2" transform="rotate(16 146 83)"/>
+          </g>
+          <!-- Ribbon bottom -->
+          <path d="M38,136 Q52,128 68,131 L80,127 L92,131 Q108,128 122,136 L118,145 Q104,140 88,143 L80,147 L72,143 Q56,140 42,145 Z" fill="#1E7D3B" stroke="#FFD23C" stroke-width="1"/>
+          <path d="M38,136 L24,150 L42,145 Z" fill="#1E7D3B" stroke="#FFD23C" stroke-width="0.8"/>
+          <path d="M122,136 L136,150 L118,145 Z" fill="#1E7D3B" stroke="#FFD23C" stroke-width="0.8"/>
+          <text x="80" y="142" text-anchor="middle" font-size="8" fill="#FFD23C" font-family="serif" font-weight="700" letter-spacing="1">SINCE 1935</text>
+          <!-- Shine -->
+          <ellipse cx="60" cy="52" rx="16" ry="10" fill="rgba(255,255,255,0.24)" transform="rotate(-35 60 52)"/>
+        </svg>
+        <div class="sz">800×800</div>
+      </div>
+      <div class="spec">
+        <div class="fn">school_emblem.png</div>
+        <div class="dot"><strong>규격:</strong> 800×800 px</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+        <div class="dot"><strong>용도:</strong> 학교 공식 로고, 배경, UI 등</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 학교 배지 -->
+  <div class="cell">
+    <div class="sec-hd"><span>2.</span> 학교 배지 <span class="en">(SCHOOL BADGE Lv.1)</span></div>
+    <div class="cb">
+      <!-- Front -->
+      <div class="art" style="height:145px;">
+        <svg viewBox="0 0 140 140" width="130" height="130" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bgo" cx="36%" cy="30%" r="72%"><stop offset="0%" stop-color="#FFE87A"/><stop offset="50%" stop-color="#FFD23C"/><stop offset="100%" stop-color="#8A6200"/></radialGradient>
+            <radialGradient id="bgi" cx="38%" cy="32%" r="72%"><stop offset="0%" stop-color="#27904A"/><stop offset="100%" stop-color="#186030"/></radialGradient>
+            <filter id="bsh"><feDropShadow dx="3" dy="4" stdDeviation="5" flood-opacity="0.4"/></filter>
+          </defs>
+          <circle cx="73" cy="74" r="63" fill="rgba(0,0,0,0.25)"/>
+          <circle cx="70" cy="70" r="63" fill="url(#bgo)" filter="url(#bsh)"/>
+          <circle cx="70" cy="70" r="57" fill="none" stroke="#7A5800" stroke-width="3" stroke-dasharray="3,2.5"/>
+          <circle cx="70" cy="70" r="53" fill="url(#bgi)"/>
+          <circle cx="70" cy="70" r="48" fill="none" stroke="rgba(255,210,60,0.5)" stroke-width="1.5"/>
+          <circle cx="70" cy="70" r="41" fill="#F6F3E6"/>
+          <g transform="translate(54,38)">
+            <rect width="32" height="24" rx="3" fill="#1E7D3B"/>
+            <line x1="16" y1="0" x2="16" y2="24" stroke="#F6F3E6" stroke-width="2"/>
+            <line x1="3.5" y1="7" x2="12" y2="7" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="3.5" y1="12" x2="12" y2="12" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="3.5" y1="17" x2="12" y2="17" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="20" y1="7" x2="28.5" y2="7" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="20" y1="12" x2="28.5" y2="12" stroke="#F6F3E6" stroke-width="1.2"/>
+            <line x1="20" y1="17" x2="28.5" y2="17" stroke="#F6F3E6" stroke-width="1.2"/>
+          </g>
+          <text x="70" y="93" text-anchor="middle" font-family="'Malgun Gothic',serif" font-size="23" font-weight="900" fill="#1E7D3B">마도</text>
+          <polygon points="70,13 72.3,20 80,20 74,25 76.3,32 70,27 63.7,32 66,25 60,20 67.7,20" fill="#FFD23C"/>
+          <polygon points="27,52 28.5,57 34,57 30,60 31.5,65 27,62 22.5,65 24,60 20,57 25.5,57" fill="#FFD23C" opacity="0.75"/>
+          <polygon points="113,52 114.5,57 120,57 116,60 117.5,65 113,62 108.5,65 110,60 106,57 111.5,57" fill="#FFD23C" opacity="0.75"/>
+          <g fill="#388A4A" opacity="0.88">
+            <ellipse cx="10" cy="65" rx="9" ry="5" transform="rotate(-38 10 65)"/>
+            <ellipse cx="7" cy="78" rx="9" ry="5" transform="rotate(-16 7 78)"/>
+            <ellipse cx="8" cy="91" rx="9" ry="5" transform="rotate(8 8 91)"/>
+            <ellipse cx="130" cy="65" rx="9" ry="5" transform="rotate(38 130 65)"/>
+            <ellipse cx="133" cy="78" rx="9" ry="5" transform="rotate(16 133 78)"/>
+            <ellipse cx="132" cy="91" rx="9" ry="5" transform="rotate(-8 132 91)"/>
+          </g>
+          <g fill="#FFD23C" opacity="0.42">
+            <ellipse cx="10" cy="65" rx="4" ry="2" transform="rotate(-38 10 65)"/>
+            <ellipse cx="130" cy="65" rx="4" ry="2" transform="rotate(38 130 65)"/>
+          </g>
+          <ellipse cx="52" cy="46" rx="13" ry="9" fill="rgba(255,255,255,0.26)" transform="rotate(-35 52 46)"/>
+        </svg>
+        <div class="sz">400×400</div>
+      </div>
+      <!-- Back -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:9px;color:#999;letter-spacing:1px;">뒷면 (BACK)</div>
+        <div class="art" style="flex:1;height:70px;">
+          <svg viewBox="0 0 100 70" width="100%" height="60" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bk1" cx="40%" cy="40%" r="60%"><stop offset="0%" stop-color="#C49A1A"/><stop offset="100%" stop-color="#7A5F10"/></radialGradient>
+            </defs>
+            <ellipse cx="35" cy="35" rx="32" ry="32" fill="url(#bk1)"/>
+            <ellipse cx="35" cy="35" rx="28" ry="28" fill="none" stroke="#5A4A0A" stroke-width="1"/>
+            <text x="35" y="31" text-anchor="middle" font-size="5.5" fill="#8B7010" font-family="serif" letter-spacing="1">MADO ACADEMIA</text>
+            <text x="35" y="42" text-anchor="middle" font-size="4.5" fill="#8B7010" font-family="serif">SINCE 1935</text>
+            <!-- Pin bar -->
+            <rect x="62" y="27" width="34" height="9" rx="4.5" fill="#5A4A0A"/>
+            <line x1="64" y1="31.5" x2="94" y2="31.5" stroke="#C49A1A" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="64" cy="31.5" r="4" fill="#C49A1A"/>
+            <polygon points="92,29.5 98,31.5 92,33.5" fill="#C49A1A"/>
+            <rect x="83" y="26" width="13" height="11" rx="2" fill="#6A5210" stroke="#5A4A0A" stroke-width="0.8"/>
+            <ellipse cx="24" cy="24" rx="6" ry="4" fill="rgba(255,255,255,0.18)" transform="rotate(-30 24 24)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">badge_lv1.png</div>
+        <div class="dot"><strong>규격:</strong> 400×400 px</div>
+        <div class="dot"><strong>앵커:</strong> Chest Center (가슴 중앙)</div>
+        <div class="dot"><strong>슬롯:</strong> chest</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 연습복 -->
+  <div class="cell">
+    <div class="sec-hd"><span>3.</span> 연습복 <span class="en">(TRAINING UNIFORM Lv.1)</span></div>
+    <div class="cb">
+      <div class="char-views">
+        <!-- Boy -->
+        <div class="gender-grp">
+          <div class="g-lbl">남학생 (BOY)</div>
+          <div class="char-row">
+            <!-- Front -->
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 4px;">
+                <svg viewBox="0 0 60 100" width="52" height="88" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Hair -->
+                  <ellipse cx="30" cy="20" rx="20" ry="18" fill="#3D2408"/>
+                  <rect x="10" y="20" width="8" height="14" rx="4" fill="#3D2408"/>
+                  <rect x="42" y="20" width="8" height="10" rx="4" fill="#3D2408"/>
+                  <!-- Face -->
+                  <ellipse cx="30" cy="26" rx="17" ry="18" fill="#F5D5A8"/>
+                  <!-- Eyes -->
+                  <circle cx="23" cy="26" r="3.5" fill="#2A1808"/>
+                  <circle cx="37" cy="26" r="3.5" fill="#2A1808"/>
+                  <circle cx="24" cy="25" r="1.2" fill="white"/>
+                  <circle cx="38" cy="25" r="1.2" fill="white"/>
+                  <!-- Mouth -->
+                  <path d="M26,33 Q30,36 34,33" stroke="#C08060" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                  <!-- Eyebrows -->
+                  <path d="M20,22 Q23,20 26,22" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  <path d="M34,22 Q37,20 40,22" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  <!-- Neck -->
+                  <rect x="26" y="43" width="8" height="8" rx="2" fill="#F5D5A8"/>
+                  <!-- Body (uniform) -->
+                  <rect x="14" y="50" width="32" height="26" rx="4" fill="#F0EBD6"/>
+                  <!-- Collar -->
+                  <path d="M22,50 L30,56 L38,50" fill="white" stroke="#DDD8C0" stroke-width="0.8"/>
+                  <!-- Guild badge (small) -->
+                  <circle cx="20" cy="60" r="4" fill="#1E7D3B"/>
+                  <circle cx="20" cy="60" r="3" fill="none" stroke="#FFD23C" stroke-width="0.8"/>
+                  <!-- Shorts -->
+                  <rect x="15" y="74" width="13" height="18" rx="3" fill="#4A380A"/>
+                  <rect x="32" y="74" width="13" height="18" rx="3" fill="#4A380A"/>
+                  <rect x="14" y="74" width="32" height="6" rx="2" fill="#5A4A18"/>
+                  <!-- Shoes -->
+                  <ellipse cx="21" cy="93" rx="9" ry="5" fill="#E8E0CC"/>
+                  <ellipse cx="39" cy="93" rx="9" ry="5" fill="#E8E0CC"/>
+                  <!-- Arms -->
+                  <rect x="6" y="50" width="9" height="20" rx="4" fill="#F0EBD6"/>
+                  <ellipse cx="10" cy="71" rx="4.5" ry="4" fill="#F5D5A8"/>
+                  <rect x="45" y="50" width="9" height="20" rx="4" fill="#F0EBD6"/>
+                  <ellipse cx="50" cy="71" rx="4.5" ry="4" fill="#F5D5A8"/>
+                </svg>
+              </div>
+              <div class="vl">정면</div>
+            </div>
+            <!-- Side (smaller) -->
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 3px;">
+                <svg viewBox="0 0 40 100" width="36" height="78" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="22" cy="20" rx="16" ry="18" fill="#3D2408"/>
+                  <ellipse cx="20" cy="26" rx="14" ry="18" fill="#F5D5A8"/>
+                  <circle cx="27" cy="24" r="3" fill="#2A1808"/>
+                  <circle cx="28" cy="23" r="1" fill="white"/>
+                  <rect x="13" y="43" width="7" height="7" rx="2" fill="#F5D5A8"/>
+                  <rect x="9" y="49" width="26" height="26" rx="4" fill="#F0EBD6"/>
+                  <rect x="9" y="73" width="12" height="19" rx="3" fill="#4A380A"/>
+                  <rect x="21" y="73" width="12" height="19" rx="3" fill="#4A380A"/>
+                  <ellipse cx="15" cy="93" rx="8" ry="4" fill="#E8E0CC"/>
+                  <ellipse cx="27" cy="93" rx="8" ry="4" fill="#E8E0CC"/>
+                  <rect x="2" y="49" width="8" height="18" rx="4" fill="#F0EBD6"/>
+                </svg>
+              </div>
+              <div class="vl">측면</div>
+            </div>
+            <!-- Back (smallest) -->
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 3px;">
+                <svg viewBox="0 0 40 100" width="32" height="70" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="20" cy="20" rx="17" ry="18" fill="#3D2408"/>
+                  <ellipse cx="20" cy="26" rx="14" ry="16" fill="#F5D5A8"/>
+                  <rect x="13" y="41" width="7" height="7" rx="2" fill="#F5D5A8"/>
+                  <rect x="8" y="48" width="24" height="26" rx="4" fill="#E5E0CC"/>
+                  <!-- Back seam -->
+                  <line x1="20" y1="48" x2="20" y2="72" stroke="#D0CCA8" stroke-width="1"/>
+                  <rect x="9" y="72" width="10" height="20" rx="3" fill="#4A380A"/>
+                  <rect x="21" y="72" width="10" height="20" rx="3" fill="#4A380A"/>
+                  <ellipse cx="14" cy="93" rx="7" ry="4" fill="#E8E0CC"/>
+                  <ellipse cx="26" cy="93" rx="7" ry="4" fill="#E8E0CC"/>
+                  <rect x="1" y="48" width="8" height="18" rx="4" fill="#E5E0CC"/>
+                  <rect x="31" y="48" width="8" height="18" rx="4" fill="#E5E0CC"/>
+                </svg>
+              </div>
+              <div class="vl">뒷면</div>
+            </div>
+          </div>
+        </div>
+        <!-- Girl -->
+        <div class="gender-grp">
+          <div class="g-lbl">여학생 (GIRL)</div>
+          <div class="char-row">
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 4px;">
+                <svg viewBox="0 0 60 100" width="52" height="88" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Hair (ponytail) -->
+                  <ellipse cx="30" cy="20" rx="19" ry="18" fill="#2D1A06"/>
+                  <rect x="11" y="20" width="8" height="12" rx="4" fill="#2D1A06"/>
+                  <rect x="41" y="20" width="8" height="8" rx="4" fill="#2D1A06"/>
+                  <!-- Ponytail -->
+                  <rect x="46" y="16" width="7" height="28" rx="3" fill="#2D1A06"/>
+                  <ellipse cx="49" cy="44" rx="5" ry="8" fill="#2D1A06" transform="rotate(15 49 44)"/>
+                  <!-- Face -->
+                  <ellipse cx="30" cy="26" rx="16" ry="18" fill="#F5D5A8"/>
+                  <!-- Eyes (slightly bigger/rounder for girl) -->
+                  <circle cx="23" cy="25" r="3.8" fill="#2A1808"/>
+                  <circle cx="37" cy="25" r="3.8" fill="#2A1808"/>
+                  <circle cx="24" cy="24" r="1.4" fill="white"/>
+                  <circle cx="38" cy="24" r="1.4" fill="white"/>
+                  <!-- Eyelashes -->
+                  <path d="M20,22 Q23,19 26,21" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  <path d="M34,21 Q37,19 40,21" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  <!-- Mouth -->
+                  <path d="M27,33 Q30,36 33,33" stroke="#E09070" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                  <!-- Cheeks -->
+                  <ellipse cx="19" cy="31" rx="4" ry="2.5" fill="rgba(255,160,140,0.35)"/>
+                  <ellipse cx="41" cy="31" rx="4" ry="2.5" fill="rgba(255,160,140,0.35)"/>
+                  <!-- Neck -->
+                  <rect x="27" y="43" width="6" height="8" rx="2" fill="#F5D5A8"/>
+                  <!-- Body -->
+                  <rect x="15" y="50" width="30" height="22" rx="4" fill="#F0EBD6"/>
+                  <!-- Collar -->
+                  <path d="M23,50 L30,55 L37,50" fill="white" stroke="#DDD8C0" stroke-width="0.8"/>
+                  <!-- Guild badge -->
+                  <circle cx="21" cy="59" r="4" fill="#1E7D3B"/>
+                  <circle cx="21" cy="59" r="3" fill="none" stroke="#FFD23C" stroke-width="0.8"/>
+                  <!-- Skirt -->
+                  <path d="M15,70 Q14,88 20,92 L30,93 L40,92 Q46,88 45,70 Z" fill="#4A380A"/>
+                  <rect x="14" y="70" width="32" height="5" rx="2" fill="#5A4A18"/>
+                  <!-- Shoes -->
+                  <ellipse cx="22" cy="93" rx="8" ry="4.5" fill="#E8E0CC"/>
+                  <ellipse cx="38" cy="93" rx="8" ry="4.5" fill="#E8E0CC"/>
+                  <!-- White socks -->
+                  <rect x="17" y="86" width="9" height="8" rx="2" fill="white" opacity="0.9"/>
+                  <rect x="34" y="86" width="9" height="8" rx="2" fill="white" opacity="0.9"/>
+                  <!-- Arms -->
+                  <rect x="7" y="50" width="9" height="18" rx="4" fill="#F0EBD6"/>
+                  <ellipse cx="11" cy="69" rx="4.5" ry="4" fill="#F5D5A8"/>
+                  <rect x="44" y="50" width="9" height="18" rx="4" fill="#F0EBD6"/>
+                  <ellipse cx="48" cy="69" rx="4.5" ry="4" fill="#F5D5A8"/>
+                </svg>
+              </div>
+              <div class="vl">정면</div>
+            </div>
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 3px;">
+                <svg viewBox="0 0 40 100" width="36" height="78" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="20" cy="20" rx="16" ry="18" fill="#2D1A06"/>
+                  <rect x="30" y="14" width="6" height="26" rx="3" fill="#2D1A06"/>
+                  <ellipse cx="20" cy="26" rx="13" ry="18" fill="#F5D5A8"/>
+                  <circle cx="26" cy="24" r="3" fill="#2A1808"/>
+                  <rect x="14" y="43" width="6" height="7" rx="2" fill="#F5D5A8"/>
+                  <rect x="8" y="49" width="24" height="22" rx="4" fill="#F0EBD6"/>
+                  <path d="M8,69 Q7,84 13,88 L20,89 L27,88 Q33,84 32,69 Z" fill="#4A380A"/>
+                  <ellipse cx="14" cy="90" rx="7" ry="4" fill="#E8E0CC"/>
+                  <ellipse cx="26" cy="90" rx="7" ry="4" fill="#E8E0CC"/>
+                  <rect x="0" y="49" width="9" height="17" rx="4" fill="#F0EBD6"/>
+                </svg>
+              </div>
+              <div class="vl">측면</div>
+            </div>
+            <div class="char-f">
+              <div class="vb" style="background:white;border:1.5px solid var(--line);border-radius:6px;padding:6px 3px;">
+                <svg viewBox="0 0 40 100" width="32" height="70" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="20" cy="20" rx="17" ry="18" fill="#2D1A06"/>
+                  <rect x="30" y="10" width="6" height="34" rx="3" fill="#2D1A06"/>
+                  <ellipse cx="20" cy="26" rx="14" ry="16" fill="#F5D5A8"/>
+                  <rect x="14" y="41" width="6" height="7" rx="2" fill="#F5D5A8"/>
+                  <rect x="8" y="47" width="24" height="23" rx="4" fill="#E5E0CC"/>
+                  <line x1="20" y1="47" x2="20" y2="68" stroke="#D0CCA8" stroke-width="1"/>
+                  <path d="M8,68 Q7,84 14,88 L20,89 L26,88 Q33,84 32,68 Z" fill="#4A380A"/>
+                  <ellipse cx="14" cy="90" rx="7" ry="4" fill="#E8E0CC"/>
+                  <ellipse cx="26" cy="90" rx="7" ry="4" fill="#E8E0CC"/>
+                  <rect x="0" y="47" width="9" height="17" rx="4" fill="#E5E0CC"/>
+                  <rect x="31" y="47" width="9" height="17" rx="4" fill="#E5E0CC"/>
+                </svg>
+              </div>
+              <div class="vl">뒷면</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">boy_uniform_lv1.png</div>
+        <div class="fn">girl_uniform_lv1.png</div>
+        <div class="dot"><strong>규격:</strong> 1024×1024 px</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+        <div class="dot"><strong>앵커:</strong> 발 위치 고정 (Foot Center)</div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--g);font-weight:700;letter-spacing:1px;margin-bottom:4px;">컬러 팔레트</div>
+        <div class="palette">
+          <div class="sw"><div class="sw-c" style="background:#F6F3E6;border-color:#ccc;"></div><div class="sw-n">아이보리</div></div>
+          <div class="sw"><div class="sw-c" style="background:#E5DDB8;"></div><div class="sw-n">베이지</div></div>
+          <div class="sw"><div class="sw-c" style="background:#6B4020;"></div><div class="sw-n">브라운</div></div>
+          <div class="sw"><div class="sw-c" style="background:#3D2408;"></div><div class="sw-n">초코브라운</div></div>
+          <div class="sw"><div class="sw-c" style="background:#C8940A;"></div><div class="sw-n">황동</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ROW 2: SHOES · PREVIEW ═══════════════ -->
+<div class="row r2">
+
+  <!-- ④ 기본 신발 -->
+  <div class="cell">
+    <div class="sec-hd"><span>4.</span> 기본 신발 <span class="en">(TRAINING SHOES Lv.1)</span></div>
+    <div class="cb">
+      <div style="display:flex;gap:12px;">
+        <!-- Boy shoes -->
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--g);font-weight:700;margin-bottom:5px;text-align:center;">남학생 (BOY)</div>
+          <div class="art" style="height:80px;">
+            <svg viewBox="0 0 160 60" width="148" height="55" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="shoe1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#F0EAD8"/><stop offset="60%" stop-color="#E0D8C0"/><stop offset="100%" stop-color="#C8C0A8"/>
+                </linearGradient>
+              </defs>
+              <!-- Left shoe -->
+              <path d="M5,45 Q5,25 18,22 Q30,20 40,24 Q48,27 50,35 L52,45 Q35,50 5,45 Z" fill="url(#shoe1)"/>
+              <path d="M5,45 Q5,25 18,22 Q30,20 40,24 Q48,27 50,35 L52,45 Q35,50 5,45 Z" fill="none" stroke="#A89878" stroke-width="1.2"/>
+              <!-- Sole -->
+              <path d="M5,45 L52,45 Q54,50 50,52 L8,52 Q3,50 5,45 Z" fill="#8B8068"/>
+              <!-- Lace -->
+              <line x1="22" y1="27" x2="38" y2="29" stroke="white" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <line x1="20" y1="31" x2="36" y2="33" stroke="white" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <!-- Shine -->
+              <ellipse cx="20" cy="28" rx="6" ry="3" fill="rgba(255,255,255,0.4)" transform="rotate(-20 20 28)"/>
+              <!-- Right shoe (flipped) -->
+              <path d="M108,45 Q108,25 121,22 Q133,20 143,24 Q151,27 153,35 L155,45 Q138,50 108,45 Z" fill="url(#shoe1)" transform="scale(-1,1) translate(-263,0)"/>
+              <path d="M108,45 Q108,25 121,22 Q133,20 143,24 Q151,27 153,35 L155,45 Q138,50 108,45 Z" fill="none" stroke="#A89878" stroke-width="1.2" transform="scale(-1,1) translate(-263,0)"/>
+              <path d="M108,45 L155,45 Q157,50 153,52 L111,52 Q106,50 108,45 Z" fill="#8B8068" transform="scale(-1,1) translate(-263,0)"/>
+              <line x1="122" y1="27" x2="138" y2="29" stroke="white" stroke-width="1.5" stroke-dasharray="3,2" transform="scale(-1,1) translate(-263,0)"/>
+              <line x1="120" y1="31" x2="136" y2="33" stroke="white" stroke-width="1.5" stroke-dasharray="3,2" transform="scale(-1,1) translate(-263,0)"/>
+            </svg>
+            <div class="sz">800×500</div>
+          </div>
+        </div>
+        <!-- Girl shoes -->
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--g);font-weight:700;margin-bottom:5px;text-align:center;">여학생 (GIRL)</div>
+          <div class="art" style="height:80px;">
+            <svg viewBox="0 0 160 60" width="148" height="55" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="shoe2" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#F0EAD8"/><stop offset="60%" stop-color="#E0D8C0"/><stop offset="100%" stop-color="#C8C0A8"/>
+                </linearGradient>
+              </defs>
+              <!-- Left mary-jane -->
+              <path d="M5,44 Q5,28 20,24 Q32,21 42,25 Q49,29 50,38 L51,44 Q30,50 5,44 Z" fill="url(#shoe2)"/>
+              <path d="M5,44 Q5,28 20,24 Q32,21 42,25 Q49,29 50,38 L51,44 Q30,50 5,44 Z" fill="none" stroke="#A89878" stroke-width="1.2"/>
+              <path d="M5,44 L51,44 Q52,49 49,51 L8,51 Q3,49 5,44 Z" fill="#8B8068"/>
+              <!-- Strap -->
+              <path d="M18,26 Q28,22 36,26" fill="none" stroke="#C8C0A8" stroke-width="3" stroke-linecap="round"/>
+              <!-- Buckle -->
+              <rect x="25" y="23" width="7" height="5" rx="1" fill="#C8940A"/>
+              <ellipse cx="17" cy="30" rx="7" ry="3" fill="rgba(255,255,255,0.35)" transform="rotate(-20 17 30)"/>
+              <!-- Right (flipped) -->
+              <path d="M108,44 Q108,28 123,24 Q135,21 145,25 Q152,29 153,38 L154,44 Q133,50 108,44 Z" fill="url(#shoe2)" transform="scale(-1,1) translate(-263,0)"/>
+              <path d="M108,44 Q108,28 123,24 Q135,21 145,25 Q152,29 153,38 L154,44 Q133,50 108,44 Z" fill="none" stroke="#A89878" stroke-width="1.2" transform="scale(-1,1) translate(-263,0)"/>
+              <path d="M108,44 L154,44 Q155,49 152,51 L111,51 Q106,49 108,44 Z" fill="#8B8068" transform="scale(-1,1) translate(-263,0)"/>
+              <path d="M121,26 Q131,22 139,26" fill="none" stroke="#C8C0A8" stroke-width="3" stroke-linecap="round" transform="scale(-1,1) translate(-263,0)"/>
+              <rect x="128" y="23" width="7" height="5" rx="1" fill="#C8940A" transform="scale(-1,1) translate(-263,0)"/>
+            </svg>
+            <div class="sz">800×500</div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">shoes_lv1.png</div>
+        <div class="dot"><strong>규격:</strong> 800×500 px</div>
+        <div class="dot"><strong>앵커:</strong> Foot Center</div>
+        <div class="dot"><strong>슬롯:</strong> foot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 세트 미리보기 -->
+  <div class="cell prev-cell">
+    <div class="sec-hd">→ 5. LV.5 견습 모험가 장비 세트 <span class="en">(APPRENTICE SET PREVIEW)</span> ← <span class="en" style="margin-left:auto;">Starter Set (Lv.1) + Apprentice Set (Lv.5) 착용 예시</span></div>
+    <div class="cb">
+      <div class="prev-chars">
+        <!-- Boy with equipment -->
+        <div class="cc">
+          <svg viewBox="0 0 70 120" width="70" height="120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Hair -->
+            <ellipse cx="35" cy="22" rx="22" ry="20" fill="#3D2408"/>
+            <rect x="13" y="22" width="8" height="14" rx="4" fill="#3D2408"/>
+            <rect x="49" y="22" width="8" height="10" rx="4" fill="#3D2408"/>
+            <!-- Face -->
+            <ellipse cx="35" cy="29" rx="19" ry="20" fill="#F5D5A8"/>
+            <circle cx="27" cy="28" r="3.8" fill="#2A1808"/>
+            <circle cx="43" cy="28" r="3.8" fill="#2A1808"/>
+            <circle cx="28" cy="27" r="1.3" fill="white"/>
+            <circle cx="44" cy="27" r="1.3" fill="white"/>
+            <path d="M30,36 Q35,39 40,36" stroke="#C08060" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <path d="M23,24 Q27,22 31,24" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M39,24 Q43,22 47,24" stroke="#3D2408" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- Neck -->
+            <rect x="30" y="48" width="10" height="9" rx="2" fill="#F5D5A8"/>
+            <!-- Cape (behind - green) -->
+            <path d="M10,56 Q5,72 8,100 L35,105 L62,100 Q65,72 60,56 Z" fill="#1A6B32" opacity="0.9"/>
+            <path d="M10,56 Q5,72 8,100 L35,105 L62,100 Q65,72 60,56 Z" fill="none" stroke="#FFD23C" stroke-width="1.5"/>
+            <!-- Body -->
+            <rect x="16" y="56" width="38" height="28" rx="4" fill="#F0EBD6"/>
+            <path d="M25,56 L35,63 L45,56" fill="white" stroke="#DDD8C0" stroke-width="0.8"/>
+            <!-- Badge -->
+            <circle cx="22" cy="67" r="5" fill="#1E7D3B"/>
+            <circle cx="22" cy="67" r="4" fill="none" stroke="#FFD23C" stroke-width="1"/>
+            <!-- Belt -->
+            <rect x="15" y="83" width="40" height="7" rx="3" fill="#7A4A18"/>
+            <rect x="29" y="81" width="12" height="11" rx="2" fill="#C8940A"/>
+            <rect x="32" y="82" width="6" height="9" rx="1" fill="#7A4A18"/>
+            <!-- Notebook (left hand) -->
+            <rect x="4" y="75" width="13" height="17" rx="2" fill="#6B4020"/>
+            <rect x="5" y="76" width="11" height="15" rx="1" fill="#8B5A2B"/>
+            <circle cx="10.5" cy="83" r="3" fill="none" stroke="#FFD23C" stroke-width="0.8"/>
+            <!-- Shorts -->
+            <rect x="17" y="89" width="15" height="20" rx="3" fill="#4A380A"/>
+            <rect x="38" y="89" width="15" height="20" rx="3" fill="#4A380A"/>
+            <!-- Shoes -->
+            <ellipse cx="24" cy="110" rx="10" ry="5" fill="#E8E0CC"/>
+            <ellipse cx="46" cy="110" rx="10" ry="5" fill="#E8E0CC"/>
+            <!-- Arms -->
+            <rect x="6" y="56" width="10" height="20" rx="4" fill="#F0EBD6"/>
+            <rect x="54" y="56" width="10" height="20" rx="4" fill="#F0EBD6"/>
+          </svg>
+          <div class="cn">남학생</div>
+        </div>
+        <!-- Girl with equipment -->
+        <div class="cc">
+          <svg viewBox="0 0 70 120" width="70" height="120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Hair -->
+            <ellipse cx="35" cy="22" rx="21" ry="20" fill="#2D1A06"/>
+            <rect x="14" y="22" width="8" height="12" rx="4" fill="#2D1A06"/>
+            <rect x="52" y="16" width="7" height="30" rx="3" fill="#2D1A06"/>
+            <ellipse cx="55" cy="46" rx="5" ry="9" fill="#2D1A06" transform="rotate(15 55 46)"/>
+            <!-- Face -->
+            <ellipse cx="35" cy="29" rx="18" ry="20" fill="#F5D5A8"/>
+            <circle cx="27" cy="27" r="4" fill="#2A1808"/>
+            <circle cx="43" cy="27" r="4" fill="#2A1808"/>
+            <circle cx="28" cy="26" r="1.4" fill="white"/>
+            <circle cx="44" cy="26" r="1.4" fill="white"/>
+            <ellipse cx="22" cy="33" rx="4" ry="2.5" fill="rgba(255,160,140,0.38)"/>
+            <ellipse cx="48" cy="33" rx="4" ry="2.5" fill="rgba(255,160,140,0.38)"/>
+            <path d="M31,36 Q35,39 39,36" stroke="#E09070" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <!-- Neck -->
+            <rect x="31" y="48" width="8" height="9" rx="2" fill="#F5D5A8"/>
+            <!-- Cape (behind) -->
+            <path d="M10,56 Q5,72 8,100 L35,105 L62,100 Q65,72 60,56 Z" fill="#1A6B32" opacity="0.9"/>
+            <path d="M10,56 Q5,72 8,100 L35,105 L62,100 Q65,72 60,56 Z" fill="none" stroke="#FFD23C" stroke-width="1.5"/>
+            <!-- Body -->
+            <rect x="17" y="56" width="36" height="24" rx="4" fill="#F0EBD6"/>
+            <path d="M25,56 L35,62 L45,56" fill="white" stroke="#DDD8C0" stroke-width="0.8"/>
+            <!-- Badge -->
+            <circle cx="23" cy="66" r="5" fill="#1E7D3B"/>
+            <circle cx="23" cy="66" r="4" fill="none" stroke="#FFD23C" stroke-width="1"/>
+            <!-- Belt -->
+            <rect x="16" y="79" width="38" height="7" rx="3" fill="#7A4A18"/>
+            <rect x="28" y="77" width="12" height="11" rx="2" fill="#C8940A"/>
+            <rect x="31" y="78" width="6" height="9" rx="1" fill="#7A4A18"/>
+            <!-- Pouch (right waist) -->
+            <rect x="48" y="78" width="12" height="15" rx="3" fill="#6B4020"/>
+            <circle cx="54" cy="84" r="3" fill="#C8940A"/>
+            <!-- Skirt -->
+            <path d="M17,85 Q14,100 20,106 L35,108 L50,106 Q56,100 53,85 Z" fill="#4A380A"/>
+            <rect x="16" y="85" width="38" height="5" rx="2" fill="#5A4A18"/>
+            <!-- Shoes -->
+            <ellipse cx="24" cy="109" rx="9" ry="5" fill="#E8E0CC"/>
+            <ellipse cx="46" cy="109" rx="9" ry="5" fill="#E8E0CC"/>
+            <!-- Socks -->
+            <rect x="19" y="102" width="10" height="8" rx="2" fill="white" opacity="0.9"/>
+            <rect x="41" y="102" width="10" height="8" rx="2" fill="white" opacity="0.9"/>
+            <!-- Arms -->
+            <rect x="7" y="56" width="11" height="18" rx="4" fill="#F0EBD6"/>
+            <rect x="52" y="56" width="11" height="18" rx="4" fill="#F0EBD6"/>
+          </svg>
+          <div class="cn">여학생</div>
+        </div>
+      </div>
+      <div class="prev-side">
+        <div class="prev-label">세트 구성</div>
+        <div class="set-box">
+          <div class="st">✨ 세트 효과</div>
+          <ul>
+            <li>모험을 위한 기본 준비 완료!</li>
+            <li>퀘스트 수행 가능</li>
+            <li>경험치 획득량 <strong style="color:var(--gold)">+10%</strong></li>
+          </ul>
+        </div>
+        <div class="set-box">
+          <div class="st">📦 포함 아이템</div>
+          <ul>
+            <li>학교 배지 (Lv.1)</li>
+            <li>견습 벨트 (Lv.5)</li>
+            <li>모험 파우치 (Lv.5)</li>
+            <li>모험 수첩 (Lv.5)</li>
+            <li>견습 망토 (Lv.5)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ROW 3: APPRENTICE ITEMS ═══════════════ -->
+<div class="row r3">
+
+  <!-- 5-1 Belt -->
+  <div class="cell">
+    <div class="sec-hd"><span>5-1.</span> 견습 벨트 <span class="en">(APPRENTICE BELT)</span></div>
+    <div class="cb">
+      <div class="views">
+        <div class="vw">
+          <div class="vb" style="height:72px;">
+            <svg viewBox="0 0 120 36" width="100%" height="62" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="lt1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#A06030"/><stop offset="40%" stop-color="#8B5A2B"/><stop offset="100%" stop-color="#5A3418"/></linearGradient>
+                <linearGradient id="brs" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE87A"/><stop offset="40%" stop-color="#C8940A"/><stop offset="100%" stop-color="#7A5800"/></linearGradient>
+              </defs>
+              <rect x="1" y="5" width="40" height="26" rx="4" fill="url(#lt1)"/>
+              <rect x="3" y="7" width="36" height="22" rx="3" fill="none" stroke="#FFD23C" stroke-width="0.6" stroke-dasharray="3,2" opacity="0.4"/>
+              <rect x="1" y="5" width="40" height="10" fill="rgba(255,255,255,0.1)" rx="4"/>
+              <rect x="78" y="5" width="41" height="26" rx="4" fill="url(#lt1)"/>
+              <rect x="80" y="7" width="37" height="22" rx="3" fill="none" stroke="#FFD23C" stroke-width="0.6" stroke-dasharray="3,2" opacity="0.4"/>
+              <g fill="#3A2010"><circle cx="88" cy="18" r="2"/><circle cx="96" cy="18" r="2"/><circle cx="104" cy="18" r="2"/><circle cx="112" cy="18" r="2"/></g>
+              <rect x="41" y="3" width="37" height="30" rx="3" fill="url(#brs)"/>
+              <rect x="48" y="9" width="23" height="18" rx="2" fill="url(#lt1)"/>
+              <rect x="57" y="1" width="6" height="34" rx="2" fill="url(#brs)"/>
+              <rect x="41" y="3" width="14" height="10" rx="3" fill="rgba(255,255,255,0.22)"/>
+            </svg>
+          </div>
+          <div class="vl">앞면 (FRONT)</div>
+        </div>
+        <div class="vw" style="max-width:52px;">
+          <div class="vb" style="height:72px;">
+            <svg viewBox="0 0 18 36" width="100%" height="62" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="lt2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#A06030"/><stop offset="100%" stop-color="#6B4020"/></linearGradient></defs>
+              <rect x="1" y="5" width="16" height="26" rx="3" fill="url(#lt2)"/>
+              <rect x="2" y="6" width="4" height="24" rx="2" fill="rgba(255,255,255,0.12)"/>
+              <rect x="1" y="5" width="16" height="8" rx="3" fill="rgba(255,255,255,0.1)"/>
+            </svg>
+          </div>
+          <div class="vl">측면 (SIDE)</div>
+        </div>
+        <div class="vw">
+          <div class="vb" style="height:72px;">
+            <svg viewBox="0 0 120 36" width="100%" height="62" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="lt3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7A4820"/><stop offset="100%" stop-color="#4A2C10"/></linearGradient></defs>
+              <rect x="1" y="5" width="118" height="26" rx="4" fill="url(#lt3)"/>
+              <rect x="3" y="7" width="114" height="22" rx="3" fill="none" stroke="rgba(255,210,60,0.25)" stroke-width="0.6" stroke-dasharray="3,2"/>
+              <text x="60" y="20" text-anchor="middle" font-size="5" fill="rgba(255,210,60,0.4)" font-family="serif" letter-spacing="2">MADO ACADEMIA</text>
+              <rect x="1" y="5" width="118" height="8" fill="rgba(0,0,0,0.15)" rx="4"/>
+            </svg>
+          </div>
+          <div class="vl">뒷면 (BACK)</div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">belt_apprentice.png</div>
+        <div class="dot"><strong>규격:</strong> 700×180 px</div>
+        <div class="dot"><strong>앵커:</strong> Waist Center</div>
+        <div class="dot"><strong>슬롯:</strong> waist</div>
+        <div class="dot"><strong>용도:</strong> PNG (투명배경)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5-2 Pouch -->
+  <div class="cell">
+    <div class="sec-hd"><span>5-2.</span> 모험 파우치 <span class="en">(ADVENTURE POUCH)</span></div>
+    <div class="cb">
+      <div class="views">
+        <div class="vw">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 70 90" width="60" height="80" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="pl1" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#A06030"/><stop offset="50%" stop-color="#8B5A2B"/><stop offset="100%" stop-color="#5A3418"/></linearGradient>
+                <linearGradient id="pl2" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#B87040"/><stop offset="100%" stop-color="#7A4A20"/></linearGradient>
+              </defs>
+              <!-- Strap -->
+              <rect x="22" y="2" width="8" height="18" rx="3" fill="url(#pl1)"/>
+              <rect x="23" y="3" width="2" height="16" rx="1" fill="rgba(255,255,255,0.15)"/>
+              <!-- Body -->
+              <rect x="5" y="18" width="60" height="65" rx="8" fill="url(#pl1)"/>
+              <!-- Flap -->
+              <path d="M5,18 Q5,46 35,48 Q65,46 65,18 Z" fill="url(#pl2)"/>
+              <!-- Flap edge -->
+              <path d="M5,18 Q5,46 35,48 Q65,46 65,18" fill="none" stroke="#FFD23C" stroke-width="1.2"/>
+              <!-- Clasp (gold circle button) -->
+              <circle cx="35" cy="46" r="7" fill="#C8940A"/>
+              <circle cx="35" cy="46" r="5" fill="none" stroke="#7A5800" stroke-width="1.5"/>
+              <circle cx="35" cy="46" r="2.5" fill="#FFE87A"/>
+              <!-- Stitching on body -->
+              <rect x="9" y="50" width="52" height="29" rx="5" fill="none" stroke="#FFD23C" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.35"/>
+              <!-- Shine on body -->
+              <ellipse cx="20" cy="30" rx="10" ry="6" fill="rgba(255,255,255,0.2)" transform="rotate(-25 20 30)"/>
+              <!-- Shine on flap -->
+              <ellipse cx="20" cy="22" rx="8" ry="4" fill="rgba(255,255,255,0.18)" transform="rotate(-20 20 22)"/>
+            </svg>
+          </div>
+          <div class="vl">앞면</div>
+        </div>
+        <div class="vw" style="max-width:60px;">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 45 90" width="40" height="80" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="18" width="37" height="65" rx="6" fill="#7A4820"/>
+              <rect x="4" y="18" width="12" height="65" rx="6" fill="rgba(255,255,255,0.08)"/>
+              <path d="M4,18 Q4,44 22,46 Q40,44 41,18 Z" fill="#9A6030"/>
+              <rect x="8" y="3" width="6" height="18" rx="3" fill="#7A4820"/>
+              <circle cx="22" cy="46" r="5" fill="#C8940A"/>
+            </svg>
+          </div>
+          <div class="vl">측면</div>
+        </div>
+        <div class="vw">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 70 90" width="60" height="80" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="18" width="60" height="65" rx="8" fill="#6B3E18"/>
+              <path d="M5,18 Q5,46 35,48 Q65,46 65,18 Z" fill="#7A4820"/>
+              <rect x="9" y="28" width="52" height="50" rx="5" fill="none" stroke="rgba(255,210,60,0.2)" stroke-width="0.8" stroke-dasharray="4,3"/>
+              <rect x="22" y="2" width="8" height="18" rx="3" fill="#6B3E18"/>
+              <rect x="5" y="18" width="60" height="8" fill="rgba(0,0,0,0.2)" rx="8"/>
+            </svg>
+          </div>
+          <div class="vl">뒷면</div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">pouch_apprentice.png</div>
+        <div class="dot"><strong>규격:</strong> 300×350 px</div>
+        <div class="dot"><strong>앵커:</strong> Waist Right</div>
+        <div class="dot"><strong>슬롯:</strong> waist</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5-3 Notebook -->
+  <div class="cell">
+    <div class="sec-hd"><span>5-3.</span> 모험 수첩 <span class="en">(ADVENTURE NOTEBOOK)</span></div>
+    <div class="cb">
+      <div class="views">
+        <div class="vw">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 75 95" width="62" height="80" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="nb1" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#A06030"/><stop offset="50%" stop-color="#8B5A2B"/><stop offset="100%" stop-color="#5A3418"/></linearGradient>
+              </defs>
+              <!-- Shadow -->
+              <rect x="8" y="5" width="64" height="88" rx="5" fill="rgba(0,0,0,0.2)"/>
+              <!-- Spine -->
+              <rect x="3" y="3" width="12" height="88" rx="4" fill="#6B4020"/>
+              <!-- Spine details -->
+              <line x1="3" y1="14" x2="15" y2="14" stroke="rgba(255,210,60,0.4)" stroke-width="1"/>
+              <line x1="3" y1="78" x2="15" y2="78" stroke="rgba(255,210,60,0.4)" stroke-width="1"/>
+              <!-- Cover -->
+              <rect x="5" y="3" width="66" height="88" rx="5" fill="url(#nb1)"/>
+              <!-- Cover border -->
+              <rect x="8" y="6" width="60" height="82" rx="4" fill="none" stroke="rgba(255,210,60,0.45)" stroke-width="1.2"/>
+              <!-- Compass rose embossing -->
+              <g transform="translate(38,44)" opacity="0.7">
+                <circle r="18" fill="none" stroke="#FFD23C" stroke-width="0.8"/>
+                <circle r="12" fill="none" stroke="#FFD23C" stroke-width="0.5" stroke-dasharray="2,2"/>
+                <!-- N E S W points -->
+                <polygon points="0,-18 2,-8 0,-5 -2,-8" fill="#FFD23C"/>
+                <polygon points="0,18 2,8 0,5 -2,8" fill="rgba(255,210,60,0.5)"/>
+                <polygon points="18,0 8,2 5,0 8,-2" fill="rgba(255,210,60,0.5)"/>
+                <polygon points="-18,0 -8,2 -5,0 -8,-2" fill="rgba(255,210,60,0.5)"/>
+                <!-- Diagonal lines -->
+                <line x1="-13" y1="-13" x2="13" y2="13" stroke="rgba(255,210,60,0.3)" stroke-width="0.5"/>
+                <line x1="13" y1="-13" x2="-13" y2="13" stroke="rgba(255,210,60,0.3)" stroke-width="0.5"/>
+                <!-- Center -->
+                <circle r="3" fill="#FFD23C"/>
+                <!-- N label -->
+                <text x="0" y="-20" text-anchor="middle" font-size="4" fill="#FFD23C" font-family="serif" font-weight="700">N</text>
+              </g>
+              <!-- Strap closure -->
+              <rect x="56" y="36" width="12" height="22" rx="3" fill="#6B4020"/>
+              <rect x="58" y="38" width="8" height="18" rx="2" fill="#8B5A2B"/>
+              <rect x="60" y="44" width="4" height="6" rx="1" fill="#C8940A"/>
+              <!-- Pages on right -->
+              <rect x="68" y="6" width="3" height="82" rx="1" fill="#E8DCC8"/>
+              <line x1="68" y1="12" x2="71" y2="12" stroke="#D0C8A8" stroke-width="0.5"/>
+              <line x1="68" y1="18" x2="71" y2="18" stroke="#D0C8A8" stroke-width="0.5"/>
+              <line x1="68" y1="24" x2="71" y2="24" stroke="#D0C8A8" stroke-width="0.5"/>
+              <!-- Shine -->
+              <ellipse cx="22" cy="18" rx="12" ry="7" fill="rgba(255,255,255,0.18)" transform="rotate(-30 22 18)"/>
+            </svg>
+          </div>
+          <div class="vl">앞면</div>
+        </div>
+        <div class="vw" style="max-width:52px;">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 25 95" width="38" height="80" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="3" width="10" height="88" rx="4" fill="#6B4020"/>
+              <rect x="10" y="3" width="13" height="88" rx="4" fill="#8B5A2B"/>
+              <rect x="10" y="6" width="8" height="82" rx="2" fill="#E8DCC8"/>
+              <line x1="10" y1="12" x2="22" y2="12" stroke="#D0C8A8" stroke-width="0.8"/>
+              <line x1="10" y1="20" x2="22" y2="20" stroke="#D0C8A8" stroke-width="0.8"/>
+              <line x1="10" y1="28" x2="22" y2="28" stroke="#D0C8A8" stroke-width="0.8"/>
+              <line x1="10" y1="36" x2="22" y2="36" stroke="#D0C8A8" stroke-width="0.8"/>
+            </svg>
+          </div>
+          <div class="vl">측면</div>
+        </div>
+        <div class="vw">
+          <div class="vb" style="height:90px;">
+            <svg viewBox="0 0 75 95" width="62" height="80" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="3" width="66" height="88" rx="5" fill="#6B3E18"/>
+              <rect x="8" y="6" width="60" height="82" rx="4" fill="none" stroke="rgba(255,210,60,0.25)" stroke-width="1"/>
+              <rect x="3" y="3" width="12" height="88" rx="4" fill="#4A2A10"/>
+              <rect x="5" y="6" width="3" height="82" rx="1" fill="#E8DCC8"/>
+              <text x="38" y="52" text-anchor="middle" font-size="6" fill="rgba(255,210,60,0.35)" font-family="serif" letter-spacing="1">MADO</text>
+              <rect x="5" y="3" width="66" height="10" fill="rgba(0,0,0,0.2)" rx="5"/>
+            </svg>
+          </div>
+          <div class="vl">뒷면</div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">notebook_adventure.png</div>
+        <div class="dot"><strong>규격:</strong> 300×380 px</div>
+        <div class="dot"><strong>앵커:</strong> Waist Left</div>
+        <div class="dot"><strong>슬롯:</strong> leftHand</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5-4 Cape -->
+  <div class="cell">
+    <div class="sec-hd"><span>5-4.</span> 견습 망토 <span class="en">(APPRENTICE CAPE)</span></div>
+    <div class="cb">
+      <div class="views">
+        <div class="vw">
+          <div class="vb" style="height:115px;">
+            <svg viewBox="0 0 100 120" width="88" height="106" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cp1" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#1A8040"/><stop offset="50%" stop-color="#1E7D3B"/><stop offset="100%" stop-color="#145228"/></linearGradient>
+                <linearGradient id="cp2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#145228"/><stop offset="100%" stop-color="#0D3B1C"/></linearGradient>
+              </defs>
+              <!-- Shadow -->
+              <path d="M8,22 Q2,55 4,110 L50,116 L96,110 Q98,55 92,22 Z" fill="rgba(0,0,0,0.2)"/>
+              <!-- Cape body -->
+              <path d="M5,20 Q0,55 2,108 L50,114 L98,108 Q100,55 95,20 Z" fill="url(#cp1)"/>
+              <!-- Gold trim -->
+              <path d="M5,20 Q0,55 2,108 L50,114 L98,108 Q100,55 95,20 Z" fill="none" stroke="#FFD23C" stroke-width="2.5"/>
+              <!-- Inner darker section (fabric fold) -->
+              <path d="M18,22 Q14,55 15,104 L50,110 L85,104 Q86,55 82,22 Z" fill="url(#cp2)" opacity="0.5"/>
+              <!-- Center seam -->
+              <line x1="50" y1="22" x2="50" y2="112" stroke="rgba(255,210,60,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- Gold inner trim -->
+              <path d="M18,22 Q14,55 15,104 L50,110 L85,104 Q86,55 82,22 Z" fill="none" stroke="rgba(255,210,60,0.4)" stroke-width="1.2"/>
+              <!-- Collar piece -->
+              <path d="M20,20 Q50,8 80,20 L82,28 Q50,16 18,28 Z" fill="#1E7D3B"/>
+              <path d="M20,20 Q50,8 80,20 L82,28 Q50,16 18,28 Z" fill="none" stroke="#FFD23C" stroke-width="1.5"/>
+              <!-- Clasp -->
+              <circle cx="50" cy="20" r="6" fill="#C8940A"/>
+              <circle cx="50" cy="20" r="4" fill="none" stroke="#7A5800" stroke-width="1"/>
+              <circle cx="50" cy="20" r="2" fill="#FFE87A"/>
+              <!-- Shine -->
+              <ellipse cx="28" cy="45" rx="12" ry="20" fill="rgba(255,255,255,0.12)" transform="rotate(-10 28 45)"/>
+            </svg>
+          </div>
+          <div class="vl">앞면</div>
+        </div>
+        <div class="vw">
+          <div class="vb" style="height:115px;">
+            <svg viewBox="0 0 100 120" width="88" height="106" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cp3" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#155A2C"/><stop offset="100%" stop-color="#0E3C1C"/></linearGradient>
+              </defs>
+              <path d="M5,20 Q0,55 2,108 L50,114 L98,108 Q100,55 95,20 Z" fill="url(#cp3)"/>
+              <path d="M5,20 Q0,55 2,108 L50,114 L98,108 Q100,55 95,20 Z" fill="none" stroke="#FFD23C" stroke-width="2.5"/>
+              <!-- Back center seam -->
+              <line x1="50" y1="22" x2="50" y2="112" stroke="rgba(255,210,60,0.4)" stroke-width="1.5"/>
+              <!-- Inner lining (visible at edges - lighter green) -->
+              <path d="M5,20 Q0,55 2,108 L15,110 Q14,55 16,22 Z" fill="#1A7A36" opacity="0.6"/>
+              <path d="M95,20 Q100,55 98,108 L85,110 Q86,55 84,22 Z" fill="#1A7A36" opacity="0.6"/>
+              <!-- Gold trim on back -->
+              <path d="M20,20 Q50,8 80,20 L82,28 Q50,16 18,28 Z" fill="#155A2C"/>
+              <path d="M20,20 Q50,8 80,20 L82,28 Q50,16 18,28 Z" fill="none" stroke="#FFD23C" stroke-width="1.5"/>
+              <!-- Decorative back pattern -->
+              <g opacity="0.25">
+                <line x1="35" y1="50" x2="65" y2="50" stroke="#FFD23C" stroke-width="0.8"/>
+                <line x1="32" y1="70" x2="68" y2="70" stroke="#FFD23C" stroke-width="0.8"/>
+                <line x1="30" y1="90" x2="70" y2="90" stroke="#FFD23C" stroke-width="0.8"/>
+              </g>
+              <path d="M5,20 Q0,55 2,108 L50,114 L98,108 Q100,55 95,20 Z" fill="none" stroke="#FFD23C" stroke-width="1" opacity="0.4"/>
+            </svg>
+          </div>
+          <div class="vl">뒷면</div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="fn">cape_apprentice.png</div>
+        <div class="dot"><strong>규격:</strong> 900×900 px</div>
+        <div class="dot"><strong>앵커:</strong> Shoulder Center (Behind)</div>
+        <div class="dot"><strong>슬롯:</strong> cape</div>
+        <div class="dot"><strong>레이어:</strong> Behind (캐릭터 뒤)</div>
+        <div class="dot"><strong>형식:</strong> PNG (투명배경)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer>
+  <span>© MADO ACADEMIA ADVENTURE SCHOOL</span>
+  <span>모든 에셋은 <strong>1024×1024</strong> 기준으로 제작되었습니다.</span>
+  <span><strong>ver.1.0</strong> | 2025.05</span>
+</footer>
+
+</div>
+</body>
+</html>

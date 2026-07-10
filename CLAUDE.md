@@ -68,32 +68,48 @@ back | cape | leftHand | rightHand | pet | foot
 badge (자동)
 ```
 
-### 장비 이미지 규격 (Art Bible v1.0)
+### 레벨별 장비 누적 시스템 (핵심 설계)
 
-**마스터 파일** (`assets/equipment/`): 1024×1024 투명 PNG, 앵커 기준으로 아이템 배치
-**앱 배포 파일** (`equipment/{slot}/{id}.png`): 400×540 투명 PNG, 카드 캔버스 맞춤 오버레이
+캐릭터는 레벨 오를 때마다 장비가 **하나씩 추가**되며, 이전 장비는 절대 사라지지 않음.
 
-| 아이템 ID | 파일명 | 마스터 크기 | 앵커 | 슬롯 |
-|-----------|--------|------------|------|------|
-| `badge_lv1` | badge_lv1.png | 400×400 | Chest Center | chest |
-| `shoes_lv1` | shoes_lv1.png | 800×500 | Foot Center | foot |
-| `belt_apprentice` | belt_apprentice.png | 700×180 | Waist Center | waist |
-| `pouch_apprentice` | pouch_apprentice.png | 300×350 | Waist Right | waist |
-| `notebook_adventure` | notebook_adventure.png | 300×380 | Waist Left | leftHand |
-| `cape_apprentice` | cape_apprentice.png | 900×900 | Shoulder Center (Behind) | cape |
-| `bag_explorer` | bag_explorer.png | 850×900 | Back Center (Behind) | back |
+| 레벨 | 추가 장비 | 폴더 | 슬롯 |
+|------|----------|------|------|
+| Lv.1 | 학교 배지 (badge_lv1) | `equipment/badge/` | chest |
+| Lv.1 | 기본 신발 (shoes_lv1) | `equipment/shoes/` | foot |
+| Lv.3 | 연습 장갑 (gloves_lv3) | `equipment/gloves/` | rightHand |
+| Lv.4 | 새싹 브로치 (brooch_sprout) | `equipment/badge/` | neck |
+| Lv.5 | 견습 벨트 (belt_apprentice) | `equipment/belt/` | waist |
+| Lv.6 | 모험 수첩 (notebook_adventure) | `equipment/notebook/` | leftHand |
+| Lv.7 | 모험 파우치 (pouch_apprentice) | `equipment/pouch/` | waist |
+| Lv.8 | 견습 장화 (boots_lv8) ← 신발 업그레이드 | `equipment/boots/` | foot |
+| Lv.9 | 견습 망토 (cape_apprentice) | `equipment/cape/` | cape |
+
+### 캐릭터 이미지 이중 구조 (핵심)
+
+**개별 아이템 이미지** (`equipment/{item-type}/{id}.png`):
+- 아이템 UI 카드, 인벤토리, 에셋팩 스펙 시트에 사용
+- 400×540 투명 PNG 풀캔버스 오버레이
+
+**레벨 티어 완성형 캐릭터 이미지** (`characters/lv{01-09}/character.png`):
+- 해당 레벨까지의 모든 장비를 **누적 착용한 완성 이미지**
+- 카드 미리보기 메인 이미지로 사용 (`getCharTier(name)` 함수로 번호 결정)
+- Lv.1→lv01, Lv.2→lv02 … Lv.9이상→lv09
+- 이미지가 없으면 `card/char_XX_nobg.png`로 폴백
+
+> **렌더링 규칙**: starter/apprentice 세트 아이템은 `_drawItem()`에서 오버레이 스킵  
+> (이미 티어 캐릭터 이미지에 포함됨). Explorer/Job 세트 아이템만 오버레이 적용.
 
 ### 레벨 세트 구조 & 세트 효과
-| 레벨 | 세트 | 아이템 | 세트 효과 |
+| 세트 | 레벨 | 아이템 | 세트 효과 |
 |------|------|--------|-----------|
-| Lv.1 | Starter | badge_lv1 + shoes_lv1 | 경험치 +10% |
-| Lv.5 | Apprentice | belt + pouch + notebook + cape | 퀘스트 수행 가능 |
-| Lv.10 | Explorer | bag + gloves + compass | 탐험 보너스 |
-| Lv.20 | Job Set | 직업별 무기·망토·정령(15종) | 직업 스킬 활성화 |
-| Lv.30 | Advanced Set | (미정) | (미정) |
-| Lv.50 | Master Set | (미정) | (미정) |
+| Starter | Lv.1-4 | badge_lv1 + shoes_lv1 + gloves_lv3 + brooch_sprout | 경험치 +10% |
+| Apprentice | Lv.5-9 | belt + notebook + pouch + boots + cape | 퀘스트 수행 가능 |
+| Explorer | Lv.10 | bag + gloves + compass | 탐험 보너스 |
+| Job Set | Lv.20 | 직업별 무기·망토·정령(15종) | 직업 스킬 활성화 |
+| Advanced Set | Lv.30 | (미정) | (미정) |
+| Master Set | Lv.50 | (미정) | (미정) |
 
-> 세트 효과는 `ITEM_SETS` 상수에 정의, `getEquippedSetBonus(name)`으로 조회. 현재 데이터만 정의돼 있고 XP 실제 적용은 미구현.
+> 세트 효과는 `ITEM_SETS` 상수에 정의, `getEquippedSetBonus(name)`으로 조회. XP 실제 적용은 미구현.
 
 ### NPC 캐릭터 (세계관 기준점, 학생보다 먼저 제작)
 | NPC | 역할 | 직함 |
@@ -216,15 +232,21 @@ assets/
 - [ ] `card/char_XX_nobg.png` 동일 스타일로 업데이트
 
 ### Phase 3 — 장비 라이브러리 제작
-- [ ] `guild_badge.png` (chest) — 최우선
-- [ ] `belt_apprentice.png`, `pouch_small.png` (waist)
-- [ ] `notebook_adventure.png` (leftHand)
-- [ ] `cape_apprentice.png` (cape)
-- [ ] `bag_explorer.png` (back)
+- [ ] `equipment/badge/badge_lv1.png` — 학교 배지
+- [ ] `equipment/shoes/shoes_lv1.png` — 기본 신발
+- [ ] `equipment/gloves/gloves_lv3.png` — 연습 장갑
+- [ ] `equipment/badge/brooch_sprout.png` — 새싹 브로치
+- [ ] `equipment/belt/belt_apprentice.png` — 견습 벨트
+- [ ] `equipment/notebook/notebook_adventure.png` — 모험 수첩
+- [ ] `equipment/pouch/pouch_apprentice.png` — 모험 파우치
+- [ ] `equipment/boots/boots_lv8.png` — 견습 장화
+- [ ] `equipment/cape/cape_apprentice.png` — 견습 망토
+- [ ] `equipment/back/bag_explorer.png` — 탐험가 가방 (Explorer Set)
 - [ ] 나머지 Explorer·Job 세트 장비들
 
-### Phase 4 — 학생 개별 생성
-- [ ] 10명 학생 개별 SD 3D 캐릭터 카드 생성 (장비 오버레이 테스트 포함)
+### Phase 4 — 레벨 티어 캐릭터 제작
+- [ ] `characters/lv01/character.png` ~ `characters/lv09/character.png` (누적 장비 포함 완성형)
+- [ ] 각 이미지는 해당 레벨까지 모든 장비를 착용한 상태로 제작 (GPT 생성)
 
 ### 유지보수
 - [ ] (검토) `flow` 회의 진행 4단계 UX 다듬기.
@@ -234,6 +256,7 @@ assets/
 
 ## 변경 이력
 
+- 2026-07-05 — 레벨 티어 캐릭터 시스템 도입. `characters/lv01~lv09/character.png` 구조 확립. ITEM_CATALOG: 신규 아이템 추가(gloves_lv3/brooch_sprout/boots_lv8), folder 속성 추가(item-type 폴더 분리), unlock 레벨 재설계(Lv1→배지·신발, Lv3→장갑, Lv4→브로치, Lv5→벨트, Lv6→수첩, Lv7→파우치, Lv8→장화, Lv9→망토). `_drawItem()` starter/apprentice 스킵 추가. `getCharTier()` 함수 신설. `equipment/` 신규 폴더(shoes/gloves/boots/belt/notebook/pouch) 생성.
 - 2026-07-05 — Art Bible v1.0 반영. GUILDS 상수 6종(REGIA 신규 추가) 코드 추가. `assets/` 마스터 에셋 라이브러리 폴더 구조 생성. 학교 엠블럼 SVG(`assets/icon/school_emblem.svg`) + 길드 배지 6종 SVG(`assets/icon/guild_badges.svg`) 제작. 색상 팔레트·장비 규격·NPC 시스템 CLAUDE.md 갱신.
 - 2026-07-05 — 마도 아카데미아 IP 도입. VRM 3D 제거. `ITEM_CATALOG` 전면 재설계(새 슬롯 11종: hair/face/neck/chest/waist/back/cape/leftHand/rightHand/pet/foot). `SPRITE_MAPS` 제거, `equipment/{slot}/{id}.png` 풀캔버스 오버레이 방식 도입. `_drawItem()`, `CARD_ITEM_POS` 업데이트. CLAUDE.md 대폭 갱신(세계관·장비 규격·로드맵).
 - 2026-07-04 — CLAUDE.md 신설(프로젝트 컨텍스트 문서화). `getLevel()` 이모지 오타 수정.

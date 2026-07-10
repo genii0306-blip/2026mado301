@@ -1156,20 +1156,20 @@ const ITEM_CATALOG=[
   // badge_lv1.png (400×400, Chest Center)
   // shoes_lv1.png (800×500, Foot Center)
   // ─────────────────────────────────────
-  {id:'badge_lv1',        name:'학교 배지',    emoji:'🛡️', slot:'chest',    unlock:{lv:1},  set:'starter',    desc:'마도 아카데미아의 상징. 신입 모험가의 증표.'},
-  {id:'shoes_lv1',        name:'기본 신발',    emoji:'👟', slot:'foot',     unlock:{lv:1},  set:'starter',    desc:'견고한 훈련용 신발. 모든 모험의 첫걸음.'},
+  {id:'badge_lv1',        name:'학교 배지',    emoji:'🛡️', slot:'chest',    folder:'badge',    unlock:{lv:1},  set:'starter',    desc:'마도 아카데미아의 상징. 신입 모험가의 증표.'},
+  {id:'shoes_lv1',        name:'기본 신발',    emoji:'👟', slot:'foot',     folder:'shoes',    unlock:{lv:1},  set:'starter',    desc:'견고한 훈련용 신발. 모든 모험의 첫걸음.'},
+  {id:'gloves_lv3',       name:'연습 장갑',    emoji:'🧤', slot:'rightHand',folder:'gloves',   unlock:{lv:3},  set:'starter',    desc:'손을 보호하는 기본 가죽 장갑'},
+  {id:'brooch_sprout',    name:'새싹 브로치',  emoji:'🌱', slot:'neck',     folder:'badge',    unlock:{lv:4},  set:'starter',    desc:'새싹 모양의 귀여운 학교 브로치'},
 
   // ─────────────────────────────────────
-  // LV.5 APPRENTICE SET – 견습 모험가
-  // belt_apprentice.png (700×180, Waist Center)
-  // pouch_apprentice.png (300×350, Waist Right)
-  // notebook_adventure.png (300×380, Waist Left)
-  // cape_apprentice.png (900×900, Shoulder Center Behind)
+  // LV.5-9 APPRENTICE SET – 견습 모험가
+  // LV5 벨트 / LV6 수첩 / LV7 파우치 / LV8 장화(신발 업그레이드) / LV9 망토
   // ─────────────────────────────────────
-  {id:'belt_apprentice',  name:'견습 벨트',    emoji:'🟫', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'다양한 장비를 착용할 수 있는 가죽 허리벨트'},
-  {id:'pouch_apprentice', name:'모험 파우치',  emoji:'👝', slot:'waist',    unlock:{lv:5},  set:'apprentice', desc:'소지품을 보관하는 가죽 파우치'},
-  {id:'notebook_adventure',name:'모험 수첩',   emoji:'📓', slot:'leftHand', unlock:{lv:5},  set:'apprentice', desc:'퀘스트와 발견을 기록하는 수첩'},
-  {id:'cape_apprentice',  name:'견습 망토',    emoji:'🧣', slot:'cape',     unlock:{lv:5},  set:'apprentice', desc:'짧지만 보온과 멋을 겸비한 견습생의 망토'},
+  {id:'belt_apprentice',  name:'견습 벨트',    emoji:'🟫', slot:'waist',    folder:'belt',     unlock:{lv:5},  set:'apprentice', desc:'다양한 장비를 착용할 수 있는 가죽 허리벨트'},
+  {id:'notebook_adventure',name:'모험 수첩',   emoji:'📓', slot:'leftHand', folder:'notebook', unlock:{lv:6},  set:'apprentice', desc:'퀘스트와 발견을 기록하는 수첩'},
+  {id:'pouch_apprentice', name:'모험 파우치',  emoji:'👝', slot:'waist',    folder:'pouch',    unlock:{lv:7},  set:'apprentice', desc:'소지품을 보관하는 가죽 파우치'},
+  {id:'boots_lv8',        name:'견습 장화',    emoji:'🥾', slot:'foot',     folder:'boots',    unlock:{lv:8},  set:'apprentice', desc:'내구성 좋은 견습 모험가 장화. 기본 신발의 업그레이드.'},
+  {id:'cape_apprentice',  name:'견습 망토',    emoji:'🧣', slot:'cape',     folder:'cape',     unlock:{lv:9},  set:'apprentice', desc:'짧지만 보온과 멋을 겸비한 견습생의 망토'},
 
   // ─────────────────────────────────────
   // LV.10 EXPLORER SET – 초급 모험가
@@ -1271,8 +1271,8 @@ const ITEM_CATALOG=[
 // ══ 세트 효과 정의 ══
 // 해당 세트 아이템을 모두 착용하면 bonus 효과가 활성화됩니다 (미래 기능)
 const ITEM_SETS={
-  starter:    {name:'스타터 세트',    name_en:'Starter Set',    lv:1,  bonus:'경험치 +10%',  items:['badge_lv1','shoes_lv1'],                                              effect:'XP_BOOST_10'},
-  apprentice: {name:'견습 모험가 세트',name_en:'Apprentice Set', lv:5,  bonus:'퀘스트 수행 가능', items:['belt_apprentice','pouch_apprentice','notebook_adventure','cape_apprentice'], effect:'QUEST_UNLOCK'},
+  starter:    {name:'스타터 세트',    name_en:'Starter Set',    lv:1,  bonus:'경험치 +10%',  items:['badge_lv1','shoes_lv1','gloves_lv3','brooch_sprout'],                  effect:'XP_BOOST_10'},
+  apprentice: {name:'견습 모험가 세트',name_en:'Apprentice Set', lv:5,  bonus:'퀘스트 수행 가능', items:['belt_apprentice','notebook_adventure','pouch_apprentice','boots_lv8','cape_apprentice'], effect:'QUEST_UNLOCK'},
   explorer:   {name:'탐험가 세트',    name_en:'Explorer Set',   lv:10, bonus:'탐험 보너스',  items:['bag_explorer','gloves_explorer','compass_neck'],                       effect:'EXPLORE_BONUS'},
 };
 function getItemSet(setId){return ITEM_SETS[setId]||null;}
@@ -1283,6 +1283,8 @@ function getEquippedSetBonus(name){
 }
 
 function getItem(id){return ITEM_CATALOG.find(i=>i.id===id)||null;}
+// 레벨 → 캐릭터 티어 이미지 번호 (1-9). characters/lv{tier}/character.png 경로에 사용
+function getCharTier(name){var lv=getLevel((xpData[name]||{}).total||0).lv;return Math.max(1,Math.min(lv,9));}
 
 function isItemUnlocked(itemId,name){
   const item=getItem(itemId);if(!item)return false;
@@ -1327,6 +1329,7 @@ let boardPosts={};
 let proposals={};
 let evalData={};
 let meetFlow={step:1,confirmedId:''};
+let localFlowStep=1; // 학생 전용: 1-2단계 로컬 탐색용 (Firebase 기록 안 함)
 let classScore={total:0,log:[]};
 let stepActions={};
 let actionData={goal:'',students:[]};
@@ -1806,6 +1809,17 @@ function pickBoardStudent(n){setMe(n,'board');}
 // ══ Step Flow ══
 function applyStep(s){
   meetFlow.step=s;
+  // 학생: 3단계 이상이면 강제 이동(글로벌), 1-2단계면 로컬 단계 유지
+  let display;
+  if(isGranter()){
+    display=s;
+  }else{
+    if(s>=3){localFlowStep=s;display=s;}
+    else{display=localFlowStep;}
+  }
+  _renderFlowDisplay(display);
+}
+function _renderFlowDisplay(s){
   ['step1','step2','step3','step4'].forEach((id,i)=>{
     document.getElementById(id).style.display=(i+1===s)?'block':'none';
   });
@@ -1816,9 +1830,12 @@ function applyStep(s){
     return`<div class="step-item ${st}" onclick="${me==='선생님'?`setStep(${i+1})`:''}">${'①②③④'[i]} ${l}</div>`;
   }).join('');
   // Nav buttons
-  document.getElementById('prevStepBtn').style.display=s>1?'inline-flex':'none';
-  document.getElementById('nextStepBtn').style.display=s<4?'inline-flex':'none';
-  document.getElementById('finishMeetingBtn').style.display=s===4?'inline-flex':'none';
+  const granter=isGranter();
+  // 선생님·회장·부회장: 전체 4단계 이동(Firebase 동기화)
+  // 일반 학생: 1↔2단계만 로컬 이동 (다른 화면 영향 없음)
+  document.getElementById('prevStepBtn').style.display=(granter?s>1:s===2)?'inline-flex':'none';
+  document.getElementById('nextStepBtn').style.display=(granter?s<4:s===1)?'inline-flex':'none';
+  document.getElementById('finishMeetingBtn').style.display=(granter&&s===4)?'inline-flex':'none';
   // Step-specific
   const month=new Date().getMonth()+1;
   const q=document.getElementById('evalMonthQuestion');
@@ -1827,10 +1844,18 @@ function applyStep(s){
   renderSpeakMini();
 }
 function moveStep(dir){
-  const s=Math.max(1,Math.min(4,(meetFlow.step||1)+dir));
-  setStep(s);
+  if(isGranter()){
+    // 선생님·회장·부회장: Firebase 동기화 (전체 화면 이동)
+    const s=Math.max(1,Math.min(4,(meetFlow.step||1)+dir));
+    setStep(s);
+  }else{
+    // 일반 학생: 1-2단계 로컬 이동만 (Firebase 기록 안 함)
+    localFlowStep=Math.max(1,Math.min(2,localFlowStep+dir));
+    _renderFlowDisplay(localFlowStep);
+  }
 }
 function setStep(s){
+  if(!isGranter())return;
   meetFlowRef.update({step:s});
 }
 
@@ -3075,9 +3100,11 @@ function renderCardPreview(){
   el.appendChild(canvas);
   const ctx=canvas.getContext('2d');
   async function _drawItem(item){
+    // starter/apprentice 세트는 레벨 티어 캐릭터 이미지에 누적 포함됨 → 오버레이 불필요
+    if(item.set==='starter'||item.set==='apprentice')return;
     var pos=CARD_ITEM_POS[item.slot];if(!pos)return;
-    // ① equipment/{slot}/{id}.png 풀캔버스 오버레이 시도
-    var eImg=await _loadImg('equipment/'+item.slot+'/'+item.id+'.png');
+    // ① equipment/{folder or slot}/{id}.png 풀캔버스 오버레이 시도
+    var eImg=await _loadImg('equipment/'+(item.folder||item.slot)+'/'+item.id+'.png');
     if(eImg){ctx.drawImage(eImg,0,0,400,540);return;}
     // ② 이모지 폴백 (앵커 위치)
     ctx.font=Math.round(pos.s*.75)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -3092,8 +3119,11 @@ function renderCardPreview(){
     const bk=equipped.filter(function(i){return BEHIND.indexOf(i.slot)>=0;});
     const fr=equipped.filter(function(i){return BEHIND.indexOf(i.slot)<0;});
     for(var i=0;i<bk.length;i++)await _drawItem(bk[i]);
-    if(bk.length>0){var cImg=await _loadImg('card/char_'+charNum+'_nobg.png');
-      if(cImg){var CH=351,CW=Math.round(cImg.naturalWidth*CH/cImg.naturalHeight);ctx.drawImage(cImg,Math.round((400-CW)/2),184,CW,CH);}}
+    // 캐릭터: 레벨 티어 이미지 우선(누적 장비 포함 완성형), 없으면 학생별 nobg 폴백
+    var tier=String(Math.max(1,Math.min(lvInfo.lv,9))).padStart(2,'0');
+    var charTierImg=await _loadImg('characters/lv'+tier+'/character.png');
+    var finalCharImg=charTierImg||(await _loadImg('card/char_'+charNum+'_nobg.png'));
+    if(finalCharImg){var CH=351,CW=Math.round(finalCharImg.naturalWidth*CH/finalCharImg.naturalHeight);ctx.drawImage(finalCharImg,Math.round((400-CW)/2),184,CW,CH);}
     for(var i=0;i<fr.length;i++)await _drawItem(fr[i]);
     var grad=ctx.createLinearGradient(0,430,0,540);
     grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.75)');

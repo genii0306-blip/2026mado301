@@ -553,6 +553,11 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
       </div>
       <div id="voteResultArea"></div>
       <div id="confirmAgendaWrap" style="margin-top:10px;display:none;"></div>
+      <!-- 교사/회장 전용: 안건 직접 확정 -->
+      <div id="teacherConfirmPanel" style="display:none;margin-top:14px;padding-top:14px;border-top:1.5px dashed #C7D2FE;">
+        <div style="font-size:.82rem;font-weight:800;color:#4F46E5;margin-bottom:8px;">📌 안건 확정 (선생님 · 회장 전용)</div>
+        <div id="teacherConfirmList"></div>
+      </div>
     </div>
   </div>
 
@@ -1522,7 +1527,7 @@ boardRef.on('value',snap=>{
 });
 proposalsRef.on('value',snap=>{
   proposals=snap.val()||{};
-  renderProposalList();renderVoteArea();renderVoteResultArea();renderConfirmedInfo();
+  renderProposalList();renderVoteArea();renderVoteResultArea();renderConfirmedInfo();renderTeacherConfirmPanel();
   if(activeTab==='admin')renderAdminProposals();
 });
 evalRef.on('value',snap=>{evalData=snap.val()||{};renderEvalResult();});
@@ -2142,14 +2147,46 @@ function renderVoteArea(){
     </div>`;
   }else{
     voteEl.innerHTML='<div class="lbl">투표할 안건을 선택하세요 (1회만 가능)</div>'+list.map(p=>{
+      const preview=p.text?(p.text.length>40?p.text.slice(0,40)+'…':p.text):'';
       return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div style="flex:1;font-weight:700;">${p.title}${p.author===me?`<div style="font-size:.78rem;color:var(--primary);font-weight:800;">나의 제안</div>`:''}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;">${p.title}${p.author===me?'<span style="font-size:.72rem;color:var(--primary);font-weight:800;margin-left:4px;">나의 제안</span>':''}</div>
+          ${preview?`<div style="font-size:.75rem;color:var(--tl);margin-top:2px;line-height:1.4;">${preview}</div>`:''}
+          <div style="font-size:.72rem;color:#9CA3AF;margin-top:1px;">${p.author||''}</div>
+        </div>
         <button class="btn btn-sm btn-outline" onclick="castVote('${p.id}')">투표</button>
       </div>`;
     }).join('');
   }
-  // 확정 버튼은 renderVoteResultArea에서 처리
   const wrapEl=document.getElementById('confirmAgendaWrap');if(wrapEl)wrapEl.style.display='none';
+  renderTeacherConfirmPanel();
+}
+function renderTeacherConfirmPanel(){
+  const panel=document.getElementById('teacherConfirmPanel');
+  const listEl=document.getElementById('teacherConfirmList');
+  if(!panel||!listEl)return;
+  // 교사/회장/부회장만 표시
+  if(!isGranter()){panel.style.display='none';return;}
+  const list=Object.values(proposals).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(!list.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  listEl.innerHTML=list.map(p=>{
+    const isConfirmed=meetFlow.confirmedId===p.id;
+    const preview=p.text?(p.text.length>30?p.text.slice(0,30)+'…':p.text):'';
+    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;
+        background:${isConfirmed?'linear-gradient(135deg,#ECFDF5,#D1FAE5)':'#F8FAFC'};
+        border:1.5px solid ${isConfirmed?'#6EE7B7':'#E5E7EB'};">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:800;font-size:.88rem;color:${isConfirmed?'#065F46':'#111'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isConfirmed?'✅ ':''}${p.title}</div>
+        ${preview?`<div style="font-size:.73rem;color:#6B7280;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</div>`:''}
+        <div style="font-size:.72rem;color:#9CA3AF;">${p.author||''}</div>
+      </div>
+      ${isConfirmed
+        ?`<span style="font-size:.75rem;font-weight:700;color:#059669;white-space:nowrap;">확정됨</span>`
+        :`<button class="btn btn-sm" onclick="confirmAgenda('${p.id}')" style="white-space:nowrap;background:#4F46E5;color:#fff;border-color:#4F46E5;padding:4px 10px;font-size:.78rem;">확정</button>`
+      }
+    </div>`;
+  }).join('');
 }
 function castVote(propId){
   const p=proposals[propId];if(!p)return;
@@ -2205,6 +2242,7 @@ function renderVoteResultArea(){
       <div style="font-size:.78rem;color:var(--tl);margin-top:6px;">전체 ${total}명 중 ${voterCount}명 투표 참여</div>
       ${canReveal?`<div style="font-size:.75rem;color:#6B7280;margin-top:6px;border-top:1px solid #E5E7EB;padding-top:6px;">✏️ 버튼으로 확정 안건을 조정할 수 있어요 (선생님·회장 전용)</div>`:''}
     </div>`;
+    renderTeacherConfirmPanel();
   }else{
     // ── 개표 전: 참여 인원만 표시, 표수 비공개 ──
     const revealBtn=canReveal
@@ -2215,6 +2253,7 @@ function renderVoteResultArea(){
       <div style="font-size:.78rem;color:var(--tl);margin-top:4px;">명 투표 완료 (결과는 개표 후 공개)</div>
       ${revealBtn}
     </div>`;
+    renderTeacherConfirmPanel();
   }
 }
 function revealVotes(){

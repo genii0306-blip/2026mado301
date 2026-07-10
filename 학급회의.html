@@ -32,6 +32,17 @@ textarea{resize:vertical;min-height:80px;}
 .teacher-entry{margin-top:12px;text-align:center;border-top:1px solid var(--border);padding-top:12px;}
 .w-btn-teacher{background:none;color:var(--tl);font-size:.82rem;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);transition:all .15s;}
 .w-btn-teacher:hover{background:#F4F6FF;color:var(--primary);}
+/* PIN 키패드 */
+.pin-screen{display:none;flex-direction:column;align-items:center;gap:14px;padding:8px 0;}
+.pin-screen.active{display:flex;}
+.pin-dots{display:flex;gap:12px;margin:4px 0;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:transparent;transition:background .15s;}
+.pin-dot.filled{background:#fff;border-color:#fff;}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:220px;}
+.pin-key{padding:14px 0;border-radius:14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:1.2rem;font-weight:800;cursor:pointer;transition:all .12s;}
+.pin-key:hover{background:rgba(255,255,255,.28);}
+.pin-key:active{transform:scale(.94);}
+.pin-key.del{font-size:1rem;}
 
 /* ── Header ── */
 header{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);box-shadow:var(--shadow);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(79,110,247,.08);}
@@ -381,8 +392,36 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div class="welcome-logo">🏫</div>
     <div class="welcome-title">학급회의</div>
     <div class="welcome-sub">이름을 선택하고 입장해 주세요 ✨</div>
-    <div class="welcome-grid" id="welcomeGrid"></div>
-    <button class="btn btn-primary" id="welcomeEnterBtn" disabled onclick="enterApp()" style="width:100%;opacity:.4;font-size:1rem;padding:14px;">🧑‍🎓 입장하기 →</button>
+    <!-- 이름 선택 화면 -->
+    <div id="welcomeNameScreen">
+      <div class="welcome-grid" id="welcomeGrid"></div>
+      <button class="btn btn-primary" id="welcomeEnterBtn" disabled onclick="startPinEntry()" style="width:100%;opacity:.4;font-size:1rem;padding:14px;">🧑‍🎓 입장하기 →</button>
+    </div>
+    <!-- PIN 입력 화면 -->
+    <div class="pin-screen" id="pinScreen">
+      <div id="pinTitle" style="color:#fff;font-weight:800;font-size:1rem;margin-bottom:2px;">암호 입력</div>
+      <div id="pinSub" style="color:rgba(255,255,255,.7);font-size:.82rem;"></div>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key del" onclick="pinBack()">← 이름 변경</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>
+    </div>
     <div class="teacher-entry">
       <button class="w-btn-teacher" onclick="openAdminLogin()">🔐 선생님 입장 (관리자)</button>
     </div>
@@ -434,10 +473,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div class="card">
       <div class="card-title">📊 단계 1 · 지난 회의 돌아보기</div>
       <div class="lbl" id="evalMonthQuestion">이번 달 학급 목표를 얼마나 지켰나요? (0~10점)</div>
-      <div style="margin:10px 0 6px;">
-        <div class="s-grid" id="evalStudentGrid"></div>
-      </div>
-      <div id="myEvalArea" style="display:none;">
+      <div id="myEvalArea">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
           <span id="evalValLbl" style="font-size:1.6rem;font-weight:900;color:var(--primary);min-width:36px;">5</span>
           <input type="range" class="eval-slider" id="evalSlider" min="0" max="10" value="5" oninput="evalChange(this.value)">
@@ -452,8 +488,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   <div id="step2" style="display:none;">
     <div class="card">
       <div class="card-title">📝 단계 2 · 안건 제안하기</div>
-      <div class="s-grid" id="propStudentGrid"></div>
-      <div id="proposalFormWrap" style="display:none;">
+      <div id="proposalFormWrap">
         <div class="lbl">안건 제목</div>
         <input type="text" id="propTitle" placeholder="예: 쉬는 시간 활용 방법" style="margin-bottom:8px;">
         <div class="lbl">내용</div>
@@ -481,10 +516,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     </div>
     <div class="card">
       <div class="card-title">🎤 단계 3 · 발표 &amp; 안건 투표</div>
-      <div style="margin-bottom:12px;">
-        <div class="lbl">발표 신청 (내 이름 누르기)</div>
-        <div class="s-grid" id="raiseHandGrid"></div>
-      </div>
+      <div style="margin-bottom:12px;" id="raiseHandWrap"></div>
       <!-- 발언 대기열 (회장/부회장) -->
       <div id="speakQueueWrap">
         <div class="lbl">🙋 발언 대기</div>
@@ -515,8 +547,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <!-- 투표 -->
     <div class="card">
       <div class="card-title">🗳️ 안건 투표</div>
-      <div class="s-grid" id="voteStudentGrid"></div>
-      <div id="voteArea" style="display:none;">
+      <div id="voteArea">
         <div class="lbl">투표할 안건을 선택하세요</div>
         <div id="voteProposalList"></div>
       </div>
@@ -530,8 +561,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div class="card">
       <div class="card-title">🎯 단계 4 · 개인 실천 계획</div>
       <div id="confirmedAgendaInfo" style="margin-bottom:12px;padding:14px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:14px;font-weight:800;border:1.5px solid #6EE7B7;"></div>
-      <div class="s-grid" id="actionStudentGrid"></div>
-      <div id="actionInputWrap" style="display:none;"></div>
+      <div id="actionInputWrap"></div>
     </div>
     <div class="card">
       <div class="card-title">📋 실천 계획 목록</div>
@@ -810,6 +840,13 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div style="font-size:.82rem;color:var(--tl);margin-top:10px;">💡 이름 클릭 → 수정 / ✕ → 삭제. 삭제 시 기존 XP·숙제 기록은 보존됩니다.</div>
   </div>
 
+  <!-- 학생 암호 관리 -->
+  <div class="card" style="border-left:5px solid #6366F1;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);">
+    <div class="card-title">🔐 학생 암호 관리 <span class="teacher-badge">선생님 전용</span></div>
+    <div style="font-size:.82rem;color:var(--tl);margin-bottom:12px;">학생이 입장할 때 사용하는 4자리 숫자 암호입니다. 초기화하면 다음 입장 시 새로 설정하게 됩니다.</div>
+    <div id="pinMgmtList"></div>
+  </div>
+
   <!-- 회장/부회장 권한 관리 -->
   <div class="card" style="border-left:5px solid #F59E0B;background:linear-gradient(135deg,#FFFDF5,#FFFBEB);">
     <div class="card-title">👑 회장 · 부회장 권한 관리 <span class="teacher-badge">선생님 전용</span></div>
@@ -1050,6 +1087,7 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 const adminRef=db.ref('adminConfig');
+const studentPinsRef=db.ref('studentPins');
 const boardRef=db.ref('board');
 const proposalsRef=db.ref('proposals2');
 const evalRef=db.ref('evaluation');
@@ -1335,6 +1373,10 @@ const VALUES=['협동','배려','용서','자율','양보','예의','끈기'];
 
 // ══ State ══
 let adminConfig={password:'1094'};
+let studentPins={};  // {학생명: '1234'}
+let pinBuffer='';    // 현재 입력 중인 PIN
+let pinMode='';      // 'enter'|'set1'|'set2'
+let pinFirst='';     // set2 단계에서 첫 번째 입력값 보관
 let boardPosts={};
 let proposals={};
 let evalData={};
@@ -1450,6 +1492,7 @@ function calcHwXP(name){return Object.values(homeworkData).reduce((s,hw)=>{const
 
 // ══ Firebase listeners ══
 adminRef.on('value',snap=>{const d=snap.val();if(d)adminConfig=d;});
+studentPinsRef.on('value',snap=>{studentPins=snap.val()||{};if(activeTab==='admin')renderPinMgmt();});
 boardRef.on('value',snap=>{
   boardPosts=snap.val()||{};
   Object.keys(boardPosts).forEach(k=>boardPosts[k].id=k);
@@ -1465,6 +1508,7 @@ evalRef.on('value',snap=>{evalData=snap.val()||{};renderEvalResult();});
 meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
+  renderVoteArea();renderVoteResultArea(); // voteRevealed 변경 즉시 반영
 });
 classScoreRef.on('value',snap=>{
   const d=snap.val();if(d)classScore=d;
@@ -1658,7 +1702,7 @@ function go(tab){
   if(tab==='mypage'){renderMyPage();}
   if(tab==='homework'){renderHomework();}
   if(tab==='suggest'){renderSuggestList();}
-  if(tab==='admin'){renderStudentMgmtList();renderRoleManagePanel();renderJobAssignment();renderActivityTable();renderAdminBoard();renderAdminProposals();renderAdminCharGrid();}
+  if(tab==='admin'){renderStudentMgmtList();renderRoleManagePanel();renderJobAssignment();renderActivityTable();renderAdminBoard();renderAdminProposals();renderAdminCharGrid();renderPinMgmt();}
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1722,7 +1766,99 @@ function goHome(){
   document.getElementById('mypageNavBtn').style.display='none';
   document.getElementById('bellWrap').style.display='none';
   document.getElementById('myScoreRow').style.display='none';
+  // 웰컴 화면 초기화 (이름 선택 화면으로 복귀)
+  document.getElementById('welcomeNameScreen').style.display='';
+  document.getElementById('pinScreen').classList.remove('active');
+  pinBuffer='';pinMode='';pinFirst='';
   initWelcome();
+}
+// ── PIN 입력 시스템 ──
+function startPinEntry(){
+  if(!me)return;
+  if(me==='선생님'){enterApp();return;}
+  const hasPIN=!!(studentPins[me]);
+  document.getElementById('welcomeNameScreen').style.display='none';
+  const ps=document.getElementById('pinScreen');
+  ps.classList.add('active');
+  pinBuffer='';
+  if(hasPIN){
+    pinMode='enter';
+    document.getElementById('pinTitle').textContent=me+'님, 암호를 입력하세요';
+    document.getElementById('pinSub').textContent='4자리 숫자';
+  }else{
+    pinMode='set1';
+    document.getElementById('pinTitle').textContent='새 암호 설정';
+    document.getElementById('pinSub').textContent='사용할 4자리 숫자를 입력하세요';
+  }
+  pinUpdateDots();
+}
+function pinKey(d){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=d;
+  pinUpdateDots();
+  if(pinBuffer.length===4)setTimeout(pinSubmit,150);
+}
+function pinDel(){
+  pinBuffer=pinBuffer.slice(0,-1);
+  pinUpdateDots();
+}
+function pinBack(){
+  pinBuffer='';pinMode='';pinFirst='';
+  document.getElementById('pinScreen').classList.remove('active');
+  document.getElementById('welcomeNameScreen').style.display='';
+}
+function pinUpdateDots(){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pd'+i);
+    if(dot)dot.classList.toggle('filled',i<pinBuffer.length);
+  }
+}
+function pinSubmit(){
+  if(pinBuffer.length<4)return;
+  const entered=pinBuffer;
+  pinBuffer='';
+  pinUpdateDots();
+  if(pinMode==='enter'){
+    if(entered===studentPins[me]){
+      enterApp();
+    }else{
+      document.getElementById('pinSub').textContent='❌ 틀렸어요. 다시 입력하세요.';
+      // 도트 빨간색 깜빡임
+      for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.style.background='#F87171';d.classList.add('filled');}}
+      setTimeout(()=>{for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.style.background='';d.classList.remove('filled');}}},600);
+    }
+  }else if(pinMode==='set1'){
+    pinFirst=entered;
+    pinMode='set2';
+    document.getElementById('pinTitle').textContent='암호 확인';
+    document.getElementById('pinSub').textContent='같은 숫자를 한 번 더 입력하세요';
+  }else if(pinMode==='set2'){
+    if(entered===pinFirst){
+      studentPinsRef.child(me).set(entered);
+      enterApp();
+    }else{
+      pinFirst='';
+      pinMode='set1';
+      document.getElementById('pinTitle').textContent='새 암호 설정';
+      document.getElementById('pinSub').textContent='❌ 숫자가 달라요. 다시 입력하세요.';
+    }
+  }
+}
+function renderPinMgmt(){
+  const el=document.getElementById('pinMgmtList');if(!el)return;
+  el.innerHTML=STUDENTS.map(n=>{
+    const hasPin=!!(studentPins[n]);
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:${hasPin?'#F0FDF4':'#FEF9C3'};margin-bottom:6px;border:1.5px solid ${hasPin?'#86EFAC':'#FDE047'};">
+      <span style="font-weight:700;font-size:.9rem;">${n}</span>
+      <span style="font-size:.8rem;color:${hasPin?'#166534':'#92400E'};">${hasPin?'🔐 설정됨':'⚠️ 미설정'}</span>
+      <button class="btn btn-sm" style="background:#FEE2E2;color:#B91C1C;border:none;padding:4px 10px;border-radius:8px;font-size:.8rem;cursor:pointer;" onclick="resetStudentPin('${n}')">초기화</button>
+    </div>`;
+  }).join('');
+}
+function resetStudentPin(name){
+  if(!confirm(`"${name}"의 암호를 초기화할까요?\n다음 입장 시 새로 설정하게 됩니다.`))return;
+  studentPinsRef.child(name).remove();
+  showToast(name+' 암호가 초기화됐어요.','t-ok');
 }
 
 // ══ Class Modal ══
@@ -1768,8 +1904,8 @@ function setMe(name,from){
   renderActionInputWrap();
 }
 function renderAllStudentGrids(){
-  renderEvalStudentGrid();renderPropStudentGrid();renderVoteStudentGrid();
-  renderBoardStudentGrid();renderModalStudentGrid();
+  renderEvalStudentGrid();renderPropStudentGrid();renderVoteArea();renderVoteResultArea();
+  renderBoardStudentGrid();renderModalStudentGrid();renderActionInputWrap();
 }
 
 // ══ Student Grids ══
@@ -1782,16 +1918,14 @@ function makeStudentGrid(elId,selName,onclick){
     return`<button class="s-btn${n===selName?' sel':''}" onclick="${onclick}('${n}')">${n}${b?`<sub>${b.icon}</sub>`:''}${isP?'<sub>👑</sub>':''}</button>`;
   }).join('');
 }
-function renderEvalStudentGrid(){
-  const el=document.getElementById('evalStudentGrid');if(!el)return;
-  const cnt=countProposals();
-  el.innerHTML=STUDENTS.map(n=>{
-    const isMe=n===me,b=getBadge(cnt[n]||0);
-    return`<button class="s-btn${isMe?' sel':''}" style="${!isMe?'opacity:.35;cursor:not-allowed;filter:grayscale(1);':''}"${isMe?`onclick="pickEvalStudent('${n}')"`:''}>${n}${b?`<sub>${b.icon}</sub>`:''}</button>`;
-  }).join('');
+function renderEvalStudentGrid(){showMyEvalArea();}  // me는 로그인 시 이미 확정됨
+function renderPropStudentGrid(){
+  const el=document.getElementById('proposalFormWrap');if(!el)return;
+  // 미로그인이면 안내 메시지, 로그인 시 바로 폼 표시
+  if(!me||me==='선생님'){el.style.display='none';return;}
+  el.style.display='block';
 }
-function renderPropStudentGrid(){makeStudentGrid('propStudentGrid',me,'pickPropStudent');}
-function renderVoteStudentGrid(){makeStudentGrid('voteStudentGrid',me,'pickVoteStudent');}
+function renderVoteStudentGrid(){renderVoteArea();}  // 그리드 없이 바로 투표 영역 표시
 function renderBoardStudentGrid(){}// 더 이상 사용 안 함
 const BOARD_HINTS=[
   '더 큰 우리를 만드려면?',
@@ -1891,10 +2025,20 @@ function toggleProposalPreview(){
 // ══ Eval ══
 function showMyEvalArea(){
   const el=document.getElementById('myEvalArea');if(!el)return;
+  if(!me||me==='선생님'){
+    el.innerHTML='<div style="font-size:.85rem;color:var(--tl);">로그인 후 점수를 입력할 수 있어요</div>';
+    return;
+  }
   const myEval=evalData[me];
   if(myEval!==undefined){
     el.innerHTML=`<div style="padding:10px;background:#F0FDF4;border-radius:8px;font-weight:700;color:#166534;">✅ ${me}님 제출 완료: ${myEval}점</div>`;
-  }else{el.style.display='block';}
+  }else{
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <span id="evalValLbl" style="font-size:1.6rem;font-weight:900;color:var(--primary);min-width:36px;">5</span>
+      <input type="range" class="eval-slider" id="evalSlider" min="0" max="10" value="5" oninput="evalChange(this.value)">
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="submitEval()">✅ 점수 제출</button>`;
+  }
 }
 function evalChange(v){document.getElementById('evalValLbl').textContent=v;}
 function submitEval(){
@@ -1955,60 +2099,109 @@ function renderProposalList(){
 // ══ Vote ══
 function renderVoteArea(){
   const voteEl=document.getElementById('voteArea');if(!voteEl)return;
-  if(!me||me==='선생님'){voteEl.style.display='none';return;}
-  voteEl.style.display='block';
+  if(!me||me==='선생님'){voteEl.innerHTML='<div style="font-size:.85rem;color:var(--tl);">로그인 후 투표할 수 있어요</div>';return;}
+  voteEl.innerHTML='';
   const list=Object.values(proposals).filter(p=>!p.confirmed);
-  if(!list.length){voteEl.innerHTML='<div style="font-size:.85rem;color:var(--tl);">제안된 안건이 없어요</div>';return;}
-  voteEl.innerHTML='<div class="lbl">투표할 안건을 선택하세요</div>'+list.map(p=>{
-    const myVote=p.votes&&p.votes[myDeviceId];
-    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="flex:1;font-weight:700;">${p.title}${me==='선생님'?`<div style="font-size:.78rem;color:var(--tl);">${p.author}</div>`:p.author===me?`<div style="font-size:.78rem;color:var(--primary);font-weight:800;">나 · Lv.${getLevel((xpData[me]||{}).total||0).lv}</div>`:''}</div>
-      <button class="btn btn-sm ${myVote?'btn-primary':'btn-outline'}" onclick="castVote('${p.id}')">${myVote?'✓ 투표함':'투표'}</button>
+  if(!list.length){voteEl.innerHTML='<div style="font-size:.85rem;color:var(--tl);">제안된 안건이 없어요</div>';
+    const wrapEl=document.getElementById('confirmAgendaWrap');if(wrapEl)wrapEl.style.display='none';return;}
+  // 이미 투표한 안건 확인
+  const myVotedProp=list.find(p=>p.votes&&p.votes[myDeviceId]);
+  if(myVotedProp){
+    voteEl.innerHTML=`<div style="text-align:center;padding:20px 14px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:14px;border:1.5px solid #6EE7B7;">
+      <div style="font-size:1.8rem;margin-bottom:6px;">✅</div>
+      <div style="font-weight:800;font-size:.95rem;color:#065F46;">"${myVotedProp.title}"에 투표 완료!</div>
+      <div style="font-size:.82rem;color:#059669;margin-top:4px;">개표를 기다려주세요</div>
     </div>`;
-  }).join('');
-  // Confirm button for president
-  const wrapEl=document.getElementById('confirmAgendaWrap');
-  if(wrapEl){
-    if(isPresident()&&list.length){
-      const top=list.sort((a,b)=>Object.values(b.votes||{}).filter(v=>v).length-Object.values(a.votes||{}).filter(v=>v).length)[0];
-      wrapEl.style.display='block';
-      wrapEl.innerHTML=`<button class="btn btn-green btn-sm" onclick="confirmAgenda('${top.id}')">✅ 최다득표 안건 확정: "${top.title}"</button>`;
-    }else wrapEl.style.display='none';
+  }else{
+    voteEl.innerHTML='<div class="lbl">투표할 안건을 선택하세요 (1회만 가능)</div>'+list.map(p=>{
+      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="flex:1;font-weight:700;">${p.title}${p.author===me?`<div style="font-size:.78rem;color:var(--primary);font-weight:800;">나의 제안</div>`:''}</div>
+        <button class="btn btn-sm btn-outline" onclick="castVote('${p.id}')">투표</button>
+      </div>`;
+    }).join('');
   }
+  // 확정 버튼은 renderVoteResultArea에서 처리
+  const wrapEl=document.getElementById('confirmAgendaWrap');if(wrapEl)wrapEl.style.display='none';
 }
 function castVote(propId){
   const p=proposals[propId];if(!p)return;
-  const already=p.votes&&p.votes[myDeviceId];
-  proposalsRef.child(propId+'/votes/'+myDeviceId).set(already?null:true);
+  // 이미 어떤 안건에든 투표했으면 차단
+  const alreadyVoted=Object.values(proposals).some(x=>x.votes&&x.votes[myDeviceId]);
+  if(alreadyVoted){alert('투표는 한 번만 할 수 있어요!');return;}
+  proposalsRef.child(propId+'/votes/'+myDeviceId).set(true);
 }
 function renderVoteResultArea(){
   const el=document.getElementById('voteResultArea');if(!el)return;
-  const list=Object.values(proposals).sort((a,b)=>
+  const allList=Object.values(proposals).sort((a,b)=>
     Object.values(b.votes||{}).filter(v=>v).length-Object.values(a.votes||{}).filter(v=>v).length
   );
-  const hasVotes=list.some(p=>Object.values(p.votes||{}).filter(v=>v).length>0);
-  if(!list.length||!hasVotes){el.innerHTML='';return;}
+  if(!allList.length){el.innerHTML='';return;}
   const total=STUDENTS.length;
-  el.innerHTML=`<div style="margin-top:14px;padding:14px;background:linear-gradient(135deg,#F0F4FF,#EBF0FF);border-radius:14px;border:1.5px solid #C7D2FE;">
-    <div style="font-size:.88rem;font-weight:800;color:var(--primary-d);margin-bottom:10px;">📊 실시간 투표 현황</div>
-    ${list.map(p=>{
-      const cnt=Object.values(p.votes||{}).filter(v=>v).length;
-      const pct=Math.round(cnt/Math.max(total,1)*100);
-      const isTop=list[0]===p&&cnt>0;
-      return`<div style="margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:3px;">
-          <span style="font-weight:700;">${isTop?'🥇 ':''}"${p.title}"${p.confirmed?'<span style="color:#10B981;font-size:.78rem;"> ✅ 확정</span>':''}</span>
-          <span style="font-weight:900;color:var(--primary);">${cnt}표</span>
-        </div>
-        <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
-      </div>`;
-    }).join('')}
-    <div style="font-size:.78rem;color:var(--tl);margin-top:6px;">전체 ${total}명 중 투표 참여 ${Math.max(...list.map(p=>Object.keys(p.votes||{}).filter(k=>p.votes[k]).length))}명</div>
-  </div>`;
+  // 참여자 수 (표수 공개 여부와 무관하게 계산)
+  const voterCount=allList.length?Math.max(0,...allList.map(p=>Object.keys(p.votes||{}).filter(k=>p.votes[k]).length)):0;
+  const canReveal=(me==='선생님'||isPresident());
+
+  if(meetFlow.voteRevealed){
+    // ── 개표 후: 결과 전체 공개 ──
+    const hasVotes=allList.some(p=>Object.values(p.votes||{}).filter(v=>v).length>0);
+    if(!hasVotes){el.innerHTML='';return;}
+    const top=allList[0];
+    const topCnt=Object.values(top.votes||{}).filter(v=>v).length;
+    // 확정 안건 배너 (상단 강조)
+    const winner=meetFlow.confirmedId?proposals[meetFlow.confirmedId]:null;
+    const winnerBanner=winner
+      ?`<div style="margin-bottom:14px;padding:16px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:14px;border:2px solid #10B981;text-align:center;">
+          <div style="font-size:.78rem;font-weight:700;color:#059669;margin-bottom:4px;">🏆 확정된 안건</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#065F46;">"${winner.title}"</div>
+          <div style="font-size:.78rem;color:#059669;margin-top:4px;">${Object.values(winner.votes||{}).filter(v=>v).length}표 획득</div>
+        </div>`:'' ;
+    el.innerHTML=`<div style="margin-top:14px;padding:14px;background:linear-gradient(135deg,#F0F4FF,#EBF0FF);border-radius:14px;border:1.5px solid #C7D2FE;">
+      ${winnerBanner}
+      <div style="font-size:.88rem;font-weight:800;color:var(--primary-d);margin-bottom:10px;">📊 개표 결과</div>
+      ${allList.map(p=>{
+        const cnt=Object.values(p.votes||{}).filter(v=>v).length;
+        const pct=Math.round(cnt/Math.max(total,1)*100);
+        const isTop=allList[0]===p&&cnt>0;
+        return`<div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:3px;">
+            <span style="font-weight:700;">${isTop?'🥇 ':''}"${p.title}"${p.confirmed?'<span style="color:#10B981;font-size:.78rem;"> ✅ 확정</span>':''}</span>
+            <span style="font-weight:900;color:var(--primary);">${cnt}표</span>
+          </div>
+          <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+      <div style="font-size:.78rem;color:var(--tl);margin-top:6px;">전체 ${total}명 중 ${voterCount}명 투표 참여</div>
+    </div>`;
+  }else{
+    // ── 개표 전: 참여 인원만 표시, 표수 비공개 ──
+    const revealBtn=canReveal
+      ?`<button class="btn btn-primary btn-sm" onclick="revealVotes()" style="margin-top:10px;width:100%;">🗳️ 개표하기</button>`:'';
+    el.innerHTML=`<div style="margin-top:14px;padding:18px 14px;background:#F8FAFC;border-radius:14px;border:1.5px solid var(--border);text-align:center;">
+      <div style="font-size:.88rem;font-weight:800;color:var(--tl);margin-bottom:8px;">🗳️ 투표 진행 중</div>
+      <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">${voterCount} / ${total}</div>
+      <div style="font-size:.78rem;color:var(--tl);margin-top:4px;">명 투표 완료 (결과는 개표 후 공개)</div>
+      ${revealBtn}
+    </div>`;
+  }
+}
+function revealVotes(){
+  if(me!=='선생님'&&!isPresident()){return;}
+  if(!confirm('지금 개표할까요?\n결과가 공개되고 최다득표 안건이 자동으로 결정됩니다.'))return;
+  // 최다득표 안건 자동 확정
+  const list=Object.values(proposals)
+    .sort((a,b)=>Object.values(b.votes||{}).filter(v=>v).length-Object.values(a.votes||{}).filter(v=>v).length);
+  const top=list[0];
+  const topCnt=top?Object.values(top.votes||{}).filter(v=>v).length:0;
+  const updates={voteRevealed:true};
+  if(top&&topCnt>0){
+    updates.confirmedId=top.id;
+    proposalsRef.child(top.id).update({confirmed:true});
+  }
+  meetFlowRef.update(updates);
 }
 function confirmAgenda(propId){
-  if(!isPresident()){alert('회장만 확정할 수 있어요!');return;}
-  if(!confirm('이 안건을 확정할까요?'))return;
+  // 수동 확정 (관리자 전용, 비상시 사용)
+  if(me!=='선생님'&&!isPresident())return;
   proposalsRef.child(propId).update({confirmed:true});
   meetFlowRef.update({confirmedId:propId});
 }
@@ -2038,15 +2231,36 @@ function grantSpeaker(name){
   timerRef.set({running:true,startedAt:Date.now(),remaining:timerDur,dur:timerDur,speaker:name});
 }
 function renderRaiseHandGrid(){
-  const el=document.getElementById('raiseHandGrid');if(!el)return;
-  const cnt=countProposals();
-  el.innerHTML=STUDENTS.map(n=>{
-    const isRaising=!!speakRequests[n];
-    const isSpeaking=n===currentSpeaker&&timerRun;
-    const isMe=n===me;
-    const b=getBadge(cnt[n]||0);
-    return`<button class="s-btn${isRaising?' raising':''}${isSpeaking?' speaking':''}" onclick="${isMe?`raiseHand('${n}')`:`grantSpeaker('${n}')`}">${n}${b?`<sub>${b.icon}</sub>`:''}${isRaising?'<sub>🙋</sub>':''}</button>`;
-  }).join('');
+  const el=document.getElementById('raiseHandWrap');if(!el)return;
+  if(!me){el.innerHTML='';return;}
+  const isRaising=!!speakRequests[me];
+  const isSpeaking=me===currentSpeaker&&timerRun;
+  const canGrant=isGranter();
+
+  // 손들기 버튼 (학생 본인용)
+  let html='';
+  if(me!=='선생님'){
+    if(isSpeaking){
+      html+=`<div style="text-align:center;padding:10px;background:linear-gradient(135deg,#EEF2FF,#E4EEFF);border-radius:12px;font-weight:800;color:var(--primary);">🎤 발표 중...</div>`;
+    }else if(isRaising){
+      html+=`<button class="btn btn-outline btn-sm" onclick="raiseHand('${me}')" style="width:100%;padding:12px;font-size:.95rem;">✋ 손 내리기</button>`;
+    }else{
+      html+=`<button class="btn btn-primary btn-sm" onclick="raiseHand('${me}')" style="width:100%;padding:12px;font-size:.95rem;">🙋 손들기</button>`;
+    }
+  }
+
+  // 선생님·회장·부회장: 직접 발언 부여용 학생 목록 (소형)
+  if(canGrant){
+    const cnt=countProposals();
+    html+=`<div style="margin-top:10px;"><div class="lbl" style="margin-bottom:6px;">✋ 직접 발언 부여</div>
+    <div class="s-grid">${STUDENTS.map(n=>{
+      const raising=!!speakRequests[n];
+      const speaking=n===currentSpeaker&&timerRun;
+      const b=getBadge(cnt[n]||0);
+      return`<button class="s-btn${raising?' raising':''}${speaking?' speaking':''}" onclick="grantSpeaker('${n}')">${n}${b?`<sub>${b.icon}</sub>`:''}${raising?'<sub>🙋</sub>':''}</button>`;
+    }).join('')}</div></div>`;
+  }
+  el.innerHTML=html;
 }
 function renderSpeakQueue(){
   const el=document.getElementById('speakQueue'),nm=document.getElementById('noQueueMsg');
@@ -3587,4 +3801,38 @@ function renderAdminBoard(){
   const el=document.getElementById('adminBoardList');if(!el)return;
   const posts=Object.values(boardPosts||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
   el.innerHTML=posts.slice(0,5).map(function(p){
-    return'<d
+    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||p.content||'')+'</div>'
+      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||p.name||'')+' · '+(p.date||'')+'</div></div>';
+  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">게시글이 없어요.</div>';
+}
+function renderAdminProposals(){
+  const el=document.getElementById('adminProposalList');if(!el)return;
+  const props=Object.values(proposals||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  el.innerHTML=props.slice(0,5).map(function(p){
+    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||'')+'</div>'
+      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||'')+' · '+(p.date||'')+'</div></div>';
+  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">안건이 없어요.</div>';
+}
+function renderActivityTable(){
+  const el=document.getElementById('activityTable');if(!el)return;
+  el.innerHTML=STUDENTS.map(function(n){
+    const xp=xpData[n]||{};
+    const log=xp.log||[];
+    const propose=log.filter(function(l){return l.reason&&l.reason.indexOf('안건')>=0;}).length;
+    const board=log.filter(function(l){return l.reason&&l.reason.indexOf('게시판')>=0;}).length;
+    const speak=log.filter(function(l){return l.reason&&l.reason.indexOf('발표')>=0;}).length;
+    const checkin=log.filter(function(l){return l.reason&&l.reason.indexOf('체크인')>=0;}).length;
+    return'<div class="activity-row">'
+      +'<div class="activity-name">'+n+'</div>'
+      +'<div class="activity-cell">'+propose+'</div>'
+      +'<div class="activity-cell">'+board+'</div>'
+      +'<div class="activity-cell">'+speak+'</div>'
+      +'<div class="activity-cell">'+checkin+'</div>'
+      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
+  }).join('');
+}
+</script>
+</body>
+</html>

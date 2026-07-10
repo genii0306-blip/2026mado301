@@ -469,6 +469,16 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
 
   <!-- 단계3 -->
   <div id="step3" style="display:none;">
+    <!-- 안건 제안 확인 패널 (접기/펼치기) -->
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
+      <button onclick="toggleProposalPreview()" style="width:100%;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:none;border-radius:14px;padding:13px 16px;text-align:left;font-weight:800;font-size:.92rem;color:#1D4ED8;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>📋 안건 제안 확인 (이전 단계)</span>
+        <span id="proposalPreviewToggleIcon" style="font-size:1.1rem;transition:transform .2s;">▼</span>
+      </button>
+      <div id="proposalPreviewBody" style="display:none;padding:0 14px 14px;">
+        <div id="proposalPreview"></div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-title">🎤 단계 3 · 발표 &amp; 안건 투표</div>
       <div style="margin-bottom:12px;">
@@ -1809,9 +1819,9 @@ function pickBoardStudent(n){setMe(n,'board');}
 // ══ Step Flow ══
 function applyStep(s){
   meetFlow.step=s;
-  // 학생: 3단계 이상이면 강제 이동(글로벌), 1-2단계면 로컬 단계 유지
+  // 선생님만 글로벌 단계 그대로 표시. 모든 학생은 3단계 이상일 때만 강제 이동
   let display;
-  if(isGranter()){
+  if(me==='선생님'){
     display=s;
   }else{
     if(s>=3){localFlowStep=s;display=s;}
@@ -1823,40 +1833,59 @@ function _renderFlowDisplay(s){
   ['step1','step2','step3','step4'].forEach((id,i)=>{
     document.getElementById(id).style.display=(i+1===s)?'block':'none';
   });
-  // Step bar
+  // Step bar (선생님만 클릭으로 단계 이동)
   const labels=['지난 회의 돌아보기','안건 제안','발표 & 투표','개인 실천'];
   document.getElementById('stepBar').innerHTML=labels.map((l,i)=>{
     const st=i+1<s?'done':i+1===s?'active':'';
     return`<div class="step-item ${st}" onclick="${me==='선생님'?`setStep(${i+1})`:''}">${'①②③④'[i]} ${l}</div>`;
   }).join('');
-  // Nav buttons
-  const granter=isGranter();
-  // 선생님·회장·부회장: 전체 4단계 이동(Firebase 동기화)
-  // 일반 학생: 1↔2단계만 로컬 이동 (다른 화면 영향 없음)
-  document.getElementById('prevStepBtn').style.display=(granter?s>1:s===2)?'inline-flex':'none';
-  document.getElementById('nextStepBtn').style.display=(granter?s<4:s===1)?'inline-flex':'none';
-  document.getElementById('finishMeetingBtn').style.display=(granter&&s===4)?'inline-flex':'none';
+  // Nav buttons: 선생님만 전체 이동, 학생은 1↔2 로컬만
+  const isTeacher=(me==='선생님');
+  document.getElementById('prevStepBtn').style.display=(isTeacher?s>1:s===2)?'inline-flex':'none';
+  document.getElementById('nextStepBtn').style.display=(isTeacher?s<4:s===1)?'inline-flex':'none';
+  document.getElementById('finishMeetingBtn').style.display=(isTeacher&&s===4)?'inline-flex':'none';
   // Step-specific
   const month=new Date().getMonth()+1;
   const q=document.getElementById('evalMonthQuestion');
   if(q)q.textContent=`${month}월 학급 목표를 얼마나 지켰나요? (0~10점)`;
-  if(s===3){renderRaiseHandGrid();renderSpeakQueue();}
+  if(s===3){renderRaiseHandGrid();renderSpeakQueue();renderProposalPreview();}
   renderSpeakMini();
 }
 function moveStep(dir){
-  if(isGranter()){
-    // 선생님·회장·부회장: Firebase 동기화 (전체 화면 이동)
+  if(me==='선생님'){
+    // 선생님만 Firebase 동기화 → 전체 화면 이동
     const s=Math.max(1,Math.min(4,(meetFlow.step||1)+dir));
     setStep(s);
   }else{
-    // 일반 학생: 1-2단계 로컬 이동만 (Firebase 기록 안 함)
+    // 모든 학생: 1-2단계 로컬 이동만 (다른 사람 화면 영향 없음)
     localFlowStep=Math.max(1,Math.min(2,localFlowStep+dir));
     _renderFlowDisplay(localFlowStep);
   }
 }
 function setStep(s){
-  if(!isGranter())return;
+  if(me!=='선생님')return;
   meetFlowRef.update({step:s});
+}
+// ── 발표 단계에서 안건 제안 내용 미리보기 ──
+function renderProposalPreview(){
+  const el=document.getElementById('proposalPreview');if(!el)return;
+  const list=Object.values(proposals).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!list.length){el.innerHTML='<div style="font-size:.85rem;color:var(--tl);padding:8px 0;">제안된 안건이 없어요</div>';return;}
+  el.innerHTML=list.map(p=>`
+    <div style="border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff;">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:3px;">${p.confirmed?'✅ ':''}${p.title}</div>
+      <div style="font-size:.8rem;color:var(--tl);margin-bottom:5px;">${p.author||''} · ${p.date||''}</div>
+      <div style="font-size:.85rem;white-space:pre-wrap;color:#333;">${p.text||''}</div>
+    </div>`).join('');
+}
+function toggleProposalPreview(){
+  const body=document.getElementById('proposalPreviewBody');
+  const icon=document.getElementById('proposalPreviewToggleIcon');
+  if(!body)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  if(icon)icon.style.transform=open?'rotate(180deg)':'';
+  if(open)renderProposalPreview();
 }
 
 // ══ Eval ══
@@ -3558,38 +3587,4 @@ function renderAdminBoard(){
   const el=document.getElementById('adminBoardList');if(!el)return;
   const posts=Object.values(boardPosts||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
   el.innerHTML=posts.slice(0,5).map(function(p){
-    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
-      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||p.content||'')+'</div>'
-      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||p.name||'')+' · '+(p.date||'')+'</div></div>';
-  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">게시글이 없어요.</div>';
-}
-function renderAdminProposals(){
-  const el=document.getElementById('adminProposalList');if(!el)return;
-  const props=Object.values(proposals||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
-  el.innerHTML=props.slice(0,5).map(function(p){
-    return'<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
-      +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||'')+'</div>'
-      +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||'')+' · '+(p.date||'')+'</div></div>';
-  }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">안건이 없어요.</div>';
-}
-function renderActivityTable(){
-  const el=document.getElementById('activityTable');if(!el)return;
-  el.innerHTML=STUDENTS.map(function(n){
-    const xp=xpData[n]||{};
-    const log=xp.log||[];
-    const propose=log.filter(function(l){return l.reason&&l.reason.indexOf('안건')>=0;}).length;
-    const board=log.filter(function(l){return l.reason&&l.reason.indexOf('게시판')>=0;}).length;
-    const speak=log.filter(function(l){return l.reason&&l.reason.indexOf('발표')>=0;}).length;
-    const checkin=log.filter(function(l){return l.reason&&l.reason.indexOf('체크인')>=0;}).length;
-    return'<div class="activity-row">'
-      +'<div class="activity-name">'+n+'</div>'
-      +'<div class="activity-cell">'+propose+'</div>'
-      +'<div class="activity-cell">'+board+'</div>'
-      +'<div class="activity-cell">'+speak+'</div>'
-      +'<div class="activity-cell">'+checkin+'</div>'
-      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
-  }).join('');
-}
-</script>
-</body>
-</html>
+    return'<d

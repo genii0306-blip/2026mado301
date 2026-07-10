@@ -1534,7 +1534,7 @@ evalRef.on('value',snap=>{evalData=snap.val()||{};renderEvalResult();});
 meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
-  renderVoteArea();renderVoteResultArea(); // voteRevealed 변경 즉시 반영
+  renderVoteArea();renderVoteResultArea();renderConfirmedInfo();renderTeacherConfirmPanel();
 });
 classScoreRef.on('value',snap=>{
   const d=snap.val();if(d)classScore=d;

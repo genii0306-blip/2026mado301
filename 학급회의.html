@@ -803,14 +803,24 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   </div>
   <!-- 학생 뷰 -->
   <div id="personalStudentView" style="display:none;">
-    <div class="card" style="background:linear-gradient(160deg,#F5F3FF,#EDE9FE,#fff);border:1.5px solid #C4B5FD;">
-      <div class="card-title" style="justify-content:center;">⭐ 내 개인 점수</div>
-      <div style="text-align:center;margin:10px 0;">
-        <div class="ps-score-big" id="psMyScore">0</div>
-        <div style="font-size:.85rem;color:var(--tl);margin-top:4px;">점</div>
-      </div>
-      <button class="btn btn-primary" onclick="openPersonalScoreUse()" style="width:100%;margin-top:8px;">🎁 점수 사용하기</button>
+    <!-- 총 점수 -->
+    <div class="card" style="background:linear-gradient(160deg,#F5F3FF,#EDE9FE,#fff);border:1.5px solid #C4B5FD;text-align:center;padding:22px 14px 18px;">
+      <div style="font-size:.82rem;font-weight:700;color:#7C3AED;letter-spacing:.05em;margin-bottom:4px;" id="psMyNameLbl">⭐ 내 개인 점수</div>
+      <div class="ps-score-big" id="psMyScore">0</div>
+      <div style="font-size:.85rem;color:var(--tl);margin-top:2px;">점</div>
     </div>
+    <!-- 월별 꺾은선 그래프 -->
+    <div class="card">
+      <div class="card-title">📈 월별 점수 변화</div>
+      <div id="psMyChart"></div>
+    </div>
+    <!-- 점수 사용 -->
+    <div class="card">
+      <div class="card-title">🎁 점수 사용하기</div>
+      <div style="font-size:.78rem;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:7px 10px;margin-bottom:12px;">⏰ 동일한 상품은 <b>1주일에 1회</b>만 사용할 수 있어요</div>
+      <div id="psUseItems"></div>
+    </div>
+    <!-- 점수 기록 -->
     <div class="card">
       <div class="card-title">📋 내 점수 기록</div>
       <div id="psMyLog"></div>
@@ -1374,6 +1384,7 @@ const VALUES=['협동','배려','용서','자율','양보','예의','끈기'];
 // ══ State ══
 let adminConfig={password:'1094'};
 let studentPins={};  // {학생명: '1234'}
+let pinsLoaded=false; // Firebase PIN 데이터 로드 완료 여부
 let pinBuffer='';    // 현재 입력 중인 PIN
 let pinMode='';      // 'enter'|'set1'|'set2'
 let pinFirst='';     // set2 단계에서 첫 번째 입력값 보관
@@ -1492,7 +1503,17 @@ function calcHwXP(name){return Object.values(homeworkData).reduce((s,hw)=>{const
 
 // ══ Firebase listeners ══
 adminRef.on('value',snap=>{const d=snap.val();if(d)adminConfig=d;});
-studentPinsRef.on('value',snap=>{studentPins=snap.val()||{};if(activeTab==='admin')renderPinMgmt();});
+studentPinsRef.on('value',snap=>{
+  studentPins=snap.val()||{};
+  pinsLoaded=true;
+  // 웰컴 화면이 열려있으면 버튼 상태 업데이트
+  if(document.getElementById('welcomeScreen').style.display!=='none'&&
+     document.getElementById('welcomeScreen').style.display!==''){
+    const btn=document.getElementById('welcomeEnterBtn');
+    if(btn&&me){btn.disabled=false;btn.style.opacity='1';}
+  }
+  if(activeTab==='admin')renderPinMgmt();
+});
 boardRef.on('value',snap=>{
   boardPosts=snap.val()||{};
   Object.keys(boardPosts).forEach(k=>boardPosts[k].id=k);
@@ -1776,6 +1797,13 @@ function goHome(){
 function startPinEntry(){
   if(!me)return;
   if(me==='선생님'){enterApp();return;}
+  if(!pinsLoaded){
+    const btn=document.getElementById('welcomeEnterBtn');
+    if(btn){btn.textContent='⏳ 연결 중...';btn.disabled=true;}
+    // 최대 3초 대기 후 재시도
+    setTimeout(()=>{if(pinsLoaded)startPinEntry();else enterApp();},3000);
+    return;
+  }
   const hasPIN=!!(studentPins[me]);
   document.getElementById('welcomeNameScreen').style.display='none';
   const ps=document.getElementById('pinScreen');
@@ -2162,15 +2190,20 @@ function renderVoteResultArea(){
         const cnt=Object.values(p.votes||{}).filter(v=>v).length;
         const pct=Math.round(cnt/Math.max(total,1)*100);
         const isTop=allList[0]===p&&cnt>0;
+        const isConfirmed=meetFlow.confirmedId===p.id;
+        const adjustBtn=canReveal&&!isConfirmed
+          ?`<button onclick="confirmAgenda('${p.id}')" style="font-size:.72rem;padding:2px 8px;border-radius:8px;background:#E0E7FF;color:#3730A3;border:none;cursor:pointer;margin-left:6px;white-space:nowrap;">✏️ 확정</button>`
+          :'';
         return`<div style="margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:3px;">
-            <span style="font-weight:700;">${isTop?'🥇 ':''}"${p.title}"${p.confirmed?'<span style="color:#10B981;font-size:.78rem;"> ✅ 확정</span>':''}</span>
-            <span style="font-weight:900;color:var(--primary);">${cnt}표</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;margin-bottom:3px;">
+            <span style="font-weight:700;flex:1;">${isTop?'🥇 ':''}"${p.title}"${isConfirmed?'<span style="color:#10B981;font-size:.78rem;"> ✅ 확정</span>':''}${adjustBtn}</span>
+            <span style="font-weight:900;color:var(--primary);margin-left:8px;">${cnt}표</span>
           </div>
           <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
         </div>`;
       }).join('')}
       <div style="font-size:.78rem;color:var(--tl);margin-top:6px;">전체 ${total}명 중 ${voterCount}명 투표 참여</div>
+      ${canReveal?`<div style="font-size:.75rem;color:#6B7280;margin-top:6px;border-top:1px solid #E5E7EB;padding-top:6px;">✏️ 버튼으로 확정 안건을 조정할 수 있어요 (선생님·회장 전용)</div>`:''}
     </div>`;
   }else{
     // ── 개표 전: 참여 인원만 표시, 표수 비공개 ──
@@ -2200,8 +2233,13 @@ function revealVotes(){
   meetFlowRef.update(updates);
 }
 function confirmAgenda(propId){
-  // 수동 확정 (관리자 전용, 비상시 사용)
   if(me!=='선생님'&&!isPresident())return;
+  const p=proposals[propId];if(!p)return;
+  if(!confirm(`"${p.title}"으로 확정 안건을 변경할까요?`))return;
+  // 기존 확정 해제
+  const prev=meetFlow.confirmedId;
+  if(prev&&prev!==propId)proposalsRef.child(prev).update({confirmed:false});
+  // 새 확정
   proposalsRef.child(propId).update({confirmed:true});
   meetFlowRef.update({confirmedId:propId});
 }
@@ -2736,9 +2774,12 @@ function teacherGivePersonalScore(){
 }
 function renderPsMyView(){
   const d=personalScore[me]||{total:0,log:[]};
-  const sc=document.getElementById('psMyScore');if(sc)sc.textContent=d.total||0;
+  const sc=document.getElementById('psMyScore');if(sc)sc.textContent=(d.total||0).toLocaleString();
+  const lbl=document.getElementById('psMyNameLbl');if(lbl)lbl.textContent=`⭐ ${me}의 개인 점수`;
+  renderPsMyChart();
+  renderPsUseItems();
   const logEl=document.getElementById('psMyLog');if(!logEl)return;
-  const logs=(d.log||[]).slice(0,30);
+  const logs=(d.log||[]).slice().reverse().slice(0,30);
   if(!logs.length){logEl.innerHTML='<div class="empty-state"><div class="ei">⭐</div><div>기록 없음</div></div>';return;}
   logEl.innerHTML=logs.map(l=>`<div class="ps-log-row">
     <span style="font-weight:800;color:${l.delta>0?'#059669':'#EF4444'};min-width:48px;">${l.delta>0?'+':''}${l.delta}</span>
@@ -2746,17 +2787,88 @@ function renderPsMyView(){
     <span style="font-size:.78rem;color:var(--tl);">${l.date||''}</span>
   </div>`).join('');
 }
+// 주간 사용 여부 확인 (같은 type이 최근 7일 내 log에 있으면 true)
+function isUsedThisWeek(name,typeName){
+  const log=(personalScore[name]||{}).log||[];
+  const d=new Date();d.setDate(d.getDate()-7);
+  const cutoff=d.toISOString().slice(0,10);
+  return log.some(l=>l.delta<0&&(l.reason||'').includes(typeName)&&(l.date||'')>=cutoff);
+}
+// 점수 사용 아이템 렌더링
+function renderPsUseItems(){
+  const el=document.getElementById('psUseItems');if(!el||!me)return;
+  const myPts=(personalScore[me]||{}).total||0;
+  const ITEMS=[
+    {name:'1일 자리바꾸기권',icon:'🪑',cost:50,note:'상대방의 동의 후 사용 가능',color:'#10B981',light:'#ECFDF5',border:'#6EE7B7'},
+    {name:'1일 실탄 면제권',icon:'🛡️',cost:50,note:'',color:'#EF4444',light:'#FEF2F2',border:'#FCA5A5'}
+  ];
+  el.innerHTML=ITEMS.map(item=>{
+    const usedWeek=isUsedThisWeek(me,item.name);
+    const canAfford=myPts>=item.cost;
+    const disabled=usedWeek||!canAfford;
+    return`<div style="border:2px solid ${disabled?'#E5E7EB':item.border};border-radius:14px;padding:14px;margin-bottom:10px;background:${disabled?'#F9FAFB':item.light};transition:all .2s;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.6rem;">${item.icon}</span>
+          <div>
+            <div style="font-weight:800;font-size:.95rem;color:${disabled?'#9CA3AF':'#111'};">${item.name}</div>
+            ${item.note?`<div style="font-size:.72rem;color:#6B7280;margin-top:2px;">💡 ${item.note}</div>`:''}
+          </div>
+        </div>
+        <span style="font-size:.95rem;font-weight:900;color:${disabled?'#9CA3AF':'#EF4444'};white-space:nowrap;margin-left:8px;">-${item.cost}점</span>
+      </div>
+      ${usedWeek
+        ?`<div style="text-align:center;padding:8px;background:#FEF9C3;border-radius:8px;font-size:.82rem;color:#92400E;font-weight:700;">✅ 이번 주 이미 사용했어요</div>`
+        :!canAfford
+        ?`<div style="text-align:center;padding:8px;background:#FEE2E2;border-radius:8px;font-size:.82rem;color:#991B1B;font-weight:700;">점수 부족 (보유 ${myPts}점 / 필요 ${item.cost}점)</div>`
+        :`<button class="btn btn-sm" onclick="submitPersonalScoreReq('${item.name}',${item.cost})" style="width:100%;background:${item.color};color:#fff;border-color:${item.color};font-weight:700;">사용 신청하기</button>`
+      }
+    </div>`;
+  }).join('');
+}
+// 월별 꺾은선 그래프
+function renderPsMyChart(){
+  const el=document.getElementById('psMyChart');if(!el)return;
+  const log=(personalScore[me]||{}).log||[];
+  const now=new Date();
+  const months=[];
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+  const monthly={};
+  log.forEach(l=>{const ym=(l.date||'').slice(0,7);if(!ym)return;monthly[ym]=(monthly[ym]||0)+(l.delta||0);});
+  let cum=0;
+  const pts=months.map(m=>{cum+=monthly[m]||0;return{m:m.slice(5),v:Math.max(0,cum)};});
+  if(!pts.some(p=>p.v>0)){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--tl);font-size:.85rem;">아직 기록이 없어요</div>';return;}
+  const W=300,H=130,PL=34,PR=8,PT=14,PB=26;
+  const IW=W-PL-PR,IH=H-PT-PB;
+  const maxV=Math.max(...pts.map(p=>p.v));
+  const px=i=>PL+(i/Math.max(pts.length-1,1))*IW;
+  const py=v=>PT+(1-v/maxV)*IH;
+  const pathD=pts.map((p,i)=>`${i===0?'M':'L'}${px(i)},${py(p.v)}`).join(' ');
+  const areaD=pathD+` L${px(pts.length-1)},${PT+IH} L${px(0)},${PT+IH} Z`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+    <defs><linearGradient id="psGr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7C3AED" stop-opacity=".25"/><stop offset="100%" stop-color="#7C3AED" stop-opacity=".02"/></linearGradient></defs>
+    ${[0,.5,1].map(r=>`<line x1="${PL}" y1="${PT+r*IH}" x2="${W-PR}" y2="${PT+r*IH}" stroke="#E5E7EB" stroke-width="1"/>`).join('')}
+    <path d="${areaD}" fill="url(#psGr)"/>
+    <path d="${pathD}" fill="none" stroke="#7C3AED" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p,i)=>`<circle cx="${px(i)}" cy="${py(p.v)}" r="4" fill="#7C3AED" stroke="#fff" stroke-width="2"/>
+    ${p.v>0?`<text x="${px(i)}" y="${py(p.v)-9}" text-anchor="middle" font-size="9" fill="#7C3AED" font-weight="700">${p.v}</text>`:''}`).join('')}
+    ${pts.map((p,i)=>`<text x="${px(i)}" y="${H-4}" text-anchor="middle" font-size="9" fill="#9CA3AF">${p.m}월</text>`).join('')}
+    <text x="${PL-3}" y="${PT+3}" text-anchor="end" font-size="9" fill="#9CA3AF">${maxV}</text>
+    <text x="${PL-3}" y="${PT+IH/2+3}" text-anchor="end" font-size="9" fill="#9CA3AF">${Math.round(maxV/2)}</text>
+    <text x="${PL-3}" y="${PT+IH+3}" text-anchor="end" font-size="9" fill="#9CA3AF">0</text>
+  </svg>`;
+}
 function openPersonalScoreUse(){openM('personalScoreUseModal');}
 function submitPersonalScoreReq(type,cost){
   const myPts=(personalScore[me]||{}).total||0;
   if(myPts<cost){alert(`⭐ 점수가 부족합니다. (보유: ${myPts}점 / 필요: ${cost}점)`);return;}
-  // check no pending req from same student
+  if(isUsedThisWeek(me,type)){alert('이번 주에 이미 사용한 상품이에요.\n다음 주에 다시 사용할 수 있어요.');return;}
   const pending=Object.values(personalScoreReq).filter(r=>r.student===me&&r.status==='pending');
   if(pending.length>0){alert('이미 대기 중인 신청이 있습니다. 선생님의 처리를 기다려주세요.');return;}
   const id=genId();
   personalScoreReqRef.child(id).set({id,student:me,type,cost,status:'pending',ts:Date.now(),date:todayStr()});
-  closeM('personalScoreUseModal');
   alert(`✅ "${type}" 사용 신청 완료!\n선생님 승인 후 ${cost}점이 차감됩니다.`);
+  renderPsUseItems(); // 버튼 상태 즉시 반영
 }
 
 // ══ Bell / Approval ══

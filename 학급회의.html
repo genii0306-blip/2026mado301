@@ -2146,15 +2146,17 @@ function renderVoteArea(){
       <div style="font-size:.82rem;color:#059669;margin-top:4px;">개표를 기다려주세요</div>
     </div>`;
   }else{
-    voteEl.innerHTML='<div class="lbl">투표할 안건을 선택하세요 (1회만 가능)</div>'+list.map(p=>{
-      const preview=p.text?(p.text.length>40?p.text.slice(0,40)+'…':p.text):'';
-      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div style="flex:1;">
-          <div style="font-weight:700;">${p.title}${p.author===me?'<span style="font-size:.72rem;color:var(--primary);font-weight:800;margin-left:4px;">나의 제안</span>':''}</div>
-          ${preview?`<div style="font-size:.75rem;color:var(--tl);margin-top:2px;line-height:1.4;">${preview}</div>`:''}
-          <div style="font-size:.72rem;color:#9CA3AF;margin-top:1px;">${p.author||''}</div>
+    voteEl.innerHTML='<div class="lbl" style="margin-bottom:10px;">안건을 읽고 투표하세요 (1회만 가능)</div>'+list.map(p=>{
+      const isMine=p.author===me;
+      return`<div style="border:1.5px solid ${isMine?'#A5B4FC':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;background:${isMine?'#F5F3FF':'#FAFAFA'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+          <div style="font-weight:800;font-size:.95rem;flex:1;">${p.title}${isMine?'<span style="font-size:.72rem;color:var(--primary);font-weight:800;margin-left:5px;">나의 제안</span>':''}</div>
         </div>
-        <button class="btn btn-sm btn-outline" onclick="castVote('${p.id}')">투표</button>
+        ${p.text?`<div style="font-size:.85rem;color:#444;line-height:1.6;white-space:pre-wrap;margin-bottom:10px;">${p.text}</div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.75rem;color:#9CA3AF;">${p.author||''} · ${p.date||''}</span>
+          <button class="btn btn-sm btn-primary" onclick="castVote('${p.id}')" style="padding:6px 18px;">🗳️ 투표</button>
+        </div>
       </div>`;
     }).join('');
   }

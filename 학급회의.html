@@ -888,6 +888,13 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
       </div>
     </div>
   </div>
+  <!-- 발표 횟수 편집 -->
+  <div class="card" style="border-left:5px solid #0EA5E9;background:linear-gradient(135deg,#F0F9FF,#E0F2FE);">
+    <div class="card-title">🎤 발표 횟수 편집 <span class="teacher-badge">선생님 전용</span></div>
+    <div style="font-size:.82rem;color:var(--tl);margin-bottom:12px;">학생별 발표 횟수를 직접 조정할 수 있어요.</div>
+    <div id="speakCountEditList"></div>
+  </div>
+
   <!-- 직업 배정 -->
   <div class="card" style="border-left:5px solid #8B5CF6;background:linear-gradient(135deg,#FAF5FF,#F5F3FF);">
     <div class="card-title">⚔️ 아카데미아 직업 배정 <span class="teacher-badge">선생님 전용</span></div>
@@ -1551,7 +1558,7 @@ actionRef.on('value',snap=>{
   if(activeTab==='action'){renderDashboard();renderCheckinSel();}
 });
 speakReqRef.on('value',snap=>{speakRequests=snap.val()||{};renderRaiseHandGrid();renderSpeakQueue();renderSpeakMini();});
-speakCountRef.on('value',snap=>{speakCount=snap.val()||{};renderRaiseHandGrid();renderSpeakMini();});
+speakCountRef.on('value',snap=>{speakCount=snap.val()||{};renderRaiseHandGrid();renderSpeakMini();if(activeTab==='admin')renderSpeakCountEditList();});
 xpRef.on('value',snap=>{xpData=snap.val()||{};updateMainScore();if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}if(activeTab==='admin'){renderActivityTable();renderAdminCharGrid();}});
 homeworkRef.on('value',snap=>{homeworkData=snap.val()||{};if(activeTab==='homework')renderHomework();if(activeTab==='mypage')renderMyPage();});
 suggestRef.on('value',snap=>{suggestData=snap.val()||{};if(activeTab==='suggest')renderSuggestList();});
@@ -1728,7 +1735,7 @@ function go(tab){
   if(tab==='mypage'){renderMyPage();}
   if(tab==='homework'){renderHomework();}
   if(tab==='suggest'){renderSuggestList();}
-  if(tab==='admin'){renderStudentMgmtList();renderRoleManagePanel();renderJobAssignment();renderActivityTable();renderAdminBoard();renderAdminProposals();renderAdminCharGrid();renderPinMgmt();}
+  if(tab==='admin'){renderStudentMgmtList();renderRoleManagePanel();renderJobAssignment();renderActivityTable();renderAdminBoard();renderAdminProposals();renderAdminCharGrid();renderPinMgmt();renderSpeakCountEditList();}
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -3967,6 +3974,34 @@ function renderAdminProposals(){
       +'<div style="font-weight:700;font-size:.9rem;">'+(p.title||'')+'</div>'
       +'<div style="font-size:.75rem;color:var(--tl);">'+(p.author||'')+' · '+(p.date||'')+'</div></div>';
   }).join('')||'<div style="color:var(--tl);text-align:center;padding:12px;">안건이 없어요.</div>';
+}
+function renderSpeakCountEditList(){
+  const el=document.getElementById('speakCountEditList');if(!el)return;
+  el.innerHTML=STUDENTS.map(n=>{
+    const cnt=speakCount[n]||0;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #E0F2FE;">
+      <span style="flex:1;font-weight:700;font-size:.9rem;">${n}</span>
+      <button onclick="adjustSpeakCount('${n}',-1)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #BAE6FD;background:#fff;font-size:1.1rem;cursor:pointer;line-height:1;">−</button>
+      <span id="scEdit_${n}" style="min-width:32px;text-align:center;font-weight:900;font-size:1.1rem;color:#0369A1;">🎤${cnt}</span>
+      <button onclick="adjustSpeakCount('${n}',1)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #BAE6FD;background:#0EA5E9;color:#fff;font-size:1.1rem;cursor:pointer;line-height:1;">+</button>
+      <button onclick="setSpeakCountDirect('${n}')" style="padding:4px 10px;border-radius:8px;border:1.5px solid #BAE6FD;background:#fff;font-size:.78rem;color:#0369A1;cursor:pointer;">직접입력</button>
+    </div>`;
+  }).join('');
+}
+function adjustSpeakCount(name,delta){
+  const cur=speakCount[name]||0;
+  const next=Math.max(0,cur+delta);
+  speakCountRef.child(name).set(next);
+  const el=document.getElementById('scEdit_'+name);
+  if(el)el.textContent='🎤'+next;
+}
+function setSpeakCountDirect(name){
+  const cur=speakCount[name]||0;
+  const val=prompt(`${name}의 발표 횟수를 입력하세요.`,cur);
+  if(val===null)return;
+  const n=parseInt(val);
+  if(isNaN(n)||n<0){alert('올바른 숫자를 입력하세요.');return;}
+  speakCountRef.child(name).set(n);
 }
 function renderActivityTable(){
   const el=document.getElementById('activityTable');if(!el)return;

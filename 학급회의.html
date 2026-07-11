@@ -912,6 +912,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
         <div class="activity-cell">🎤발표</div>
         <div class="activity-cell">✅체크인</div>
         <div class="activity-cell">⚡XP</div>
+        <div class="activity-cell">⭐개인</div>
       </div>
       <div id="activityTable"></div>
     </div>
@@ -1568,6 +1569,7 @@ personalScoreRef.on('value',snap=>{
   personalScore=snap.val()||{};
   if(activeTab==='personal')renderPersonalTab();
   if(psSelectedStudent)renderPsDetail(psSelectedStudent);
+  if(activeTab==='admin')renderActivityTable();
 });
 personalScoreReqRef.on('value',snap=>{
   personalScoreReq=snap.val()||{};
@@ -4018,5 +4020,10 @@ function renderActivityTable(){
       +'<div class="activity-cell">'+board+'</div>'
       +'<div class="activity-cell">'+speak+'</div>'
       +'<div class="activity-cell">'+checkin+'</div>'
-      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div></div>';
-  
+      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div>'
+      +'<div class="activity-cell" style="color:#7C3AED;font-weight:800;">'+((personalScore[n]||{}).total||0).toLocaleString()+'</div></div>';
+  }).join('');
+}
+</script>
+</body>
+</html>

@@ -1456,6 +1456,8 @@ let myDeviceId=localStorage.getItem('deviceId')||(()=>{const id='d_'+Math.random
 let activeTab='flow';
 
 // ══ Helpers ══
+// 특정 input/textarea ID에 포커스 중이거나 내용이 있으면 true → 리렌더 건너뜀
+function _isFocusedOrHasContent(id){const el=document.getElementById(id);return el&&(document.activeElement===el||el.value.trim()!=='');}
 function p2(n){return String(n).padStart(2,'0');}
 function todayStr(){const d=new Date();return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
 function nowYM(){const d=new Date();return`${d.getFullYear()}-${p2(d.getMonth()+1)}`;}
@@ -2478,6 +2480,9 @@ function renderGoal(){
   el.textContent=actionData.goal||'아직 목표가 없어요';
   if(!ia)return;
   if(me==='선생님'){
+    // 입력창에 포커스 중이면 innerHTML 교체하지 않음 (입력 내용 보존)
+    const gi=document.getElementById('goalInput');
+    if(gi&&document.activeElement===gi)return;
     ia.innerHTML=`<div style="display:flex;gap:8px;">
       <input type="text" id="goalInput" placeholder="공동 목표 입력..." style="flex:1;" value="${actionData.goal||''}">
       <button class="btn btn-primary btn-sm" onclick="saveGoal()">저장</button>
@@ -2557,6 +2562,9 @@ function renderPracticeBoard(){
     if(myPost){
       writeEl.innerHTML=`<div style="font-size:.84rem;color:#059669;background:#F0FDF4;border-radius:10px;padding:10px 12px;margin-bottom:10px;">✅ 이번 달 후기를 작성했어요!</div>`;
     } else {
+      // 현재 입력 중이면 textarea 영역 교체 안 함 (입력 내용 보존)
+      const pi=document.getElementById('practiceInput');
+      if(pi&&(document.activeElement===pi||pi.value.trim()))return;
       writeEl.innerHTML=`<div style="margin-bottom:10px;">
         <textarea id="practiceInput" placeholder="이번 달 내가 실천한 행동이나 느낀 점을 적어보세요..." rows="3"
           style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:.92rem;font-family:inherit;resize:vertical;"></textarea>

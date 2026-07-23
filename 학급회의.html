@@ -2528,6 +2528,9 @@ function pickCheckinStudent(n){
 function switchCheckinTab(tab){checkinTab=tab;renderCheckinItems(me);}
 function renderCheckinItems(name){
   const ca=document.getElementById('checkinArea');if(!ca||!name)return;
+  // 실천 기록 텍스트 입력 중이면 리렌더 건너뜀
+  const ri=document.getElementById('goalRecord');
+  if(ri&&(document.activeElement===ri||ri.value.trim()))return;
   const week=getMondayStr();
   const isStudent=name&&name!=='선생님';
 
@@ -2542,16 +2545,18 @@ function renderCheckinItems(name){
     // ── 실천 기록 탭: 이번 달 공동 목표를 실천 항목으로 ──
     html+='<div style="font-size:.78rem;color:var(--tl);margin-bottom:10px;">이번 달 목표를 오늘 실천했나요? 체크해봅시다!</div>';
     const goal=actionData.goal||'';
-    if(goal){
-      const today=todayStr();
-      const checked=!!(actionData.goalLogs||{})[name]&&(actionData.goalLogs[name][today]===true);
-      html+='<div class="action-item" style="margin-bottom:14px;">'
-        +'<input type="checkbox" class="action-cb" '+(checked?'checked':'')+' onchange="toggleGoalCheck(\''+name+'\',this.checked)">'
-        +'<span style="font-size:.95rem;font-weight:700;">'+goal+'</span>'
-        +'</div>';
-    }else{
-      html+='<div style="font-size:.85rem;color:var(--tl);margin-bottom:14px;background:#F9FAFB;padding:10px;border-radius:8px;">아직 이번 달 목표가 정해지지 않았어요.<br>회의 진행 후 목표가 설정되면 여기에 나타나요.</div>';
+    // 이번 달 목표 표시
+    html+='<div style="background:#F0FDF4;border-radius:8px;padding:8px 12px;font-size:.9rem;font-weight:700;color:#065F46;margin-bottom:10px;">'
+      +'🎯 '+(goal||'아직 이번 달 목표가 정해지지 않았어요')
+      +'</div>';
+    // 오늘 실천 기록
+    const today=todayStr();
+    const savedRecord=((actionData.goalLogs||{})[name]?.[today]||{}).record||'';
+    if(savedRecord){
+      html+='<div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:8px 10px;font-size:.88rem;color:#065F46;margin-bottom:6px;">📝 '+savedRecord+'</div>';
     }
+    html+='<textarea id="goalRecord" rows="2" placeholder="오늘 어떻게 실천했는지 적어봐요..." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #D1FAE5;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin-bottom:5px;"></textarea>'
+      +'<button class="btn btn-sm" style="width:100%;background:#D1FAE5;color:#065F46;font-weight:700;border:none;margin-bottom:12px;" onclick="saveGoalRecord(\''+name+'\')">✏️ 실천 내용 저장</button>';
     // 이번 주 자기 점수
     if(isStudent){
       const myScore=(weeklyScores[name]||{})[week];
@@ -2599,9 +2604,16 @@ function renderCheckinItems(name){
 
   ca.innerHTML=html;
 }
-function toggleGoalCheck(name,checked){
-  actionRef.child('goalLogs').child(name).child(todayStr()).set(checked||null);
-  if(checked&&name===me)awardXP(me,1,'학급 목표 실천');
+function saveGoalRecord(name){
+  const text=(document.getElementById('goalRecord')?.value||'').trim();
+  if(!text){showToast('내용을 입력해주세요!','t-warn');return;}
+  const ref=actionRef.child('goalLogs').child(name).child(todayStr());
+  ref.once('value',snap=>{
+    const cur=snap.val()||{};
+    cur.record=text;
+    ref.set(cur);
+  });
+  showToast('📝 실천 기록을 저장했어요!','t-success');
 }
 function submitPraise(){
   const target=document.getElementById('praiseTarget')?.value;

@@ -2534,7 +2534,8 @@ function renderCheckinItems(name){
     // 이번 주 내가 보낸 칭찬
     const myPraises=Object.values(praiseData).filter(p=>p.from===name&&p.week===week);
     html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#4F46E5;margin-bottom:8px;">💌 친구 칭찬하기</div>
+      <div style="font-size:.85rem;font-weight:800;color:#4F46E5;margin-bottom:2px;">🌟 친구를 칭찬해봅시다</div>
+      <div style="font-size:.78rem;color:#6366F1;margin-bottom:8px;">친구의 좋은 점을 찾아 칭찬해보세요 😊</div>
       <select id="praiseTarget" style="margin-bottom:8px;font-size:.9rem;"><option value="">칭찬할 친구 선택...</option>${peers.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
       <textarea id="praiseContent" rows="2" placeholder="칭찬 내용을 적어주세요 😊" style="font-size:.9rem;margin-bottom:6px;"></textarea>
       <button class="btn btn-primary btn-sm" onclick="submitPraise()">💌 칭찬 보내기</button>
@@ -2556,7 +2557,8 @@ function renderCheckinItems(name){
     const today=todayStr();
     const todayLog=st.logs?.find(l=>l.date===today)||{date:today,checked:[]};
     html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:6px;">✅ 오늘의 실천 체크</div>
+      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:2px;">✅ 나의 실천 기록을 적어봅시다</div>
+      <div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 실천한 항목에 체크해보세요!</div>
       ${st.items.map((item,i)=>{
         const checked=todayLog.checked.includes(i);
         return`<div class="action-item">
@@ -2567,7 +2569,8 @@ function renderCheckinItems(name){
     </div>`;
   }else{
     html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:6px;">✅ 오늘의 실천 체크</div>
+      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:2px;">✅ 나의 실천 기록을 적어봅시다</div>
+      <div style="font-size:.78rem;color:var(--tl);margin-bottom:6px;">오늘 실천한 항목에 체크해보세요!</div>
       <div style="font-size:.84rem;color:var(--tl);">아직 선생님이 배정한 실천 항목이 없어요.</div>
     </div>`;
   }

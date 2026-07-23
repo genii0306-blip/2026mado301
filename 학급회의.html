@@ -2957,11 +2957,9 @@ function renderPersonalTab(){
 function renderPsTeacherGrid(){
   const el=document.getElementById('psTeacherGrid');if(!el)return;
   el.innerHTML=STUDENTS.map(n=>{
-    const ps=(personalScore[n]||{}).total||0;
     const xp=(xpData[n]||{}).total||0;
     return`<button class="ps-student-btn${n===psSelectedStudent?' sel':''}" onclick="selectPsStudent('${n}')">
-      ${n}<br><span style="font-size:.75rem;font-weight:800;color:var(--purple);">부여 ${ps}점</span>
-      <span style="font-size:.72rem;color:var(--tl);">/ XP ${xp}</span>
+      ${n}<br><span style="font-size:.8rem;font-weight:800;color:var(--purple);">⭐ ${xp} XP</span>
     </button>`;
   }).join('');
 }
@@ -2973,12 +2971,11 @@ function selectPsStudent(name){
 }
 function renderPsDetail(name){
   const el=document.getElementById('psTeacherDetail');if(!el||!name)return;
-  const d=personalScore[name]||{total:0,log:[]};
-  const xpTotal=(xpData[name]||{}).total||0;
+  const d=xpData[name]||{total:0,log:[]};
   const title=document.getElementById('psDetailTitle');
-  if(title)title.textContent=`👤 ${name}`;
+  if(title)title.textContent=`👤 ${name}의 개인 XP`;
   const sc=document.getElementById('psDetailScore');
-  if(sc)sc.innerHTML=`${d.total||0}<span style="font-size:.7em;font-weight:600;color:var(--tl);margin-left:6px;">부여점수 / 전체XP ${xpTotal}</span>`;
+  if(sc)sc.textContent=d.total||0;
   const logEl=document.getElementById('psDetailLog');if(!logEl)return;
   const logs=(d.log||[]).slice(0,30);
   if(!logs.length){logEl.innerHTML='<div class="empty-state"><div class="ei">⭐</div><div>기록 없음</div></div>';return;}

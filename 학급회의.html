@@ -808,26 +808,28 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   </div>
   <!-- 학생 뷰 -->
   <div id="personalStudentView" style="display:none;">
+    <!-- 선생님 알림 -->
+    <div id="psMyAlerts" style="margin-bottom:4px;"></div>
     <!-- 총 점수 -->
     <div class="card" style="background:linear-gradient(160deg,#F5F3FF,#EDE9FE,#fff);border:1.5px solid #C4B5FD;text-align:center;padding:22px 14px 18px;">
-      <div style="font-size:.82rem;font-weight:700;color:#7C3AED;letter-spacing:.05em;margin-bottom:4px;" id="psMyNameLbl">⭐ 내 개인 점수</div>
+      <div style="font-size:.82rem;font-weight:700;color:#7C3AED;letter-spacing:.05em;margin-bottom:4px;" id="psMyNameLbl">⭐ 내 개인 XP</div>
       <div class="ps-score-big" id="psMyScore">0</div>
-      <div style="font-size:.85rem;color:var(--tl);margin-top:2px;">점</div>
+      <div style="font-size:.85rem;color:var(--tl);margin-top:2px;">XP</div>
     </div>
     <!-- 월별 꺾은선 그래프 -->
     <div class="card">
-      <div class="card-title">📈 월별 점수 변화</div>
+      <div class="card-title">📈 월별 XP 변화</div>
       <div id="psMyChart"></div>
     </div>
     <!-- 점수 사용 -->
     <div class="card">
-      <div class="card-title">🎁 점수 사용하기</div>
-      <div style="font-size:.78rem;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:7px 10px;margin-bottom:12px;">⏰ 동일한 상품은 <b>1주일에 1회</b>만 사용할 수 있어요</div>
+      <div class="card-title">🎁 XP 사용하기</div>
+      <div style="font-size:.78rem;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:7px 10px;margin-bottom:12px;">⏰ 동일한 아이템은 <b>1주일에 1회</b>만 신청할 수 있어요</div>
       <div id="psUseItems"></div>
     </div>
     <!-- 점수 기록 -->
     <div class="card">
-      <div class="card-title">📋 내 점수 기록</div>
+      <div class="card-title">📋 내 XP 기록</div>
       <div id="psMyLog"></div>
     </div>
   </div>
@@ -911,8 +913,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
         <div class="activity-cell">💬게시판</div>
         <div class="activity-cell">🎤발표</div>
         <div class="activity-cell">✅체크인</div>
-        <div class="activity-cell">⚡XP</div>
-        <div class="activity-cell">⭐개인</div>
+        <div class="activity-cell">⭐개인XP</div>
       </div>
       <div id="activityTable"></div>
     </div>
@@ -938,18 +939,23 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   </div>
 </div>
 
-<!-- Personal Score Use Modal (student) -->
-<div class="overlay" id="personalScoreUseModal">
+<!-- Item Request Modal (student) -->
+<div class="overlay" id="itemRequestModal">
   <div class="modal" style="max-width:360px;">
-    <div class="modal-title">🎁 개인 점수 사용</div>
-    <div style="font-size:.88rem;color:var(--tl);margin-bottom:14px;">사용을 신청하면 선생님 승인 후 차감됩니다.</div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
-      <button class="score-use-btn" style="border-color:#E11D48;color:#9F1239;" onclick="submitPersonalScoreReq('실탄 1회 면제권',50)">🛡️ 실탄 1회 면제권 <span style="float:right;color:var(--red);">-50점</span></button>
-      <button class="score-use-btn" style="border-color:#F59E0B;color:#B45309;" onclick="submitPersonalScoreReq('1일 급식 먼저 먹기',20)">🍱 1일 급식 먼저 먹기 <span style="float:right;color:var(--red);">-20점</span></button>
-      <button class="score-use-btn" style="border-color:#10B981;color:#047857;" onclick="submitPersonalScoreReq('1일 자리 바꾸기',20)">🪑 1일 자리 바꾸기 <span style="float:right;color:var(--red);">-20점</span></button>
+    <div class="modal-title" id="itemReqTitle">🎁 아이템 사용 신청</div>
+    <div id="itemReqCostBadge" style="display:inline-block;background:#FEF2F2;color:#DC2626;font-weight:800;font-size:.9rem;border-radius:20px;padding:4px 14px;margin-bottom:14px;"></div>
+    <div class="lbl">실행 날짜 선택</div>
+    <input type="date" id="itemReqDate" style="margin-bottom:12px;width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;">
+    <div id="itemConsentWrap" style="display:none;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px;margin-bottom:12px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="itemConsentCheck" style="margin-top:3px;width:18px;height:18px;accent-color:#F59E0B;flex-shrink:0;">
+        <span style="font-size:.9rem;font-weight:700;color:#92400E;">바꿀 사람의 동의를 얻었습니까?</span>
+      </label>
+      <div style="font-size:.78rem;color:#B45309;margin-top:6px;padding-left:28px;">동의 없이 자리를 바꾸는 것은 허용되지 않아요.</div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-outline btn-sm" onclick="closeM('personalScoreUseModal')">취소</button>
+      <button class="btn btn-outline btn-sm" onclick="closeM('itemRequestModal')">취소</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmItemRequest()">신청하기</button>
     </div>
   </div>
 </div>
@@ -1129,6 +1135,7 @@ const personalScoreRef=db.ref('personalScore');
 const personalScoreReqRef=db.ref('personalScoreReq');
 const weeklyScoresRef=db.ref('weeklyScores');
 const praiseRef=db.ref('praiseData');
+const studentAlertsRef=db.ref('studentAlerts');
 const shopRef=db.ref('shopData');
 const timerRef=db.ref('timerState');
 const classInfoRef=db.ref('classInfo');
@@ -1447,6 +1454,8 @@ const SHOP_ITEMS=[
   {id:'ac_hat',   type:'acc',    name:'마법사 모자',emoji:'🎩',v:'🎩', cost:20,  desc:'멋진 마법사 모자'},
 ];
 let personalScoreReq={};
+let studentAlerts={};  // {studentName: {alertId: {type,reqType,executeDate,ts,read}}}
+let _itemReqType='';let _itemReqCost=0;
 let psSelectedStudent='';
 let weeklyScores={};  // {studentName: {weekKey: score}}
 let praiseData={};    // {id: {from,to,content,date,week}}
@@ -1566,6 +1575,7 @@ actionRef.on('value',snap=>{
   }else actionData={goal:'',students:[]};
   renderGoal();
   if(activeTab==='action'){renderDashboard();renderCheckinSel();}
+  migrateGoalLogsToPracticeBoard();
 });
 speakReqRef.on('value',snap=>{speakRequests=snap.val()||{};renderRaiseHandGrid();renderSpeakQueue();renderSpeakMini();});
 speakCountRef.on('value',snap=>{speakCount=snap.val()||{};renderRaiseHandGrid();renderSpeakMini();if(activeTab==='admin')renderSpeakCountEditList();});
@@ -1585,6 +1595,11 @@ personalScoreReqRef.on('value',snap=>{
   personalScoreReq=snap.val()||{};
   updateBellBadge();
   if(document.getElementById('bellModal').classList.contains('active')||document.getElementById('bellModal').style.display==='flex')renderBellModal();
+});
+studentAlertsRef.on('value',snap=>{
+  studentAlerts=snap.val()||{};
+  updateStudentAlertBadge();
+  if(activeTab==='personal')renderPersonalTab();
 });
 weeklyScoresRef.on('value',snap=>{weeklyScores=snap.val()||{};if(activeTab==='action'){renderDashboard();renderCheckinItems(me);}});
 praiseRef.on('value',snap=>{praiseData=snap.val()||{};if(activeTab==='action')renderCheckinItems(me);});
@@ -1652,19 +1667,18 @@ timerRef.on('value',snap=>{
 function calcTotalScore(){
   const xpTotal=STUDENTS.reduce((s,n)=>s+((xpData[n]||{}).total||0),0);
   const meetScore=classScore.total||0;
-  const psTotal=STUDENTS.reduce((s,n)=>s+((personalScore[n]||{}).total||0),0);
-  return {xpTotal,meetScore,psTotal,total:xpTotal+meetScore+psTotal};
+  return {xpTotal,meetScore,total:xpTotal+meetScore};
 }
 function updateMainScore(){
-  const {xpTotal,meetScore,psTotal,total}=calcTotalScore();
+  const {xpTotal,meetScore,total}=calcTotalScore();
   const el=document.getElementById('mainTotalScore');
   const br=document.getElementById('mainScoreBreakdown');
   if(el)el.textContent=total.toLocaleString();
-  if(br)br.textContent=`개인 XP ${xpTotal.toLocaleString()} + 학급 달성 ${meetScore.toLocaleString()} + 개인 점수 ${psTotal.toLocaleString()}`;
+  if(br)br.textContent=`개인 XP ${xpTotal.toLocaleString()} + 학급 달성 ${meetScore.toLocaleString()}`;
   const sb=document.getElementById('scoreBig');
   if(sb)sb.textContent=total.toLocaleString();
   const sbd=document.getElementById('scoreBigBreakdown');
-  if(sbd)sbd.textContent=`학급 달성 ${meetScore.toLocaleString()}점 + 개인 XP ${xpTotal.toLocaleString()}점 + 개인 점수 ${psTotal.toLocaleString()}점`;
+  if(sbd)sbd.textContent=`학급 달성 ${meetScore.toLocaleString()}점 + 개인 XP ${xpTotal.toLocaleString()}점`;
   document.getElementById('scoreChip').textContent='🏆 '+total.toLocaleString()+'점';
 }
 
@@ -2574,6 +2588,27 @@ function renderCheckinItems(name){
 
   ca.innerHTML=html;
 }
+function migrateGoalLogsToPracticeBoard(){
+  // goalLogs에 기록이 있지만 게시판에 없는 학생 → 자동으로 게시판에 등록
+  const logs=actionData.goalLogs||{};
+  STUDENTS.forEach(name=>{
+    const studentLogs=logs[name];if(!studentLogs)return;
+    // 이번 달 기록 중 가장 최근 것 찾기
+    const thisMonth=nowYM();
+    const datesThisMonth=Object.keys(studentLogs).filter(d=>d.startsWith(thisMonth));
+    if(!datesThisMonth.length)return;
+    datesThisMonth.sort();
+    const latestDate=datesThisMonth[datesThisMonth.length-1];
+    const record=(studentLogs[latestDate]||{}).record||'';
+    if(!record)return;
+    // 이미 게시판에 이번 달 글이 있으면 스킵
+    const existing=Object.values(practicePosts).find(p=>p.author===name&&p.month===thisMonth);
+    if(existing)return;
+    // 없으면 생성
+    const id=genId();
+    practiceRef.child(id).set({author:name,content:record,month:thisMonth,date:latestDate,timestamp:Date.now(),likes:0,likedBy:{},xpAwarded:false,bestAwarded:false});
+  });
+}
 function saveGoalRecord(name){
   const text=(document.getElementById('goalRecord')?.value||'').trim();
   if(!text){showToast('내용을 입력해주세요!','t-warn');return;}
@@ -2903,9 +2938,9 @@ function renderPersonalTab(){
 function renderPsTeacherGrid(){
   const el=document.getElementById('psTeacherGrid');if(!el)return;
   el.innerHTML=STUDENTS.map(n=>{
-    const pts=(personalScore[n]||{}).total||0;
+    const xp=(xpData[n]||{}).total||0;
     return`<button class="ps-student-btn${n===psSelectedStudent?' sel':''}" onclick="selectPsStudent('${n}')">
-      ${n}<br><span style="font-size:.8rem;font-weight:800;color:var(--purple);">⭐${pts}</span>
+      ${n}<br><span style="font-size:.8rem;font-weight:800;color:var(--purple);">⭐${xp} XP</span>
     </button>`;
   }).join('');
 }
@@ -2917,9 +2952,9 @@ function selectPsStudent(name){
 }
 function renderPsDetail(name){
   const el=document.getElementById('psTeacherDetail');if(!el||!name)return;
-  const d=personalScore[name]||{total:0,log:[]};
+  const d=xpData[name]||{total:0,log:[]};
   const title=document.getElementById('psDetailTitle');
-  if(title)title.textContent=`👤 ${name}의 개인 점수`;
+  if(title)title.textContent=`👤 ${name}의 개인 XP`;
   const sc=document.getElementById('psDetailScore');if(sc)sc.textContent=d.total||0;
   const logEl=document.getElementById('psDetailLog');if(!logEl)return;
   const logs=(d.log||[]).slice(0,30);
@@ -2940,13 +2975,30 @@ function teacherGivePersonalScore(){
   document.getElementById('psGiveReason').value='';
 }
 function renderPsMyView(){
-  const d=personalScore[me]||{total:0,log:[]};
+  const d=xpData[me]||{total:0,log:[]};
   const sc=document.getElementById('psMyScore');if(sc)sc.textContent=(d.total||0).toLocaleString();
-  const lbl=document.getElementById('psMyNameLbl');if(lbl)lbl.textContent=`⭐ ${me}의 개인 점수`;
+  const lbl=document.getElementById('psMyNameLbl');if(lbl)lbl.textContent=`⭐ ${me}의 개인 XP`;
+  // 알림 표시
+  const alertEl=document.getElementById('psMyAlerts');
+  if(alertEl){
+    const myAlerts=Object.values(studentAlerts[me]||{}).sort((a,b)=>b.ts-a.ts).slice(0,5);
+    if(myAlerts.length){
+      alertEl.innerHTML=myAlerts.map(a=>{
+        const isApproved=a.type==='approved';
+        const bg=isApproved?'#ECFDF5':'#FEF2F2';const bc=isApproved?'#6EE7B7':'#FCA5A5';const tc=isApproved?'#065F46':'#991B1B';
+        return`<div style="background:${bg};border:1.5px solid ${bc};border-radius:10px;padding:10px 12px;margin-bottom:6px;${a.read?'opacity:.65':''}">
+          <div style="font-weight:800;font-size:.9rem;color:${tc};">${isApproved?'✅ 승인됨':'❌ 거절됨'} — ${a.reqType}</div>
+          ${isApproved&&a.executeDate?`<div style="font-size:.8rem;color:#1D4ED8;margin-top:2px;">📅 실행일: ${a.executeDate} / -${a.cost} XP 차감</div>`:''}
+          <div style="font-size:.75rem;color:var(--tl);margin-top:2px;">${new Date(a.ts).toLocaleDateString('ko-KR')}</div>
+        </div>`;
+      }).join('');
+      markStudentAlertsRead();
+    }else{alertEl.innerHTML='';}
+  }
   renderPsMyChart();
   renderPsUseItems();
   const logEl=document.getElementById('psMyLog');if(!logEl)return;
-  const logs=(d.log||[]).slice().reverse().slice(0,30);
+  const logs=(d.log||[]).slice(0,30);
   if(!logs.length){logEl.innerHTML='<div class="empty-state"><div class="ei">⭐</div><div>기록 없음</div></div>';return;}
   logEl.innerHTML=logs.map(l=>`<div class="ps-log-row">
     <span style="font-weight:800;color:${l.delta>0?'#059669':'#EF4444'};min-width:48px;">${l.delta>0?'+':''}${l.delta}</span>
@@ -2954,24 +3006,26 @@ function renderPsMyView(){
     <span style="font-size:.78rem;color:var(--tl);">${l.date||''}</span>
   </div>`).join('');
 }
-// 주간 사용 여부 확인 (같은 type이 최근 7일 내 log에 있으면 true)
+// 주간 사용 여부 확인 (이번 주 pending/approved 신청이 있으면 true)
 function isUsedThisWeek(name,typeName){
-  const log=(personalScore[name]||{}).log||[];
-  const d=new Date();d.setDate(d.getDate()-7);
-  const cutoff=d.toISOString().slice(0,10);
-  return log.some(l=>l.delta<0&&(l.reason||'').includes(typeName)&&(l.date||'')>=cutoff);
+  const week=getMondayStr();
+  return Object.values(personalScoreReq).some(r=>
+    r.student===name&&r.type===typeName&&
+    (r.status==='pending'||r.status==='approved')&&
+    (r.date||'')>=week
+  );
 }
 // 점수 사용 아이템 렌더링
 function renderPsUseItems(){
   const el=document.getElementById('psUseItems');if(!el||!me)return;
-  const myPts=(personalScore[me]||{}).total||0;
+  const myXP=(xpData[me]||{}).total||0;
   const ITEMS=[
     {name:'1일 자리바꾸기권',icon:'🪑',cost:50,note:'상대방의 동의 후 사용 가능',color:'#10B981',light:'#ECFDF5',border:'#6EE7B7'},
     {name:'1일 실탄 면제권',icon:'🛡️',cost:50,note:'',color:'#EF4444',light:'#FEF2F2',border:'#FCA5A5'}
   ];
   el.innerHTML=ITEMS.map(item=>{
     const usedWeek=isUsedThisWeek(me,item.name);
-    const canAfford=myPts>=item.cost;
+    const canAfford=myXP>=item.cost;
     const disabled=usedWeek||!canAfford;
     return`<div style="border:2px solid ${disabled?'#E5E7EB':item.border};border-radius:14px;padding:14px;margin-bottom:10px;background:${disabled?'#F9FAFB':item.light};transition:all .2s;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
@@ -2982,13 +3036,13 @@ function renderPsUseItems(){
             ${item.note?`<div style="font-size:.72rem;color:#6B7280;margin-top:2px;">💡 ${item.note}</div>`:''}
           </div>
         </div>
-        <span style="font-size:.95rem;font-weight:900;color:${disabled?'#9CA3AF':'#EF4444'};white-space:nowrap;margin-left:8px;">-${item.cost}점</span>
+        <span style="font-size:.95rem;font-weight:900;color:${disabled?'#9CA3AF':'#EF4444'};white-space:nowrap;margin-left:8px;">-${item.cost} XP</span>
       </div>
       ${usedWeek
-        ?`<div style="text-align:center;padding:8px;background:#FEF9C3;border-radius:8px;font-size:.82rem;color:#92400E;font-weight:700;">✅ 이번 주 이미 사용했어요</div>`
+        ?`<div style="text-align:center;padding:8px;background:#FEF9C3;border-radius:8px;font-size:.82rem;color:#92400E;font-weight:700;">⏳ 이번 주 신청 중 또는 완료</div>`
         :!canAfford
-        ?`<div style="text-align:center;padding:8px;background:#FEE2E2;border-radius:8px;font-size:.82rem;color:#991B1B;font-weight:700;">점수 부족 (보유 ${myPts}점 / 필요 ${item.cost}점)</div>`
-        :`<button class="btn btn-sm" onclick="submitPersonalScoreReq('${item.name}',${item.cost})" style="width:100%;background:${item.color};color:#fff;border-color:${item.color};font-weight:700;">사용 신청하기</button>`
+        ?`<div style="text-align:center;padding:8px;background:#FEE2E2;border-radius:8px;font-size:.82rem;color:#991B1B;font-weight:700;">XP 부족 (보유 ${myXP} / 필요 ${item.cost})</div>`
+        :`<button class="btn btn-sm" onclick="openItemRequestModal('${item.name}',${item.cost})" style="width:100%;background:${item.color};color:#fff;border-color:${item.color};font-weight:700;">날짜 선택 후 신청하기</button>`
       }
     </div>`;
   }).join('');
@@ -2996,7 +3050,7 @@ function renderPsUseItems(){
 // 월별 꺾은선 그래프
 function renderPsMyChart(){
   const el=document.getElementById('psMyChart');if(!el)return;
-  const log=(personalScore[me]||{}).log||[];
+  const log=(xpData[me]||{}).log||[];
   const now=new Date();
   const months=[];
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
@@ -3027,7 +3081,7 @@ function renderPsMyChart(){
 }
 function openPersonalScoreUse(){openM('personalScoreUseModal');}
 function submitPersonalScoreReq(type,cost){
-  const myPts=(personalScore[me]||{}).total||0;
+  const myPts=(xpData[me]||{}).total||0;
   if(myPts<cost){alert(`⭐ 점수가 부족합니다. (보유: ${myPts}점 / 필요: ${cost}점)`);return;}
   if(isUsedThisWeek(me,type)){alert('이번 주에 이미 사용한 상품이에요.\n다음 주에 다시 사용할 수 있어요.');return;}
   const pending=Object.values(personalScoreReq).filter(r=>r.student===me&&r.status==='pending');
@@ -3061,8 +3115,10 @@ function renderBellModal(){
     html+='<div style="font-weight:800;font-size:.88rem;color:var(--red);margin-bottom:8px;">⏳ 대기 중</div>';
     html+=pending.map(r=>`<div class="req-card">
       <div class="req-name">👤 ${r.student}</div>
-      <div class="req-type">🎁 ${r.type}</div>
-      <div class="req-cost">-${r.cost}점 사용 신청 · ${r.date||''}</div>
+      <div class="req-type">🎁 ${r.type} <span style="font-weight:900;color:var(--red);">-${r.cost} XP</span></div>
+      <div class="req-cost">신청일: ${r.date||''}</div>
+      ${r.executeDate?`<div style="font-size:.82rem;color:#1D4ED8;font-weight:700;margin:2px 0;">📅 실행 희망일: ${r.executeDate}</div>`:''}
+      ${r.consentChecked===true?`<div style="font-size:.82rem;color:#059669;font-weight:700;margin:2px 0;">✅ 상대방 동의 확인됨</div>`:''}
       <div class="req-actions">
         <button class="btn btn-green btn-sm" onclick="approvePersonalScoreReq('${r.id}')">✅ 승인</button>
         <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);" onclick="rejectPersonalScoreReq('${r.id}')">❌ 거절</button>
@@ -3078,16 +3134,77 @@ function renderBellModal(){
   }
   el.innerHTML=html;
 }
+// ══ Item Request (아이템 사용 신청) ══
+function openItemRequestModal(type,cost){
+  _itemReqType=type;_itemReqCost=cost;
+  document.getElementById('itemReqTitle').textContent='🎁 '+type+' 신청';
+  document.getElementById('itemReqCostBadge').textContent='-'+cost+' XP 차감';
+  const today=todayStr();
+  const di=document.getElementById('itemReqDate');di.value=today;di.min=today;
+  const isSwap=type.includes('자리');
+  document.getElementById('itemConsentWrap').style.display=isSwap?'block':'none';
+  document.getElementById('itemConsentCheck').checked=false;
+  openM('itemRequestModal');
+}
+function confirmItemRequest(){
+  const executeDate=document.getElementById('itemReqDate').value;
+  if(!executeDate){showToast('날짜를 선택해주세요!','t-warn');return;}
+  const isSwap=_itemReqType.includes('자리');
+  if(isSwap&&!document.getElementById('itemConsentCheck').checked){
+    showToast('상대방의 동의 여부를 체크해주세요.','t-warn');return;
+  }
+  const myXP=(xpData[me]||{}).total||0;
+  if(myXP<_itemReqCost){showToast(`XP 부족! (보유 ${myXP} / 필요 ${_itemReqCost})`,'t-warn');return;}
+  const pending=Object.values(personalScoreReq).filter(r=>r.student===me&&r.status==='pending');
+  if(pending.length>0){showToast('대기 중인 신청이 있어요. 선생님 처리 후 신청하세요.','t-warn');return;}
+  const id=genId();
+  personalScoreReqRef.child(id).set({
+    id,student:me,type:_itemReqType,cost:_itemReqCost,
+    status:'pending',ts:Date.now(),date:todayStr(),
+    executeDate,
+    consentChecked:isSwap?document.getElementById('itemConsentCheck').checked:null
+  });
+  closeM('itemRequestModal');
+  showToast('✅ 신청 완료! 선생님 승인을 기다려주세요.','t-success');
+}
+// ══ Student Alert Badge ══
+function updateStudentAlertBadge(){
+  if(!me||me==='선생님')return;
+  const myAlerts=Object.values(studentAlerts[me]||{});
+  const unreadCnt=myAlerts.filter(a=>!a.read).length;
+  let badge=document.getElementById('studentAlertBadge');
+  if(!badge)return;
+  if(unreadCnt>0){badge.style.display='flex';badge.textContent=unreadCnt;}
+  else{badge.style.display='none';}
+}
+function markStudentAlertsRead(){
+  if(!me||me==='선생님')return;
+  const myAlerts=Object.values(studentAlerts[me]||{}).filter(a=>!a.read);
+  myAlerts.forEach(a=>{studentAlertsRef.child(me).child(a.id).update({read:true});});
+}
 function approvePersonalScoreReq(reqId){
   const req=personalScoreReq[reqId];if(!req)return;
-  awardPersonalScore(req.student,-req.cost,`${req.type} 사용 (승인됨)`);
+  // XP 차감
+  awardXP(req.student,-req.cost,`${req.type} 사용 승인 (실행일: ${req.executeDate||req.date})`);
   personalScoreReqRef.child(reqId).update({status:'approved'});
+  // 학생 알림
+  const alertId=genId();
+  studentAlertsRef.child(req.student).child(alertId).set({
+    id:alertId,type:'approved',reqType:req.type,
+    executeDate:req.executeDate||req.date,cost:req.cost,
+    ts:Date.now(),read:false
+  });
   renderBellModal();
 }
 function rejectPersonalScoreReq(reqId){
   const req=personalScoreReq[reqId];if(!req)return;
   personalScoreReqRef.child(reqId).update({status:'rejected'});
-  awardPersonalScore(req.student,0,`${req.type} 신청 거절됨`);
+  // 학생 알림
+  const alertId=genId();
+  studentAlertsRef.child(req.student).child(alertId).set({
+    id:alertId,type:'rejected',reqType:req.type,
+    ts:Date.now(),read:false
+  });
   renderBellModal();
 }
 
@@ -4137,8 +4254,7 @@ function renderActivityTable(){
       +'<div class="activity-cell">'+board+'</div>'
       +'<div class="activity-cell">'+speak+'</div>'
       +'<div class="activity-cell">'+checkin+'</div>'
-      +'<div class="activity-cell">'+(xp.total||0).toLocaleString()+'</div>'
-      +'<div class="activity-cell" style="color:#7C3AED;font-weight:800;">'+((personalScore[n]||{}).total||0).toLocaleString()+'</div></div>';
+      +'<div class="activity-cell" style="color:#7C3AED;font-weight:800;">'+(xp.total||0).toLocaleString()+'</div></div>';
   }).join('');
 }
 </script>

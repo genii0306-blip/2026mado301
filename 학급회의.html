@@ -2942,8 +2942,8 @@ function awardPersonalScore(name,delta,reason){
     d.log.unshift({date:todayStr(),delta,reason});
     ref.set(d);
   });
-  // 개인점수는 XP에도 동일하게 반영
-  awardXP(name,delta,reason);
+  // 선생님 부여 점수는 isBonus=true로 하루 상한 적용 안 함
+  awardXP(name,delta,reason,true);
 }
 function renderPersonalTab(){
   const tv=document.getElementById('personalTeacherView');
@@ -2957,9 +2957,11 @@ function renderPersonalTab(){
 function renderPsTeacherGrid(){
   const el=document.getElementById('psTeacherGrid');if(!el)return;
   el.innerHTML=STUDENTS.map(n=>{
+    const ps=(personalScore[n]||{}).total||0;
     const xp=(xpData[n]||{}).total||0;
     return`<button class="ps-student-btn${n===psSelectedStudent?' sel':''}" onclick="selectPsStudent('${n}')">
-      ${n}<br><span style="font-size:.8rem;font-weight:800;color:var(--purple);">⭐${xp} XP</span>
+      ${n}<br><span style="font-size:.75rem;font-weight:800;color:var(--purple);">부여 ${ps}점</span>
+      <span style="font-size:.72rem;color:var(--tl);">/ XP ${xp}</span>
     </button>`;
   }).join('');
 }
@@ -2971,10 +2973,12 @@ function selectPsStudent(name){
 }
 function renderPsDetail(name){
   const el=document.getElementById('psTeacherDetail');if(!el||!name)return;
-  const d=xpData[name]||{total:0,log:[]};
+  const d=personalScore[name]||{total:0,log:[]};
+  const xpTotal=(xpData[name]||{}).total||0;
   const title=document.getElementById('psDetailTitle');
-  if(title)title.textContent=`👤 ${name}의 개인 XP`;
-  const sc=document.getElementById('psDetailScore');if(sc)sc.textContent=d.total||0;
+  if(title)title.textContent=`👤 ${name}`;
+  const sc=document.getElementById('psDetailScore');
+  if(sc)sc.innerHTML=`${d.total||0}<span style="font-size:.7em;font-weight:600;color:var(--tl);margin-left:6px;">부여점수 / 전체XP ${xpTotal}</span>`;
   const logEl=document.getElementById('psDetailLog');if(!logEl)return;
   const logs=(d.log||[]).slice(0,30);
   if(!logs.length){logEl.innerHTML='<div class="empty-state"><div class="ei">⭐</div><div>기록 없음</div></div>';return;}
@@ -3203,8 +3207,8 @@ function markStudentAlertsRead(){
 }
 function approvePersonalScoreReq(reqId){
   const req=personalScoreReq[reqId];if(!req)return;
-  // XP 차감
-  awardXP(req.student,-req.cost,`${req.type} 사용 승인 (실행일: ${req.executeDate||req.date})`);
+  // XP 차감 (차감은 상한 우회)
+  awardXP(req.student,-req.cost,`${req.type} 사용 승인 (실행일: ${req.executeDate||req.date})`,true);
   personalScoreReqRef.child(reqId).update({status:'approved'});
   // 학생 알림
   const alertId=genId();

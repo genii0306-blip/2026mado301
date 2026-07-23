@@ -2890,6 +2890,8 @@ function awardPersonalScore(name,delta,reason){
     d.log.unshift({date:todayStr(),delta,reason});
     ref.set(d);
   });
+  // 개인점수는 XP에도 동일하게 반영
+  awardXP(name,delta,reason);
 }
 function renderPersonalTab(){
   const tv=document.getElementById('personalTeacherView');

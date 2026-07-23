@@ -1450,6 +1450,7 @@ let personalScoreReq={};
 let psSelectedStudent='';
 let weeklyScores={};  // {studentName: {weekKey: score}}
 let praiseData={};    // {id: {from,to,content,date,week}}
+let checkinTab='practice'; // 'practice' | 'praise'
 let jobData={}; // {studentName: {jobId, promoted}}
 let practicePosts={}; // {postId: {author,content,month,timestamp,likes,likedBy,xpAwarded,bestAwarded}}
 let customEquipData={}; // {studentName: {hair,face,spirit,badge,items:[...]}}
@@ -1575,6 +1576,7 @@ characterRef.on('value',snap=>{characterData=snap.val()||{};if(activeTab==='mypa
 shopRef.on('value',snap=>{shopData=snap.val()||{};if(activeTab==='mypage')renderShop();if(activeTab==='admin')renderAdminCharGrid();});
 personalScoreRef.on('value',snap=>{
   personalScore=snap.val()||{};
+  updateMainScore();
   if(activeTab==='personal')renderPersonalTab();
   if(psSelectedStudent)renderPsDetail(psSelectedStudent);
   if(activeTab==='admin')renderActivityTable();
@@ -1650,18 +1652,19 @@ timerRef.on('value',snap=>{
 function calcTotalScore(){
   const xpTotal=STUDENTS.reduce((s,n)=>s+((xpData[n]||{}).total||0),0);
   const meetScore=classScore.total||0;
-  return {xpTotal,meetScore,total:xpTotal+meetScore};
+  const psTotal=STUDENTS.reduce((s,n)=>s+((personalScore[n]||{}).total||0),0);
+  return {xpTotal,meetScore,psTotal,total:xpTotal+meetScore+psTotal};
 }
 function updateMainScore(){
-  const {xpTotal,meetScore,total}=calcTotalScore();
+  const {xpTotal,meetScore,psTotal,total}=calcTotalScore();
   const el=document.getElementById('mainTotalScore');
   const br=document.getElementById('mainScoreBreakdown');
   if(el)el.textContent=total.toLocaleString();
-  if(br)br.textContent=`개인 XP ${xpTotal.toLocaleString()}점 + 학급 달성 ${meetScore.toLocaleString()}점`;
+  if(br)br.textContent=`개인 XP ${xpTotal.toLocaleString()} + 학급 달성 ${meetScore.toLocaleString()} + 개인 점수 ${psTotal.toLocaleString()}`;
   const sb=document.getElementById('scoreBig');
   if(sb)sb.textContent=total.toLocaleString();
   const sbd=document.getElementById('scoreBigBreakdown');
-  if(sbd)sbd.textContent=`학급 달성 ${meetScore.toLocaleString()}점 + 개인 XP ${xpTotal.toLocaleString()}점`;
+  if(sbd)sbd.textContent=`학급 달성 ${meetScore.toLocaleString()}점 + 개인 XP ${xpTotal.toLocaleString()}점 + 개인 점수 ${psTotal.toLocaleString()}점`;
   document.getElementById('scoreChip').textContent='🏆 '+total.toLocaleString()+'점';
 }
 
@@ -2522,82 +2525,83 @@ function pickCheckinStudent(n){
   renderCheckinSel();
   renderCheckinItems(n);
 }
+function switchCheckinTab(tab){checkinTab=tab;renderCheckinItems(me);}
 function renderCheckinItems(name){
   const ca=document.getElementById('checkinArea');if(!ca||!name)return;
   const week=getMondayStr();
   const isStudent=name&&name!=='선생님';
-  let html='';
 
-  // ── 칭찬 보내기 (로그인 학생만) ──
-  if(isStudent){
-    const peers=STUDENTS.filter(n=>n!==name);
-    // 이번 주 내가 보낸 칭찬
-    const myPraises=Object.values(praiseData).filter(p=>p.from===name&&p.week===week);
-    html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#4F46E5;margin-bottom:2px;">🌟 친구를 칭찬해봅시다</div>
-      <div style="font-size:.78rem;color:#6366F1;margin-bottom:8px;">친구의 좋은 점을 찾아 칭찬해보세요 😊</div>
-      <select id="praiseTarget" style="margin-bottom:8px;font-size:.9rem;"><option value="">칭찬할 친구 선택...</option>${peers.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
-      <textarea id="praiseContent" rows="2" placeholder="칭찬 내용을 적어주세요 😊" style="font-size:.9rem;margin-bottom:6px;"></textarea>
-      <button class="btn btn-primary btn-sm" onclick="submitPraise()">💌 칭찬 보내기</button>
-      ${myPraises.length?`<div style="margin-top:8px;font-size:.8rem;color:#6366F1;">이번 주 보낸 칭찬: ${myPraises.map(p=>`${p.to}`).join(', ')}</div>`:''}
-    </div>`;
-    // 내가 받은 칭찬
-    const received=Object.values(praiseData).filter(p=>p.to===name&&p.week===week);
-    if(received.length){
-      html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-        <div style="font-size:.85rem;font-weight:800;color:#059669;margin-bottom:6px;">🎉 받은 칭찬</div>
-        ${received.map(p=>`<div style="background:#F0FDF4;border-radius:10px;padding:8px 10px;margin-bottom:4px;font-size:.88rem;">"${p.content}" <span style="color:#6B7280;font-size:.78rem;">— ${p.from}</span></div>`).join('')}
-      </div>`;
-    }
-  }
+  // ── 탭 버튼 ──
+  const pActive=checkinTab==='practice';
+  let html='<div style="display:flex;gap:6px;margin-bottom:12px;">'
+    +'<button onclick="switchCheckinTab(\'practice\')" style="flex:1;padding:7px 0;border-radius:8px;font-size:.85rem;font-weight:700;border:1.5px solid '+(pActive?'#4F46E5':'#E0E7FF')+';background:'+(pActive?'#EEF2FF':'#fff')+';color:'+(pActive?'#4F46E5':'#9CA3AF')+';cursor:pointer;">✅ 나의 실천 기록</button>'
+    +'<button onclick="switchCheckinTab(\'praise\')" style="flex:1;padding:7px 0;border-radius:8px;font-size:.85rem;font-weight:700;border:1.5px solid '+(!pActive?'#F59E0B':'#E0E7FF')+';background:'+(!pActive?'#FFFBEB':'#fff')+';color:'+(!pActive?'#D97706':'#9CA3AF')+';cursor:pointer;">🌟 칭찬합니다</button>'
+    +'</div>';
 
-  // ── 실천 체크박스 항목 ──
-  const st=actionData.students?.find(s=>s.name===name);
-  if(st&&st.items&&st.items.length){
-    const today=todayStr();
-    const todayLog=st.logs?.find(l=>l.date===today)||{date:today,checked:[]};
-    html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:2px;">✅ 나의 실천 기록을 적어봅시다</div>
-      <div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 실천한 항목에 체크해보세요!</div>
-      ${st.items.map((item,i)=>{
-        const checked=todayLog.checked.includes(i);
-        return`<div class="action-item">
-          <input type="checkbox" class="action-cb" ${checked?'checked':''} onchange="toggleCheckin('${name}',${i},this.checked)">
-          <span style="font-size:.95rem;">${item}</span>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }else{
-    html+=`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #E0E7FF;">
-      <div style="font-size:.85rem;font-weight:800;color:#374151;margin-bottom:2px;">✅ 나의 실천 기록을 적어봅시다</div>
-      <div style="font-size:.78rem;color:var(--tl);margin-bottom:6px;">오늘 실천한 항목에 체크해보세요!</div>
-      <div style="font-size:.84rem;color:var(--tl);">아직 선생님이 배정한 실천 항목이 없어요.</div>
-    </div>`;
-  }
-
-  // ── 이번 주 자기 점수 (로그인 학생만) ──
-  if(isStudent){
-    const myScore=(weeklyScores[name]||{})[week];
-    if(myScore!==undefined){
-      html+=`<div style="background:#EEF2FF;border-radius:12px;padding:12px;text-align:center;">
-        <div style="font-size:.85rem;font-weight:800;color:#4F46E5;">이번 주 나의 실천 점수</div>
-        <div style="font-size:2rem;font-weight:900;color:#4F46E5;margin:4px 0;">${myScore}<span style="font-size:1rem;">/10</span></div>
-        <div style="font-size:.78rem;color:#6366F1;">제출 완료 ✅</div>
-      </div>`;
+  if(pActive){
+    // ── 실천 기록 탭: 이번 달 공동 목표를 실천 항목으로 ──
+    html+='<div style="font-size:.78rem;color:var(--tl);margin-bottom:10px;">이번 달 목표를 오늘 실천했나요? 체크해봅시다!</div>';
+    const goal=actionData.goal||'';
+    if(goal){
+      const today=todayStr();
+      const checked=!!(actionData.goalLogs||{})[name]&&(actionData.goalLogs[name][today]===true);
+      html+='<div class="action-item" style="margin-bottom:14px;">'
+        +'<input type="checkbox" class="action-cb" '+(checked?'checked':'')+' onchange="toggleGoalCheck(\''+name+'\',this.checked)">'
+        +'<span style="font-size:.95rem;font-weight:700;">'+goal+'</span>'
+        +'</div>';
     }else{
-      html+=`<div style="background:#EEF2FF;border-radius:12px;padding:12px;">
-        <div style="font-size:.85rem;font-weight:800;color:#4F46E5;margin-bottom:8px;">⭐ 이번 주 나의 실천 점수 (0~10점)</div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input type="range" id="weeklyScoreSlider" min="0" max="10" value="5" style="flex:1;" oninput="document.getElementById('weeklyScoreVal').textContent=this.value">
-          <span id="weeklyScoreVal" style="font-size:1.3rem;font-weight:900;color:#4F46E5;min-width:28px;text-align:center;">5</span>
-          <span style="font-size:.85rem;color:var(--tl);">점</span>
-        </div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;" onclick="submitWeeklyScore()">📊 점수 제출</button>
-      </div>`;
+      html+='<div style="font-size:.85rem;color:var(--tl);margin-bottom:14px;background:#F9FAFB;padding:10px;border-radius:8px;">아직 이번 달 목표가 정해지지 않았어요.<br>회의 진행 후 목표가 설정되면 여기에 나타나요.</div>';
+    }
+    // 이번 주 자기 점수
+    if(isStudent){
+      const myScore=(weeklyScores[name]||{})[week];
+      if(myScore!==undefined){
+        html+='<div style="background:#EEF2FF;border-radius:12px;padding:12px;text-align:center;">'
+          +'<div style="font-size:.85rem;font-weight:800;color:#4F46E5;">이번 주 나의 실천 점수</div>'
+          +'<div style="font-size:2rem;font-weight:900;color:#4F46E5;margin:4px 0;">'+myScore+'<span style="font-size:1rem;">/10</span></div>'
+          +'<div style="font-size:.78rem;color:#6366F1;">제출 완료 ✅</div>'
+          +'</div>';
+      }else{
+        html+='<div style="background:#EEF2FF;border-radius:12px;padding:12px;">'
+          +'<div style="font-size:.85rem;font-weight:800;color:#4F46E5;margin-bottom:8px;">⭐ 이번 주 나의 실천 점수 (0~10점)</div>'
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+          +'<input type="range" id="weeklyScoreSlider" min="0" max="10" value="5" style="flex:1;" oninput="document.getElementById(\'weeklyScoreVal\').textContent=this.value">'
+          +'<span id="weeklyScoreVal" style="font-size:1.3rem;font-weight:900;color:#4F46E5;min-width:28px;text-align:center;">5</span>'
+          +'<span style="font-size:.85rem;color:var(--tl);">점</span>'
+          +'</div>'
+          +'<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;" onclick="submitWeeklyScore()">📊 점수 제출</button>'
+          +'</div>';
+      }
+    }
+  }else{
+    // ── 칭찬 탭 ──
+    if(isStudent){
+      const peers=STUDENTS.filter(n=>n!==name);
+      const myPraises=Object.values(praiseData).filter(p=>p.from===name&&p.week===week);
+      const received=Object.values(praiseData).filter(p=>p.to===name&&p.week===week);
+      html+='<div style="font-size:.78rem;color:var(--tl);margin-bottom:10px;">친구의 좋은 점을 찾아 칭찬해봅시다! 😊</div>'
+        +'<select id="praiseTarget" style="margin-bottom:8px;font-size:.9rem;"><option value="">칭찬할 친구 선택...</option>'
+        +peers.map(n=>'<option value="'+n+'">'+n+'</option>').join('')
+        +'</select>'
+        +'<textarea id="praiseContent" rows="2" placeholder="칭찬 내용을 적어주세요" style="font-size:.9rem;margin-bottom:6px;"></textarea>'
+        +'<button class="btn btn-primary btn-sm" onclick="submitPraise()">💌 칭찬 보내기</button>'
+        +(myPraises.length?'<div style="margin-top:8px;font-size:.8rem;color:#6366F1;">이번 주 보낸 칭찬: '+myPraises.map(p=>p.to).join(', ')+'</div>':'');
+      if(received.length){
+        html+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #E0E7FF;">'
+          +'<div style="font-size:.85rem;font-weight:800;color:#059669;margin-bottom:6px;">🎉 이번 주 받은 칭찬</div>'
+          +received.map(p=>'<div style="background:#F0FDF4;border-radius:10px;padding:8px 10px;margin-bottom:4px;font-size:.88rem;">"'+p.content+'" <span style="color:#6B7280;font-size:.78rem;">— '+p.from+'</span></div>').join('')
+          +'</div>';
+      }
+    }else{
+      html+='<div style="font-size:.85rem;color:var(--tl);">로그인 후 칭찬을 보낼 수 있어요</div>';
     }
   }
 
-  ca.innerHTML=html||'<div style="font-size:.85rem;color:var(--tl);">로그인 후 이용할 수 있어요</div>';
+  ca.innerHTML=html;
+}
+function toggleGoalCheck(name,checked){
+  actionRef.child('goalLogs').child(name).child(todayStr()).set(checked||null);
+  if(checked&&name===me)awardXP(me,1,'학급 목표 실천');
 }
 function submitPraise(){
   const target=document.getElementById('praiseTarget')?.value;

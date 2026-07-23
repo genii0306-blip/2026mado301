@@ -2577,13 +2577,22 @@ function renderCheckinItems(name){
 function saveGoalRecord(name){
   const text=(document.getElementById('goalRecord')?.value||'').trim();
   if(!text){showToast('내용을 입력해주세요!','t-warn');return;}
+  // goalLogs에 저장 (일별 기록)
   const ref=actionRef.child('goalLogs').child(name).child(todayStr());
-  ref.once('value',snap=>{
-    const cur=snap.val()||{};
-    cur.record=text;
-    ref.set(cur);
-  });
-  showToast('📝 실천 기록을 저장했어요!','t-success');
+  ref.once('value',snap=>{const cur=snap.val()||{};cur.record=text;ref.set(cur);});
+  // 실천 후기 게시판에도 반영 (이번 달 기존 글 업데이트 or 새 글 생성)
+  if(name&&name!=='선생님'){
+    const thisMonth=nowYM();
+    const existing=Object.values(practicePosts).find(p=>p.author===name&&p.month===thisMonth);
+    if(existing){
+      practiceRef.child(existing.id).update({content:text,date:todayStr(),timestamp:Date.now()});
+    }else{
+      const id=genId();
+      practiceRef.child(id).set({author:name,content:text,month:thisMonth,date:todayStr(),timestamp:Date.now(),likes:0,likedBy:{},xpAwarded:false,bestAwarded:false});
+      awardXP(name,1,'실천 후기 작성');
+    }
+  }
+  showToast('📝 기록을 저장했어요!','t-success');
 }
 function submitPraise(){
   const target=document.getElementById('praiseTarget')?.value;

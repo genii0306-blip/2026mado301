@@ -1718,6 +1718,22 @@ function xpInMonth(name,ym){return xpInRange(name,ym+'-01',ym+'-31');}
 function calcHwXP(name){return Object.values(homeworkData).reduce((s,hw)=>{const sc=(hw.scores||{})[name];return s+(sc!==undefined?sc:0);},0);}
 
 // ══ Firebase listeners ══
+// 여러 명이 동시에 접속해서 짧은 시간에 데이터를 계속 바꾸면(예: XP 여러 건 연속 부여),
+// 'value' 이벤트가 연달아 와서 화면이 반복적으로 다시 그려져 깜빡이는 현상이 생길 수 있음.
+// → 데이터 저장은 항상 즉시 하되, 화면 다시 그리기(특히 캐릭터 이미지가 있는 마이페이지/친구 목록)는
+//    짧게(200ms) 모아서 마지막 한 번만 실행되도록 디바운스 처리.
+const _rdTimers={};
+function debounceRender(key,fn,delay){
+  if(_rdTimers[key])clearTimeout(_rdTimers[key]);
+  _rdTimers[key]=setTimeout(fn,delay==null?200:delay);
+}
+let _myPageRenderTimer=null;
+function scheduleMyPageRender(){
+  if(_myPageRenderTimer)clearTimeout(_myPageRenderTimer);
+  _myPageRenderTimer=setTimeout(function(){
+    if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}
+  },200);
+}
 adminRef.on('value',snap=>{const d=snap.val();if(d)adminConfig=d;});
 studentPinsRef.on('value',snap=>{
   studentPins=snap.val()||{};
@@ -1728,20 +1744,24 @@ studentPinsRef.on('value',snap=>{
     const btn=document.getElementById('welcomeEnterBtn');
     if(btn&&me){btn.disabled=false;btn.style.opacity='1';}
   }
-  if(activeTab==='admin')renderPinMgmt();
+  if(activeTab==='admin')debounceRender('pins',()=>renderPinMgmt());
 });
 boardRef.on('value',snap=>{
   boardPosts=snap.val()||{};
   Object.keys(boardPosts).forEach(k=>boardPosts[k].id=k);
-  if(activeTab==='board')renderBoard();
-  if(activeTab==='admin')renderAdminBoard();
+  debounceRender('board',()=>{
+    if(activeTab==='board')renderBoard();
+    if(activeTab==='admin')renderAdminBoard();
+  });
 });
 proposalsRef.on('value',snap=>{
   proposals=snap.val()||{};
-  renderProposalList();renderVoteArea();renderVoteResultArea();renderConfirmedInfo();renderTeacherConfirmPanel();
-  if(activeTab==='admin')renderAdminProposals();
+  debounceRender('proposals',()=>{
+    renderProposalList();renderVoteArea();renderVoteResultArea();renderConfirmedInfo();renderTeacherConfirmPanel();
+    if(activeTab==='admin')renderAdminProposals();
+  });
 });
-evalRef.on('value',snap=>{evalData=snap.val()||{};renderEvalResult();});
+evalRef.on('value',snap=>{evalData=snap.val()||{};debounceRender('eval',()=>renderEvalResult());});
 meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
@@ -1750,31 +1770,51 @@ meetFlowRef.on('value',snap=>{
 classScoreRef.on('value',snap=>{
   const d=snap.val();if(d)classScore=d;
   updateMainScore();
-  if(activeTab==='score')renderScoreLog();
+  debounceRender('classScore',()=>{if(activeTab==='score')renderScoreLog();});
 });
-stepActionsRef.on('value',snap=>{stepActions=snap.val()||{};renderActionPlanList();});
+stepActionsRef.on('value',snap=>{stepActions=snap.val()||{};debounceRender('stepActions',()=>renderActionPlanList());});
 actionRef.on('value',snap=>{
   const d=snap.val();
   if(d){actionData=d;actionData.students=actionData.students||[];
     actionData.students.forEach(s=>{if(s.items&&typeof s.items[0]==='object')s.items=s.items.map(i=>i.text||i);if(!s.logs)s.logs=[];});
   }else actionData={goal:'',students:[]};
-  renderGoal();
-  if(activeTab==='action'){renderDashboard();renderCheckinSel();}
-  migrateGoalLogsToPracticeBoard();
+  debounceRender('action',()=>{
+    renderGoal();
+    if(activeTab==='action'){renderDashboard();renderCheckinSel();}
+    migrateGoalLogsToPracticeBoard();
+  });
 });
-speakReqRef.on('value',snap=>{speakRequests=snap.val()||{};renderRaiseHandGrid();renderSpeakQueue();renderSpeakMini();});
-speakCountRef.on('value',snap=>{speakCount=snap.val()||{};renderRaiseHandGrid();renderSpeakMini();if(activeTab==='admin')renderSpeakCountEditList();});
-xpRef.on('value',snap=>{xpData=snap.val()||{};updateMainScore();if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}if(activeTab==='admin'){renderActivityTable();renderAdminCharGrid();}});
-homeworkRef.on('value',snap=>{homeworkData=snap.val()||{};if(activeTab==='homework')renderHomework();if(activeTab==='mypage')renderMyPage();});
-suggestRef.on('value',snap=>{suggestData=snap.val()||{};if(activeTab==='suggest')renderSuggestList();});
-characterRef.on('value',snap=>{characterData=snap.val()||{};if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}if(activeTab==='admin')renderAdminCharGrid();});
-shopRef.on('value',snap=>{shopData=snap.val()||{};if(activeTab==='mypage')renderShop();if(activeTab==='admin')renderAdminCharGrid();});
+speakReqRef.on('value',snap=>{speakRequests=snap.val()||{};debounceRender('speak',()=>{renderRaiseHandGrid();renderSpeakQueue();renderSpeakMini();});});
+speakCountRef.on('value',snap=>{speakCount=snap.val()||{};debounceRender('speakCount',()=>{renderRaiseHandGrid();renderSpeakMini();if(activeTab==='admin')renderSpeakCountEditList();});});
+xpRef.on('value',snap=>{
+  xpData=snap.val()||{};
+  updateMainScore();
+  scheduleMyPageRender();
+  debounceRender('xpAdmin',()=>{if(activeTab==='admin'){renderActivityTable();renderAdminCharGrid();}});
+});
+homeworkRef.on('value',snap=>{
+  homeworkData=snap.val()||{};
+  debounceRender('homework',()=>{if(activeTab==='homework')renderHomework();});
+  scheduleMyPageRender();
+});
+suggestRef.on('value',snap=>{suggestData=snap.val()||{};debounceRender('suggest',()=>{if(activeTab==='suggest')renderSuggestList();});});
+characterRef.on('value',snap=>{
+  characterData=snap.val()||{};
+  scheduleMyPageRender();
+  debounceRender('characterAdmin',()=>{if(activeTab==='admin')renderAdminCharGrid();});
+});
+shopRef.on('value',snap=>{
+  shopData=snap.val()||{};
+  debounceRender('shop',()=>{if(activeTab==='mypage')renderShop();if(activeTab==='admin')renderAdminCharGrid();});
+});
 personalScoreRef.on('value',snap=>{
   personalScore=snap.val()||{};
   updateMainScore();
-  if(activeTab==='personal')renderPersonalTab();
-  if(psSelectedStudent)renderPsDetail(psSelectedStudent);
-  if(activeTab==='admin')renderActivityTable();
+  debounceRender('personalScore',()=>{
+    if(activeTab==='personal')renderPersonalTab();
+    if(psSelectedStudent)renderPsDetail(psSelectedStudent);
+    if(activeTab==='admin')renderActivityTable();
+  });
 });
 personalScoreReqRef.on('value',snap=>{
   personalScoreReq=snap.val()||{};
@@ -1784,10 +1824,10 @@ personalScoreReqRef.on('value',snap=>{
 studentAlertsRef.on('value',snap=>{
   studentAlerts=snap.val()||{};
   updateStudentAlertBadge();
-  if(activeTab==='personal')renderPersonalTab();
+  if(activeTab==='personal')debounceRender('alerts',()=>renderPersonalTab());
 });
-weeklyScoresRef.on('value',snap=>{weeklyScores=snap.val()||{};if(activeTab==='action'){renderDashboard();renderCheckinItems(me);}});
-praiseRef.on('value',snap=>{praiseData=snap.val()||{};if(activeTab==='action')renderCheckinItems(me);});
+weeklyScoresRef.on('value',snap=>{weeklyScores=snap.val()||{};debounceRender('weekly',()=>{if(activeTab==='action'){renderDashboard();renderCheckinItems(me);}});});
+praiseRef.on('value',snap=>{praiseData=snap.val()||{};debounceRender('praise',()=>{if(activeTab==='action')renderCheckinItems(me);});});
 studentsRef.on('value',snap=>{
   const d=snap.val();
   if(d&&Array.isArray(d)&&d.length>0) STUDENTS=d;
@@ -1799,24 +1839,24 @@ studentsRef.on('value',snap=>{
 practiceRef.on('value',snap=>{
   practicePosts=snap.val()||{};
   Object.keys(practicePosts).forEach(k=>practicePosts[k].id=k);
-  if(activeTab==='action')renderPracticeBoard();
+  debounceRender('practice',()=>{if(activeTab==='action')renderPracticeBoard();});
 });
 
 // ── 직업 데이터 ──
 jobRef.on('value',snap=>{
   jobData=snap.val()||{};
-  if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}
-  if(activeTab==='admin')renderJobAssignment();
+  scheduleMyPageRender();
+  debounceRender('jobAdmin',()=>{if(activeTab==='admin')renderJobAssignment();});
 });
 // ── 동물 종족 데이터 ──
 speciesRef.on('value',snap=>{
   speciesData=snap.val()||{};
-  if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}
-  if(activeTab==='admin')renderSpeciesAssignment();
+  scheduleMyPageRender();
+  debounceRender('speciesAdmin',()=>{if(activeTab==='admin')renderSpeciesAssignment();});
 });
 customEquipRef.on('value',snap=>{
   customEquipData=snap.val()||{};
-  if(activeTab==='mypage'){renderMyPage();renderClassmateMiniGrid();}
+  scheduleMyPageRender();
 });
 
 // ── 학급 정보 Firebase 동기화 ──

@@ -1292,6 +1292,16 @@ function getCharImg(name){
 }
 // 아이템 이미지 경로: item_{id}.png 없으면 null
 function itemImgPath(id){return id?`item_${id}.png`:null;}
+// 캐릭터 이미지 로드 실패 시 이모지로 대체 (onerror 핸들러, data-* 속성으로 값 전달해 따옴표 이스케이프 문제 방지)
+function charImgFallback(img){
+  const emoji=img.getAttribute('data-fallback-emoji')||'🥚';
+  const tag=img.getAttribute('data-fallback-tag')||'span';
+  const style=img.getAttribute('data-fallback-style')||'';
+  const span=document.createElement(tag);
+  span.setAttribute('style',style);
+  span.textContent=emoji;
+  img.replaceWith(span);
+}
 
 // ── 스프라이트 시트 맵 ──
 // {src, imgW, imgH, cols, rows, headerH, col(0-based), row(0-based)}
@@ -3889,7 +3899,7 @@ function renderStudentMyPage(){
   const charImg=getCharImg(me);
   let avatarEl='';
   if(charImg){
-    avatarEl='<img src="'+charImg+'" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,.6);" onerror="this.outerHTML=\'<div style=\\"font-size:3.5rem;line-height:1;\\">'+(sp?sp.emoji:'🥚')+'</div>\'">';
+    avatarEl='<img src="'+charImg+'" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,.6);" data-fallback-emoji="'+(sp?sp.emoji:'🥚')+'" data-fallback-tag="div" data-fallback-style="font-size:3.5rem;line-height:1;" onerror="charImgFallback(this)">';
   } else {
     avatarEl='<div style="font-size:3.5rem;line-height:1;">'+(shopAvItem?shopAvItem.v:(sp?sp.emoji:'🥚'))+'</div>';
   }
@@ -3935,7 +3945,7 @@ function renderClassmateMiniGrid(){
     const equippedAvId=(shopData[n]||{}).equipped||'';
     const shopAv=SHOP_ITEMS.find(function(i){return i.type==='avatar'&&i.id===equippedAvId;});
     var av='';
-    if(charImg)av='<img src="'+charImg+'" style="width:36px;height:36px;object-fit:contain;border-radius:50%;" onerror="this.outerHTML=\'<span style=\\"font-size:1.5rem;\\">'+(spN?spN.emoji:'🥚')+'</span>\'">';
+    if(charImg)av='<img src="'+charImg+'" style="width:36px;height:36px;object-fit:contain;border-radius:50%;" data-fallback-emoji="'+(spN?spN.emoji:'🥚')+'" data-fallback-tag="span" data-fallback-style="font-size:1.5rem;" onerror="charImgFallback(this)">';
     else av='<span style="font-size:1.5rem;">'+(shopAv?shopAv.v:(spN?spN.emoji:'🥚'))+'</span>';
     return '<div style="text-align:center;padding:8px 6px;background:#F8FAFF;border-radius:12px;border:1.5px solid '+(n===me?'var(--primary)':'var(--border)')+';">'
       +av+'<div style="font-size:.75rem;font-weight:700;margin-top:2px;">'+n+'</div>'
@@ -4192,7 +4202,7 @@ function ccUpdatePreview(){
   const charImg=getCharImg(me);
   const wrap=document.getElementById('ccPrevCharImg');
   if(wrap){
-    if(charImg)wrap.innerHTML='<img src="'+charImg+'" style="width:100px;height:100px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,.5);" onerror="this.outerHTML=\'<div style=\\"font-size:4rem;line-height:100px;\\">'+(ccSp?ccSp.emoji:'🥚')+'</div>\'">';
+    if(charImg)wrap.innerHTML='<img src="'+charImg+'" style="width:100px;height:100px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,.5);" data-fallback-emoji="'+(ccSp?ccSp.emoji:'🥚')+'" data-fallback-tag="div" data-fallback-style="font-size:4rem;line-height:100px;" onerror="charImgFallback(this)">';
     else wrap.innerHTML='<div style="font-size:4rem;line-height:100px;">'+(ccSp?ccSp.emoji:'🥚')+'</div>';
   }
 }
@@ -4538,7 +4548,7 @@ function renderAdminCharGrid(){
     const themeItem=SHOP_ITEMS.find(function(i){return i.type==='color'&&i.id===themeId;});
     const cardBg=themeItem?themeItem.bg:'linear-gradient(135deg,#4F6EF7,#8B5CF6)';
     var av='';
-    if(charImg)av='<img src="'+charImg+'" style="width:54px;height:54px;object-fit:contain;" onerror="this.outerHTML=\'<div style=\\"font-size:2.4rem;\\">'+(spN?spN.emoji:'🥚')+'</div>\'">';
+    if(charImg)av='<img src="'+charImg+'" style="width:54px;height:54px;object-fit:contain;" data-fallback-emoji="'+(spN?spN.emoji:'🥚')+'" data-fallback-tag="div" data-fallback-style="font-size:2.4rem;" onerror="charImgFallback(this)">';
     else av='<div style="font-size:2.4rem;">'+(shopAv?shopAv.v:(spN?spN.emoji:'🥚'))+'</div>';
     return '<div style="border-radius:16px;overflow:hidden;border:2px solid var(--border);">'
       +'<div style="background:'+cardBg+';padding:14px 8px;text-align:center;">'+av+'</div>'

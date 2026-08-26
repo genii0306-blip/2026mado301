@@ -699,6 +699,9 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   <div id="jobSelectBtnArea" style="display:none;margin:-4px 0 14px;text-align:center;">
     <button class="btn btn-primary btn-sm" onclick="openJobSelectModal()" style="width:100%;background:linear-gradient(135deg,#7C3AED,#A78BFA);border:none;">⚔️ 나의 직업 선택하기 (Lv.3 달성!)</button>
   </div>
+  <div id="evolveBtnArea" style="display:none;margin:-4px 0 14px;text-align:center;">
+    <button class="btn btn-primary btn-sm" id="evolveBtnEl" onclick="openEvolveModal()" style="width:100%;background:linear-gradient(135deg,#F59E0B,#FCD34D);border:none;">✨ 히든 캐릭터로 진화하기! (Lv.50 달성)</button>
+  </div>
   <div class="card" id="myStatsCard">
     <div class="card-title">📊 내 활동 요약</div>
     <div class="stat-chip-row" id="myStatChips"></div>
@@ -1194,6 +1197,24 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   </div>
 </div>
 
+<!-- 히든 캐릭터 진화 모달 (학생용, Lv.50 달성 시) -->
+<div class="overlay" id="evolveModal">
+  <div class="modal" style="max-width:520px;max-height:88vh;overflow-y:auto;">
+    <div style="text-align:center;margin-bottom:4px;">
+      <div style="font-size:2.4rem;margin-bottom:6px;">✨</div>
+      <div class="modal-title" style="text-align:center;font-size:1.3rem;">히든 캐릭터로 진화!</div>
+      <div style="font-size:.88rem;color:var(--tl);margin-bottom:16px;line-height:1.6;">
+        만렙을 달성한 당신! 전설의 캐릭터로 진화할 수 있어요.<br>
+        원하는 모습을 골라보세요 🌟
+      </div>
+    </div>
+    <div id="evolveGrid"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn btn-outline btn-sm" onclick="closeM('evolveModal')">나중에 하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 관리자 동물 배정 모달 -->
 <div class="overlay" id="adminSpeciesModal">
   <div class="modal" style="max-width:520px;max-height:88vh;overflow-y:auto;">
@@ -1356,7 +1377,17 @@ const SPECIES=[
   {id:'dog',    guildId:'lumen',     name:'강아지',   emoji:'🐶', color:'#CA8A04'},
   {id:'eagle',  guildId:'regia',     name:'독수리',   emoji:'🦅', color:'#1D4ED8'},
 ];
-function getSpecies(id){return SPECIES.find(s=>s.id===id)||null;}
+// ══ 히든 캐릭터 (2026-08-26 도입) ══
+// 만렙(Lv.50) 달성 후 학생이 직접 "진화하기" 버튼을 눌러야 해금됨 (자동 아님).
+// 이미지 경로는 일반 동물과 동일: animals/{id}/stage{01~06}.png
+const EVOLVE_LV=50;
+const HIDDEN_SPECIES=[
+  {id:'haechi', guildId:null, name:'해치',   emoji:'🦁',  color:'#F59E0B', hidden:true},
+  {id:'dragon', guildId:null, name:'드래곤', emoji:'🐉',  color:'#DC2626', hidden:true},
+  {id:'jujak',  guildId:null, name:'주작',   emoji:'🐦‍🔥', color:'#EA580C', hidden:true},
+  {id:'totoro', guildId:null, name:'토토로', emoji:'🌳',  color:'#16A34A', hidden:true},
+];
+function getSpecies(id){return SPECIES.find(s=>s.id===id)||HIDDEN_SPECIES.find(s=>s.id===id)||null;}
 // 레벨 → 성장 단계(1~6). 기존 등급 구간(신입/견습/초급/정식/중급/상급)과 동일한 경계 사용.
 function getAnimalStage(lv){
   if(lv>=50)return 6;
@@ -3623,6 +3654,48 @@ function confirmSpeciesSelect(speciesId){
   closeM('speciesSelectModal');
 }
 
+// ══ 히든 캐릭터 진화 (학생, Lv.50 달성 후 본인이 직접 진화) ══
+function openEvolveModal(){
+  renderEvolveGrid();
+  openM('evolveModal');
+}
+function renderEvolveGrid(){
+  const el=document.getElementById('evolveGrid');if(!el)return;
+  const cur=(speciesData[me]||{}).speciesId||'';
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">';
+  HIDDEN_SPECIES.forEach(function(s){
+    const sel=cur===s.id;
+    html+=`<div class="job-select-card${sel?' selected':''}" style="${sel?`border-color:${s.color};`:''}cursor:pointer;" onclick="confirmEvolve('${s.id}')">
+      <div style="font-size:1.8rem;">${s.emoji}</div>
+      <div style="font-weight:800;font-size:.9rem;">${s.name}</div>
+      <div style="font-size:.75rem;color:var(--tl);margin-top:2px;">✨ 히든</div>
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function confirmEvolve(speciesId){
+  if(!me||me==='선생님')return;
+  const sp=getSpecies(speciesId);if(!sp)return;
+  speciesRef.child(me).set({speciesId});
+  showToast(`✨ ${sp.emoji} ${sp.name}(으)로 진화했어요!`,'t-success');
+  closeM('evolveModal');
+  checkEvolveUnlock();
+}
+// 만렙(Lv.50) + 동물 보유 시에만 진화 버튼 노출 (자동 해금 아님, 학생이 직접 눌러야 진화)
+function checkEvolveUnlock(){
+  if(!me||me==='선생님')return;
+  const btn=document.getElementById('evolveBtnArea');
+  if(!btn)return;
+  const lv=getLevel((xpData[me]||{}).total||0).lv;
+  const curSpeciesId=(speciesData[me]||{}).speciesId||'';
+  const hasSpecies=!!curSpeciesId;
+  const isHidden=HIDDEN_SPECIES.some(function(s){return s.id===curSpeciesId;});
+  btn.style.display=(lv>=EVOLVE_LV&&hasSpecies)?'block':'none';
+  const btnEl=document.getElementById('evolveBtnEl');
+  if(btnEl)btnEl.textContent=isHidden?'🔄 히든 캐릭터 바꾸기':'✨ 히든 캐릭터로 진화하기! (Lv.50 달성)';
+}
+
 // ══ 동물 배정 (교사/관리자) ══
 function renderSpeciesAssignment(){
   const el=document.getElementById('speciesAssignmentPanel');if(!el)return;
@@ -3780,6 +3853,7 @@ function renderMyPage(){
   if(me==='선생님'){renderTeacherMyPage();}else{renderStudentMyPage();renderShop();}
   checkJobUnlock();
   checkSpeciesUnlock();
+  checkEvolveUnlock();
 }
 function renderTeacherMyPage(){
   const el=document.getElementById('myCharCard');if(!el)return;
@@ -4201,15 +4275,18 @@ function renderHwScoreGrid(){
       +'</div>'
       +'</td>';
     list.forEach(function(_,idx){
-      const score=myHw[idx]||0;
+      const graded=myHw[idx]!==undefined;
+      const score=graded?myHw[idx]:0;
       t+='<td style="text-align:center;padding:6px 4px;border-bottom:1px solid #F0EEFF;">';
-      if(score>0){
+      if(graded){
+        const isZero=score===0;
         t+='<div style="display:inline-flex;align-items:center;gap:3px;">'
-          +'<span style="background:var(--green);color:#fff;font-weight:900;font-size:.88rem;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;">'+score+'</span>'
-          +'<button onclick="hwSetScore(\''+name+'\','+idx+',0)" style="background:none;border:none;color:#DC2626;font-size:.75rem;cursor:pointer;padding:0 2px;" title="취소">✕</button>'
+          +'<span style="background:'+(isZero?'#F87171':'var(--green)')+';color:#fff;font-weight:900;font-size:.88rem;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;" title="'+(isZero?'미제출 처리(0점)':score+'점')+'">'+score+'</span>'
+          +'<button onclick="hwClearScore(\''+name+'\','+idx+')" style="background:none;border:none;color:#DC2626;font-size:.75rem;cursor:pointer;padding:0 2px;" title="채점 취소">✕</button>'
           +'</div>';
       } else {
-        t+='<div style="display:inline-flex;gap:3px;">'
+        t+='<div style="display:inline-flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:90px;">'
+          +'<button onclick="hwSetScore(\''+name+'\','+idx+',0)" style="background:#F3F4F6;border:none;border-radius:6px;padding:4px 7px;font-size:.8rem;font-weight:700;color:#6B7280;cursor:pointer;" title="미제출 처리">0</button>'
           +'<button onclick="hwSetScore(\''+name+'\','+idx+',1)" style="background:#DBEAFE;border:none;border-radius:6px;padding:4px 7px;font-size:.8rem;font-weight:700;color:#1D4ED8;cursor:pointer;">1</button>'
           +'<button onclick="hwSetScore(\''+name+'\','+idx+',2)" style="background:#FEF3C7;border:none;border-radius:6px;padding:4px 7px;font-size:.8rem;font-weight:700;color:#D97706;cursor:pointer;">2</button>'
           +'<button onclick="hwSetScore(\''+name+'\','+idx+',3)" style="background:#FCE7F3;border:none;border-radius:6px;padding:4px 7px;font-size:.8rem;font-weight:700;color:#BE185D;cursor:pointer;">3</button>'
@@ -4223,19 +4300,28 @@ function renderHwScoreGrid(){
   el.innerHTML=t;
 }
 function hwSetScore(name,idx,score){
-  const prev=(homeworkData[name]||{})[idx]||0;
+  const had=(homeworkData[name]||{})[idx]!==undefined;
+  const prev=had?(homeworkData[name]||{})[idx]:0;
   var upd={};upd[idx]=score;
   homeworkRef.child(name).update(upd);
-  if(score>0&&prev===0){
-    awardXP(name,score,'숙제 완료');
-    showToast(name+' · '+score+'점 부여!','t-success');
-  } else if(score===0&&prev>0){
-    awardXP(name,-prev,'숙제 점수 취소');
-    showToast(name+' 점수 취소','t-info');
-  } else if(score>0&&prev>0&&score!==prev){
+  if(!had){
+    if(score>0){
+      awardXP(name,score,'숙제 완료');
+      showToast(name+' · '+score+'점 부여!','t-success');
+    } else {
+      showToast(name+' · 미제출(0점) 처리했어요','t-info');
+    }
+  } else if(score!==prev){
     awardXP(name,score-prev,'숙제 점수 수정');
     showToast(name+' · '+prev+'점 → '+score+'점','t-success');
   }
+}
+function hwClearScore(name,idx){
+  const prev=(homeworkData[name]||{})[idx];
+  if(prev===undefined)return;
+  homeworkRef.child(name).child(idx).remove();
+  if(prev>0)awardXP(name,-prev,'숙제 점수 취소');
+  showToast(name+' 채점을 취소했어요','t-info');
 }
 function renderHomeworkStudentGrid(){
   const el=document.getElementById('hwStudentGrid');if(!el)return;

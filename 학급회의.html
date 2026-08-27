@@ -632,6 +632,10 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div class="s-grid" id="actionStudentSel"></div>
     <div id="checkinArea"></div>
   </div>
+  <div class="card" id="reflectCard">
+    <div class="card-title">🌙 오늘 하루 돌아보기</div>
+    <div id="reflectArea"></div>
+  </div>
   <div class="card">
     <div class="card-title">📊 달성률 대시보드</div>
     <div id="dashboardArea"></div>
@@ -1543,7 +1547,7 @@ function getItemSet(setId){return ITEM_SETS[setId]||null;}
 function getEquippedSetBonus(name){
   // 착용 중인 세트를 확인하고 완성된 세트 효과 반환
   const equip=characterData[name]||{};
-  return Object.entries(ITEM_SETS).filter(([,s])=>s.items.every(id=>equip[ITEM_CATALOG.find(i=>i.id===id)?.slot]===id)).map(([k])=>k);
+  return Object.entries(ITEM_SETS).filter(([,s])=>s.items.every(id=>{const it=ITEM_CATALOG.find(i=>i.id===id);return equip[it?it.slot:null]===id;})).map(([k])=>k);
 }
 
 function getItem(id){return ITEM_CATALOG.find(i=>i.id===id)||null;}
@@ -1820,6 +1824,7 @@ personalScoreReqRef.on('value',snap=>{
   personalScoreReq=snap.val()||{};
   updateBellBadge();
   if(document.getElementById('bellModal').classList.contains('active')||document.getElementById('bellModal').style.display==='flex')renderBellModal();
+  if(activeTab==='action')renderReflectCard();
 });
 studentAlertsRef.on('value',snap=>{
   studentAlerts=snap.val()||{};
@@ -1988,7 +1993,7 @@ function go(tab){
   if(navBtns[idx])navBtns[idx].classList.add('active');
   if(tab==='flow'){applyStep(meetFlow.step||1);}
   if(tab==='board'){renderBoardWriterInfo();renderBoard();}
-  if(tab==='action'){renderGoal();renderDashboard();renderCheckinSel();renderPracticeBoard();}
+  if(tab==='action'){renderGoal();renderDashboard();renderCheckinSel();renderPracticeBoard();renderReflectCard();}
   if(tab==='score'){renderScoreLog();drawScoreMonthChart();const uc=document.getElementById('classScoreUseCard');if(uc)uc.style.display=me==='선생님'?'block':'none';}
   if(tab==='personal'){renderPersonalTab();}
   if(tab==='history'){renderHistory();}
@@ -2177,7 +2182,7 @@ function populatePresidentSel(){
 function saveClass(){
   classInfo={grade:document.getElementById('mGrade').value,num:document.getElementById('mNum').value,
     teacher:document.getElementById('mTeacher').value,president:document.getElementById('mPresident').value,
-    vicePresident:document.getElementById('mVicePresident')?.value||''};
+    vicePresident:(document.getElementById('mVicePresident')||{}).value||''};
   localStorage.setItem('classInfo',JSON.stringify(classInfo));
   classInfoRef.set(classInfo); // Firebase 동기화
   updateClassBadge();closeM('classModal');
@@ -2380,7 +2385,7 @@ function submitProposal(){
 }
 function renderProposalList(){
   const el=document.getElementById('proposalList');if(!el)return;
-  const list=Object.values(proposals).sort((a,b)=>b.date?.localeCompare(a.date||'')||0);
+  const list=Object.values(proposals).sort((a,b)=>b.date?b.date.localeCompare(a.date||''):0);
   if(!list.length){el.innerHTML='<div class="empty-state"><div class="ei">📝</div><div>아직 제안이 없어요</div></div>';return;}
   const cnt=countProposals();
   el.innerHTML=list.map(p=>{
@@ -2770,6 +2775,57 @@ function pickCheckinStudent(n){
   renderCheckinSel();
   renderCheckinItems(n);
 }
+// ══ 오늘 하루 돌아보기 (발표·숙제·학급목표 실천 자기 체크 → 선생님 승인 시 점수 반영) ══
+function reflectItemsLabel(items){
+  items=items||{};
+  const labels=[];
+  if(items.presentation)labels.push('🙋 발표');
+  if(items.homework)labels.push('📚 숙제');
+  if(items.goal)labels.push('🎯 목표실천');
+  return labels.join(' · ');
+}
+function myTodayReflect(){
+  if(!me||me==='선생님')return null;
+  const today=todayStr();
+  const mine=Object.values(personalScoreReq).filter(r=>r.kind==='reflect'&&r.student===me&&r.date===today);
+  return mine.length?mine[mine.length-1]:null;
+}
+function renderReflectCard(){
+  const el=document.getElementById('reflectArea');if(!el)return;
+  if(!me||me==='선생님'){el.innerHTML='<div class="empty-state"><div class="ei">🌙</div><div>학생 계정으로 입장하면 오늘 하루를 돌아볼 수 있어요</div></div>';return;}
+  const submitted=myTodayReflect();
+  if(submitted){
+    const label=reflectItemsLabel(submitted.items);
+    const statusMap={pending:['⏳ 선생님 승인 대기 중','#B45309'],approved:['✅ 승인 완료! 점수 반영됐어요','#059669'],rejected:['❌ 반려됐어요','#DC2626']};
+    const st=statusMap[submitted.status]||statusMap.pending;
+    el.innerHTML='<div style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:10px;padding:12px;">'
+      +'<div style="font-weight:800;color:#5B21B6;margin-bottom:4px;">📤 오늘 제출 완료!</div>'
+      +'<div style="font-size:.85rem;color:#6D28D9;margin-bottom:6px;">'+(label||'체크한 항목 없음')+' · <span style="font-weight:900;">+'+submitted.points+'점 신청</span></div>'
+      +(submitted.note?'<div style="font-size:.85rem;color:#4C1D95;background:#fff;border-radius:8px;padding:6px 8px;margin-bottom:6px;">💬 '+submitted.note+'</div>':'')
+      +'<div style="font-size:.82rem;font-weight:700;color:'+st[1]+';">'+st[0]+'</div>'
+      +'</div>';
+    return;
+  }
+  el.innerHTML='<div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 있었던 일을 스스로 체크하고 소감을 적어보세요. 제출하면 선생님 승인 후 점수가 반영돼요. (하루 1번만 제출 가능)</div>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfPresentation" style="width:18px;height:18px;flex-shrink:0;"> 🙋 오늘 발표를 했어요</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfHomework" style="width:18px;height:18px;flex-shrink:0;"> 📚 오늘 숙제를 했어요</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfGoal" style="width:18px;height:18px;flex-shrink:0;"> 🎯 학급 목표를 실천했어요</label>'
+    +'<textarea id="rfNote" rows="2" placeholder="오늘 하루 소감을 적어보세요 (선택)" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #DDD6FE;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin:8px 0;"></textarea>'
+    +'<button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitReflect()">📤 오늘 돌아보기 제출</button>';
+}
+function submitReflect(){
+  if(!me||me==='선생님')return;
+  if(myTodayReflect()){showToast('오늘은 이미 제출했어요!','t-warn');return;}
+  const presentation=!!(document.getElementById('rfPresentation')||{}).checked;
+  const homework=!!(document.getElementById('rfHomework')||{}).checked;
+  const goal=!!(document.getElementById('rfGoal')||{}).checked;
+  const note=((document.getElementById('rfNote')||{}).value||'').trim();
+  const points=(presentation?1:0)+(homework?1:0)+(goal?1:0);
+  const id=genId();
+  personalScoreReqRef.child(id).set({id,student:me,kind:'reflect',status:'pending',ts:Date.now(),date:todayStr(),items:{presentation,homework,goal},points,note});
+  showToast('📤 오늘 돌아보기를 제출했어요! 선생님 승인을 기다려주세요.','t-success');
+  renderReflectCard();
+}
 function switchCheckinTab(tab){checkinTab=tab;renderCheckinItems(me);}
 function renderCheckinItems(name){
   const ca=document.getElementById('checkinArea');if(!ca||!name)return;
@@ -2786,7 +2842,7 @@ function renderCheckinItems(name){
 
   // ── 오늘의 기록 (실천 + 칭찬 통합) ──
   const today=todayStr();
-  const savedRecord=((actionData.goalLogs||{})[name]?.[today]||{}).record||'';
+  const savedRecord=(((actionData.goalLogs||{})[name]||{})[today]||{}).record||'';
   if(savedRecord){
     html+='<div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:8px 10px;font-size:.88rem;color:#065F46;margin-bottom:6px;">📝 '+savedRecord+'</div>';
   }
@@ -2841,7 +2897,7 @@ function migrateGoalLogsToPracticeBoard(){
   });
 }
 function saveGoalRecord(name){
-  const text=(document.getElementById('goalRecord')?.value||'').trim();
+  const text=((document.getElementById('goalRecord')||{}).value||'').trim();
   if(!text){showToast('내용을 입력해주세요!','t-warn');return;}
   // goalLogs에 저장 (일별 기록)
   const ref=actionRef.child('goalLogs').child(name).child(todayStr());
@@ -2861,8 +2917,8 @@ function saveGoalRecord(name){
   showToast('📝 기록을 저장했어요!','t-success');
 }
 function submitPraise(){
-  const target=document.getElementById('praiseTarget')?.value;
-  const content=(document.getElementById('praiseContent')?.value||'').trim();
+  const target=(document.getElementById('praiseTarget')||{}).value;
+  const content=((document.getElementById('praiseContent')||{}).value||'').trim();
   if(!target){showToast('칭찬할 친구를 선택하세요!','t-warn');return;}
   if(!content){showToast('칭찬 내용을 적어주세요!','t-warn');return;}
   const id='p'+Date.now();
@@ -2874,13 +2930,13 @@ function submitPraise(){
 }
 function submitWeeklyScore(){
   if(!me||me==='선생님')return;
-  const score=parseInt(document.getElementById('weeklyScoreSlider')?.value||'5');
+  const score=parseInt((document.getElementById('weeklyScoreSlider')||{}).value||'5');
   weeklyScoresRef.child(me).update({[getMondayStr()]:score});
   showToast('📊 이번 주 점수를 제출했어요!','t-success');
 }
 function toggleCheckin(name,idx,checked){
   const today=todayStr();
-  const stu=actionData.students?.find(s=>s.name===name);if(!stu)return;
+  const stu=(actionData.students||[]).find(s=>s.name===name);if(!stu)return;
   let logs=stu.logs||[];
   let tl=logs.find(l=>l.date===today);
   if(!tl){tl={date:today,checked:[]};logs.push(tl);}
@@ -3357,6 +3413,47 @@ function updateBellBadge(){
   else{badge.style.display='none';}
 }
 function openBellModal(){renderBellModal();openM('bellModal');}
+function bellPendingRow(r){
+  if(r.kind==='reflect'){
+    const label=reflectItemsLabel(r.items)||'체크한 항목 없음';
+    return `<div class="req-card">
+      <div class="req-name">👤 ${r.student}</div>
+      <div class="req-type">🌙 하루 돌아보기 (${label}) <span style="font-weight:900;color:var(--green);">+${r.points} XP</span></div>
+      <div class="req-cost">제출일: ${r.date||''}</div>
+      ${r.note?`<div style="font-size:.82rem;color:var(--tl);background:#F8FAFF;border-radius:8px;padding:6px 8px;margin:2px 0;">💬 ${r.note}</div>`:''}
+      <div class="req-actions">
+        <button class="btn btn-green btn-sm" onclick="approvePersonalScoreReq('${r.id}')">✅ 승인</button>
+        <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);" onclick="rejectPersonalScoreReq('${r.id}')">❌ 거절</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="req-card">
+    <div class="req-name">👤 ${r.student}</div>
+    <div class="req-type">🎁 ${r.type} <span style="font-weight:900;color:var(--red);">-${r.cost} XP</span></div>
+    <div class="req-cost">신청일: ${r.date||''}</div>
+    ${r.executeDate?`<div style="font-size:.82rem;color:#1D4ED8;font-weight:700;margin:2px 0;">📅 실행 희망일: ${r.executeDate}</div>`:''}
+    ${r.consentChecked===true?`<div style="font-size:.82rem;color:#059669;font-weight:700;margin:2px 0;">✅ 상대방 동의 확인됨</div>`:''}
+    <div class="req-actions">
+      <button class="btn btn-green btn-sm" onclick="approvePersonalScoreReq('${r.id}')">✅ 승인</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);" onclick="rejectPersonalScoreReq('${r.id}')">❌ 거절</button>
+    </div>
+  </div>`;
+}
+function bellDoneRow(r){
+  const statusLabel=r.status==='approved'?'✅ 승인됨':'❌ 거절됨';
+  const statusColor=r.status==='approved'?'var(--green)':'var(--red)';
+  if(r.kind==='reflect'){
+    const label=reflectItemsLabel(r.items)||'체크한 항목 없음';
+    return `<div class="req-card" style="opacity:.65;">
+      <div class="req-name">👤 ${r.student} <span style="font-size:.8rem;color:${statusColor};">${statusLabel}</span></div>
+      <div class="req-type">🌙 하루 돌아보기 (${label}) (+${r.points}점) · ${r.date||''}</div>
+    </div>`;
+  }
+  return `<div class="req-card" style="opacity:.65;">
+    <div class="req-name">👤 ${r.student} <span style="font-size:.8rem;color:${statusColor};">${statusLabel}</span></div>
+    <div class="req-type">🎁 ${r.type} (-${r.cost}점) · ${r.date||''}</div>
+  </div>`;
+}
 function renderBellModal(){
   const el=document.getElementById('bellModalList');if(!el)return;
   const reqs=Object.values(personalScoreReq).sort((a,b)=>b.ts-a.ts);
@@ -3366,24 +3463,11 @@ function renderBellModal(){
   let html='';
   if(pending.length){
     html+='<div style="font-weight:800;font-size:.88rem;color:var(--red);margin-bottom:8px;">⏳ 대기 중</div>';
-    html+=pending.map(r=>`<div class="req-card">
-      <div class="req-name">👤 ${r.student}</div>
-      <div class="req-type">🎁 ${r.type} <span style="font-weight:900;color:var(--red);">-${r.cost} XP</span></div>
-      <div class="req-cost">신청일: ${r.date||''}</div>
-      ${r.executeDate?`<div style="font-size:.82rem;color:#1D4ED8;font-weight:700;margin:2px 0;">📅 실행 희망일: ${r.executeDate}</div>`:''}
-      ${r.consentChecked===true?`<div style="font-size:.82rem;color:#059669;font-weight:700;margin:2px 0;">✅ 상대방 동의 확인됨</div>`:''}
-      <div class="req-actions">
-        <button class="btn btn-green btn-sm" onclick="approvePersonalScoreReq('${r.id}')">✅ 승인</button>
-        <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);" onclick="rejectPersonalScoreReq('${r.id}')">❌ 거절</button>
-      </div>
-    </div>`).join('');
+    html+=pending.map(bellPendingRow).join('');
   }
   if(done.length){
     html+='<div style="font-weight:800;font-size:.88rem;color:var(--tl);margin:12px 0 8px;">✅ 처리 완료</div>';
-    html+=done.map(r=>`<div class="req-card" style="opacity:.65;">
-      <div class="req-name">👤 ${r.student} <span style="font-size:.8rem;color:${r.status==='approved'?'var(--green)':'var(--red)'};">${r.status==='approved'?'✅ 승인됨':'❌ 거절됨'}</span></div>
-      <div class="req-type">🎁 ${r.type} (-${r.cost}점) · ${r.date||''}</div>
-    </div>`).join('');
+    html+=done.map(bellDoneRow).join('');
   }
   el.innerHTML=html;
 }
@@ -3437,11 +3521,20 @@ function markStudentAlertsRead(){
 }
 function approvePersonalScoreReq(reqId){
   const req=personalScoreReq[reqId];if(!req)return;
-  // XP 차감 (차감은 상한 우회)
+  const alertId=genId();
+  if(req.kind==='reflect'){
+    // 하루 돌아보기 승인 → 체크한 항목만큼 XP 지급 (일반 XP, 하루 상한 적용)
+    if(req.points>0)awardXP(req.student,req.points,'하루 돌아보기 ('+(reflectItemsLabel(req.items)||'참여')+')');
+    personalScoreReqRef.child(reqId).update({status:'approved'});
+    studentAlertsRef.child(req.student).child(alertId).set({
+      id:alertId,type:'approved',reqType:'하루 돌아보기',cost:req.points,ts:Date.now(),read:false
+    });
+    renderBellModal();
+    return;
+  }
+  // 아이템 사용 신청 승인 → XP 차감 (차감은 상한 우회)
   awardXP(req.student,-req.cost,`${req.type} 사용 승인 (실행일: ${req.executeDate||req.date})`,true);
   personalScoreReqRef.child(reqId).update({status:'approved'});
-  // 학생 알림
-  const alertId=genId();
   studentAlertsRef.child(req.student).child(alertId).set({
     id:alertId,type:'approved',reqType:req.type,
     executeDate:req.executeDate||req.date,cost:req.cost,
@@ -3455,7 +3548,7 @@ function rejectPersonalScoreReq(reqId){
   // 학생 알림
   const alertId=genId();
   studentAlertsRef.child(req.student).child(alertId).set({
-    id:alertId,type:'rejected',reqType:req.type,
+    id:alertId,type:'rejected',reqType:req.kind==='reflect'?'하루 돌아보기':req.type,
     ts:Date.now(),read:false
   });
   renderBellModal();
@@ -3472,13 +3565,13 @@ function renderHistory(){
   const el=document.getElementById('historyList');if(!el)return;
   if(!history2.length){el.innerHTML='<div class="empty-state"><div class="ei">📂</div><div>아직 저장된 회의가 없어요</div></div>';return;}
   const byMonth={};
-  history2.forEach(r=>{const m=r.month||r.date?.slice(0,7)||'';if(!byMonth[m])byMonth[m]=[];byMonth[m].push(r);});
+  history2.forEach(r=>{const m=r.month||(r.date||'').slice(0,7)||'';if(!byMonth[m])byMonth[m]=[];byMonth[m].push(r);});
   el.innerHTML=Object.keys(byMonth).sort((a,b)=>b.localeCompare(a)).map(m=>`
     <div style="font-weight:800;color:var(--tl);font-size:.85rem;margin:12px 0 6px;">${m}</div>
     ${byMonth[m].map(r=>`<div class="hist-card">
       <div style="font-weight:800;margin-bottom:6px;">📅 ${r.date}</div>
       <div style="font-size:.85rem;color:var(--tl);">안건 ${(r.proposals||[]).length}건</div>
-      ${r.confirmedId&&r.proposals?.find(p=>p.id===r.confirmedId)?`<div style="font-size:.9rem;margin-top:4px;">✅ 확정 안건: ${r.proposals.find(p=>p.id===r.confirmedId).title}</div>`:''}
+      ${r.confirmedId&&r.proposals&&r.proposals.find(p=>p.id===r.confirmedId)?`<div style="font-size:.9rem;margin-top:4px;">✅ 확정 안건: ${r.proposals.find(p=>p.id===r.confirmedId).title}</div>`:''}
     </div>`).join('')}`).join('');
 }
 

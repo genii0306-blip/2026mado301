@@ -628,7 +628,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div id="goalInputArea"></div>
   </div>
   <div class="card">
-    <div class="card-title">✅ 내 실천 기록 / 🌟 칭찬합니다</div>
+    <div class="card-title">🌟 칭찬합니다</div>
     <div class="s-grid" id="actionStudentSel"></div>
     <div id="checkinArea"></div>
   </div>
@@ -2792,9 +2792,29 @@ function myTodayReflect(){
   const mine=Object.values(personalScoreReq).filter(r=>r.kind==='reflect'&&r.student===me&&r.date===today);
   return mine.length?mine[mine.length-1]:null;
 }
+let reflectFormDirty=false; // 체크박스/소감을 한 번이라도 건드리면 true (다른 학생 활동으로 인한 재렌더를 막기 위한 안전장치)
+function markReflectDirty(){reflectFormDirty=true;}
+// 선생님 계정: 전체 학생의 "오늘 하루 돌아보기" 체크 내역을 목록으로 보여줌 (읽기 전용, 승인/거절은 🔔 알림에서)
+function renderReflectHistoryForTeacher(el){
+  const all=Object.values(personalScoreReq).filter(function(r){return r.kind==='reflect'||r.items;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+  if(!all.length){el.innerHTML='<div class="empty-state"><div class="ei">🌙</div><div>아직 제출한 학생이 없어요</div></div>';return;}
+  const statusMap={pending:['⏳ 대기 중','#B45309'],approved:['✅ 승인됨','#059669'],rejected:['❌ 거절됨','#DC2626']};
+  el.innerHTML=all.slice(0,30).map(function(r){
+    const st=statusMap[r.status]||statusMap.pending;
+    const label=reflectItemsLabel(r.items)||'체크한 항목 없음';
+    return '<div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:.85rem;">'
+      +'<span style="font-weight:800;color:#5B21B6;">'+r.student+'</span>'
+      +'<span style="font-size:.75rem;font-weight:700;color:'+st[1]+';margin-left:6px;">'+st[0]+'</span>'
+      +'<span style="color:var(--tl);font-size:.75rem;margin-left:6px;">'+(r.date||'')+'</span>'
+      +'<div style="color:#4C1D95;margin-top:2px;">'+label+' · +'+(r.points||0)+'점</div>'
+      +(r.note?'<div style="color:#6D28D9;margin-top:2px;">💬 '+r.note+'</div>':'')
+      +'</div>';
+  }).join('');
+}
 function renderReflectCard(force){
   const el=document.getElementById('reflectArea');if(!el)return;
-  if(!me||me==='선생님'){el.innerHTML='<div class="empty-state"><div class="ei">🌙</div><div>학생 계정으로 입장하면 오늘 하루를 돌아볼 수 있어요</div></div>';return;}
+  if(!me){el.innerHTML='<div class="empty-state"><div class="ei">🌙</div><div>학생 계정으로 입장하면 오늘 하루를 돌아볼 수 있어요</div></div>';return;}
+  if(me==='선생님'){renderReflectHistoryForTeacher(el);return;}
   // 체크박스에 체크하거나 소감을 적는 중이면 리렌더 건너뜀 (다른 학생의 신청/승인 등으로 실시간 데이터가 바뀌어도 작성 중인 내용이 초기화되지 않도록)
   // force=true면 (제출 직후 등 실제로 화면을 바꿔야 하는 상황) 이 보호를 건너뛰고 무조건 다시 그림
   if(!force){
@@ -2802,10 +2822,11 @@ function renderReflectCard(force){
     if(rfNote){
       const rfP=document.getElementById('rfPresentation'),rfH=document.getElementById('rfHomework'),rfG=document.getElementById('rfGoal');
       const active=document.activeElement;
-      const isEditing=active===rfNote||active===rfP||active===rfH||active===rfG||(rfNote.value||'').trim()||(rfP&&rfP.checked)||(rfH&&rfH.checked)||(rfG&&rfG.checked);
+      const isEditing=reflectFormDirty||active===rfNote||active===rfP||active===rfH||active===rfG||(rfNote.value||'').trim()||(rfP&&rfP.checked)||(rfH&&rfH.checked)||(rfG&&rfG.checked);
       if(isEditing)return;
     }
   }
+  reflectFormDirty=false; // 폼을 새로 그리는 시점이므로 초기화
   const submitted=myTodayReflect();
   if(submitted&&submitted.status!=='rejected'){
     const label=reflectItemsLabel(submitted.items);
@@ -2827,16 +2848,17 @@ function renderReflectCard(force){
     :'';
   el.innerHTML=rejectedBanner
     +'<div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 있었던 일을 스스로 체크하고 소감을 적어보세요. 제출하면 선생님 승인 후 점수가 반영돼요. (승인 대기/완료 중에는 재제출 불가, 거절되면 다시 제출 가능)</div>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfPresentation" style="width:18px;height:18px;flex-shrink:0;"> 🙋 오늘 발표를 했어요</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfHomework" style="width:18px;height:18px;flex-shrink:0;"> 📚 오늘 숙제를 했어요</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfGoal" style="width:18px;height:18px;flex-shrink:0;"> 🎯 학급 목표를 실천했어요</label>'
-    +'<textarea id="rfNote" rows="2" placeholder="오늘 하루 소감을 적어보세요 (선택)" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #DDD6FE;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin:8px 0;"></textarea>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfPresentation" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 🙋 오늘 발표를 했어요</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfHomework" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 📚 오늘 숙제를 했어요</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfGoal" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 🎯 학급 목표를 실천했어요</label>'
+    +'<textarea id="rfNote" rows="2" placeholder="오늘 하루 소감을 적어보세요 (선택)" oninput="markReflectDirty()" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #DDD6FE;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin:8px 0;"></textarea>'
     +'<button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitReflect()">📤 오늘 돌아보기 제출</button>';
 }
 function submitReflect(){
   if(!me||me==='선생님')return;
   const prevSubmitted=myTodayReflect();
   if(prevSubmitted&&prevSubmitted.status!=='rejected'){showToast('오늘은 이미 제출했어요!','t-warn');return;}
+  reflectFormDirty=false;
   const presentation=!!(document.getElementById('rfPresentation')||{}).checked;
   const homework=!!(document.getElementById('rfHomework')||{}).checked;
   const goal=!!(document.getElementById('rfGoal')||{}).checked;
@@ -2850,9 +2872,9 @@ function submitReflect(){
 function switchCheckinTab(tab){checkinTab=tab;renderCheckinItems(me);}
 function renderCheckinItems(name){
   const ca=document.getElementById('checkinArea');if(!ca||!name)return;
-  // 실천 기록 텍스트 입력 중이면 리렌더 건너뜀
-  const ri=document.getElementById('goalRecord');
-  if(ri&&(document.activeElement===ri||ri.value.trim()))return;
+  // 칭찬 내용 입력 중이면 리렌더 건너뜀 (다른 학생 활동으로 인해 작성 중인 내용이 초기화되지 않도록)
+  const pc=document.getElementById('praiseContent');
+  if(pc&&(document.activeElement===pc||pc.value.trim()))return;
   const week=getMondayStr();
   const isStudent=name&&name!=='선생님';
 
@@ -2861,15 +2883,32 @@ function renderCheckinItems(name){
   let html='<div style="background:#F0FDF4;border-radius:8px;padding:8px 12px;font-size:.9rem;font-weight:700;color:#065F46;margin-bottom:10px;">'
     +'🎯 '+(goal||'아직 이번 달 목표가 정해지지 않았어요')+'</div>';
 
-  // ── 오늘의 기록 (실천 + 칭찬 통합) ──
-  const today=todayStr();
-  const savedRecord=(((actionData.goalLogs||{})[name]||{})[today]||{}).record||'';
-  if(savedRecord){
-    html+='<div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:8px 10px;font-size:.88rem;color:#065F46;margin-bottom:6px;">📝 '+savedRecord+'</div>';
+  // ── 친구 칭찬 작성 (학생만) ──
+  if(isStudent){
+    const others=STUDENTS.filter(function(n){return n!==name;});
+    html+='<div style="font-size:.78rem;color:var(--tl);margin-bottom:4px;">🌟 친구의 좋은 점을 칭찬해보세요</div>'
+      +'<select id="praiseTarget" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #FDE68A;border-radius:8px;font-size:.9rem;margin-bottom:6px;">'
+      +'<option value="">칭찬할 친구를 선택하세요</option>'
+      +others.map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('')
+      +'</select>'
+      +'<textarea id="praiseContent" rows="2" placeholder="예) 민준이가 청소 시간에 열심히 도와줬어요." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #FDE68A;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin-bottom:6px;"></textarea>'
+      +'<button class="btn btn-sm" style="width:100%;background:#FEF3C7;color:#92400E;font-weight:700;border:none;margin-bottom:12px;" onclick="submitPraise()">💌 칭찬 보내기 (+1점)</button>';
   }
-  html+='<div style="font-size:.78rem;color:var(--tl);margin-bottom:4px;">✅ 나의 실천 내용 · 🌟 친구 칭찬 내용을 함께 적어봐요</div>'
-    +'<textarea id="goalRecord" rows="3" placeholder="예) 오늘 복도에서 조용히 걷기를 실천했어요. / 민준이가 청소 시간에 열심히 도와줬어요." style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #D1FAE5;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin-bottom:5px;"></textarea>'
-    +'<button class="btn btn-sm" style="width:100%;background:#D1FAE5;color:#065F46;font-weight:700;border:none;margin-bottom:12px;" onclick="saveGoalRecord(\''+name+'\')">저장</button>';
+
+  // ── 우리 반 칭찬 내역 (학생·선생님 모두 확인 가능) ──
+  const allPraise=Object.values(praiseData).sort(function(a,b){return (b.date||'').localeCompare(a.date||'')||(b.id||'').localeCompare(a.id||'');});
+  html+='<div style="font-size:.85rem;font-weight:800;color:#92400E;margin:4px 0 6px;">🌟 우리 반 칭찬 내역'+(allPraise.length?' ('+allPraise.length+')':'')+'</div>';
+  if(!allPraise.length){
+    html+='<div class="empty-state" style="padding:16px 0;"><div class="ei">🌟</div><div>아직 칭찬이 없어요</div></div>';
+  } else {
+    html+=allPraise.slice(0,30).map(function(p){
+      return '<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:.85rem;">'
+        +'<span style="font-weight:800;color:#92400E;">'+p.from+' → '+p.to+'</span>'
+        +'<span style="color:var(--tl);font-size:.75rem;margin-left:6px;">'+(p.date||'')+'</span>'
+        +'<div style="color:#78350F;margin-top:2px;">'+p.content+'</div>'
+        +'</div>';
+    }).join('');
+  }
 
   // ── 이번 주 자기 점수 ──
   if(isStudent){
@@ -3435,11 +3474,11 @@ function updateBellBadge(){
 }
 function openBellModal(){renderBellModal();openM('bellModal');}
 function bellPendingRow(r){
-  if(r.kind==='reflect'){
+  if(r.kind==='reflect'||r.items){
     const label=reflectItemsLabel(r.items)||'체크한 항목 없음';
     return `<div class="req-card">
       <div class="req-name">👤 ${r.student}</div>
-      <div class="req-type">🌙 하루 돌아보기 (${label}) <span style="font-weight:900;color:var(--green);">+${r.points} XP</span></div>
+      <div class="req-type">🌙 하루 돌아보기 (${label}) <span style="font-weight:900;color:var(--green);">+${r.points||0} XP</span></div>
       <div class="req-cost">제출일: ${r.date||''}</div>
       ${r.note?`<div style="font-size:.82rem;color:var(--tl);background:#F8FAFF;border-radius:8px;padding:6px 8px;margin:2px 0;">💬 ${r.note}</div>`:''}
       <div class="req-actions">
@@ -3463,11 +3502,17 @@ function bellPendingRow(r){
 function bellDoneRow(r){
   const statusLabel=r.status==='approved'?'✅ 승인됨':'❌ 거절됨';
   const statusColor=r.status==='approved'?'var(--green)':'var(--red)';
-  if(r.kind==='reflect'){
+  if(r.kind==='reflect'||r.items){
     const label=reflectItemsLabel(r.items)||'체크한 항목 없음';
     return `<div class="req-card" style="opacity:.65;">
       <div class="req-name">👤 ${r.student} <span style="font-size:.8rem;color:${statusColor};">${statusLabel}</span></div>
-      <div class="req-type">🌙 하루 돌아보기 (${label}) (+${r.points}점) · ${r.date||''}</div>
+      <div class="req-type">🌙 하루 돌아보기 (${label}) (+${r.points||0}점) · ${r.date||''}</div>
+    </div>`;
+  }
+  if(r.type==null&&r.cost==null){
+    return `<div class="req-card" style="opacity:.65;">
+      <div class="req-name">👤 ${r.student} <span style="font-size:.8rem;color:${statusColor};">${statusLabel}</span></div>
+      <div class="req-type">📋 이전 신청 (세부 정보 없음) · ${r.date||''}</div>
     </div>`;
   }
   return `<div class="req-card" style="opacity:.65;">

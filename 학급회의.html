@@ -1190,10 +1190,11 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div style="text-align:center;margin-bottom:4px;">
       <div style="font-size:2.4rem;margin-bottom:6px;">🐾</div>
       <div class="modal-title" style="text-align:center;font-size:1.3rem;">나의 동물 선택</div>
-      <div style="font-size:.88rem;color:var(--tl);margin-bottom:16px;line-height:1.6;">
+      <div style="font-size:.88rem;color:var(--tl);margin-bottom:8px;line-height:1.6;">
         나와 함께 성장할 동물을 골라보세요.<br>
         레벨이 오를수록 동물도 함께 자라나요 🌱
       </div>
+      <div id="speciesSelectStatusMsg" style="font-size:.82rem;font-weight:700;margin-bottom:16px;"></div>
     </div>
     <div id="speciesSelectGrid"></div>
     <div class="modal-actions" style="margin-top:16px;">
@@ -2791,13 +2792,24 @@ function myTodayReflect(){
   const mine=Object.values(personalScoreReq).filter(r=>r.kind==='reflect'&&r.student===me&&r.date===today);
   return mine.length?mine[mine.length-1]:null;
 }
-function renderReflectCard(){
+function renderReflectCard(force){
   const el=document.getElementById('reflectArea');if(!el)return;
   if(!me||me==='선생님'){el.innerHTML='<div class="empty-state"><div class="ei">🌙</div><div>학생 계정으로 입장하면 오늘 하루를 돌아볼 수 있어요</div></div>';return;}
+  // 체크박스에 체크하거나 소감을 적는 중이면 리렌더 건너뜀 (다른 학생의 신청/승인 등으로 실시간 데이터가 바뀌어도 작성 중인 내용이 초기화되지 않도록)
+  // force=true면 (제출 직후 등 실제로 화면을 바꿔야 하는 상황) 이 보호를 건너뛰고 무조건 다시 그림
+  if(!force){
+    const rfNote=document.getElementById('rfNote');
+    if(rfNote){
+      const rfP=document.getElementById('rfPresentation'),rfH=document.getElementById('rfHomework'),rfG=document.getElementById('rfGoal');
+      const active=document.activeElement;
+      const isEditing=active===rfNote||active===rfP||active===rfH||active===rfG||(rfNote.value||'').trim()||(rfP&&rfP.checked)||(rfH&&rfH.checked)||(rfG&&rfG.checked);
+      if(isEditing)return;
+    }
+  }
   const submitted=myTodayReflect();
-  if(submitted){
+  if(submitted&&submitted.status!=='rejected'){
     const label=reflectItemsLabel(submitted.items);
-    const statusMap={pending:['⏳ 선생님 승인 대기 중','#B45309'],approved:['✅ 승인 완료! 점수 반영됐어요','#059669'],rejected:['❌ 반려됐어요','#DC2626']};
+    const statusMap={pending:['⏳ 선생님 승인 대기 중','#B45309'],approved:['✅ 승인 완료! 점수 반영됐어요','#059669']};
     const st=statusMap[submitted.status]||statusMap.pending;
     el.innerHTML='<div style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:10px;padding:12px;">'
       +'<div style="font-weight:800;color:#5B21B6;margin-bottom:4px;">📤 오늘 제출 완료!</div>'
@@ -2807,7 +2819,14 @@ function renderReflectCard(){
       +'</div>';
     return;
   }
-  el.innerHTML='<div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 있었던 일을 스스로 체크하고 소감을 적어보세요. 제출하면 선생님 승인 후 점수가 반영돼요. (하루 1번만 제출 가능)</div>'
+  const rejectedBanner=(submitted&&submitted.status==='rejected')
+    ?('<div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;padding:10px 12px;margin-bottom:10px;">'
+      +'<div style="font-weight:800;color:#B91C1C;margin-bottom:2px;">❌ 이전 신청이 반려됐어요</div>'
+      +'<div style="font-size:.82rem;color:#7F1D1D;">'+(reflectItemsLabel(submitted.items)||'체크한 항목 없음')+' · 다시 체크하고 제출해보세요.</div>'
+      +'</div>')
+    :'';
+  el.innerHTML=rejectedBanner
+    +'<div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 있었던 일을 스스로 체크하고 소감을 적어보세요. 제출하면 선생님 승인 후 점수가 반영돼요. (승인 대기/완료 중에는 재제출 불가, 거절되면 다시 제출 가능)</div>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfPresentation" style="width:18px;height:18px;flex-shrink:0;"> 🙋 오늘 발표를 했어요</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfHomework" style="width:18px;height:18px;flex-shrink:0;"> 📚 오늘 숙제를 했어요</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfGoal" style="width:18px;height:18px;flex-shrink:0;"> 🎯 학급 목표를 실천했어요</label>'
@@ -2816,7 +2835,8 @@ function renderReflectCard(){
 }
 function submitReflect(){
   if(!me||me==='선생님')return;
-  if(myTodayReflect()){showToast('오늘은 이미 제출했어요!','t-warn');return;}
+  const prevSubmitted=myTodayReflect();
+  if(prevSubmitted&&prevSubmitted.status!=='rejected'){showToast('오늘은 이미 제출했어요!','t-warn');return;}
   const presentation=!!(document.getElementById('rfPresentation')||{}).checked;
   const homework=!!(document.getElementById('rfHomework')||{}).checked;
   const goal=!!(document.getElementById('rfGoal')||{}).checked;
@@ -2825,7 +2845,7 @@ function submitReflect(){
   const id=genId();
   personalScoreReqRef.child(id).set({id,student:me,kind:'reflect',status:'pending',ts:Date.now(),date:todayStr(),items:{presentation,homework,goal},points,note});
   showToast('📤 오늘 돌아보기를 제출했어요! 선생님 승인을 기다려주세요.','t-success');
-  renderReflectCard();
+  renderReflectCard(true);
 }
 function switchCheckinTab(tab){checkinTab=tab;renderCheckinItems(me);}
 function renderCheckinItems(name){
@@ -3777,6 +3797,16 @@ function openSpeciesSelectModal(){
 function renderSpeciesSelectGrid(){
   const el=document.getElementById('speciesSelectGrid');if(!el)return;
   const cur=(speciesData[me]||{}).speciesId||'';
+  const msgEl=document.getElementById('speciesSelectStatusMsg');
+  if(msgEl){
+    if(!cur){
+      msgEl.textContent='';
+    } else {
+      const left=getSpeciesChangesLeft(me);
+      msgEl.textContent=left>0?('🔄 동물을 바꿀 수 있는 기회가 '+left+'번 남았어요.'):('😢 동물 바꾸기 기회를 모두 사용했어요.');
+      msgEl.style.color=left>0?'var(--tl)':'var(--red)';
+    }
+  }
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">';
   SPECIES.forEach(function(s){
     const g=getGuild(s.guildId);
@@ -3790,10 +3820,23 @@ function renderSpeciesSelectGrid(){
   html+='</div>';
   el.innerHTML=html;
 }
+const SPECIES_CHANGE_LIMIT=2;
+function getSpeciesChangesLeft(name){
+  const used=(speciesData[name]||{}).changeCount||0;
+  return Math.max(0,SPECIES_CHANGE_LIMIT-used);
+}
 function confirmSpeciesSelect(speciesId){
   if(!me||me==='선생님')return;
   const sp=getSpecies(speciesId);if(!sp)return;
-  speciesRef.child(me).set({speciesId});
+  const cur=speciesData[me]||{};
+  const isChange=!!cur.speciesId&&cur.speciesId!==speciesId;
+  if(isChange&&getSpeciesChangesLeft(me)<=0){
+    showToast('😢 동물 바꾸기 기회를 모두 사용했어요 (최대 '+SPECIES_CHANGE_LIMIT+'번)','t-warn');
+    closeM('speciesSelectModal');
+    return;
+  }
+  const newCount=isChange?(cur.changeCount||0)+1:(cur.changeCount||0);
+  speciesRef.child(me).set({speciesId,changeCount:newCount});
   showToast(`${sp.emoji} ${sp.name}과(와) 함께 모험을 시작해요!`,'t-success');
   closeM('speciesSelectModal');
 }
@@ -3821,7 +3864,8 @@ function renderEvolveGrid(){
 function confirmEvolve(speciesId){
   if(!me||me==='선생님')return;
   const sp=getSpecies(speciesId);if(!sp)return;
-  speciesRef.child(me).set({speciesId});
+  const cur=speciesData[me]||{};
+  speciesRef.child(me).set({speciesId,changeCount:cur.changeCount||0});
   showToast(`✨ ${sp.emoji} ${sp.name}(으)로 진화했어요!`,'t-success');
   closeM('evolveModal');
   checkEvolveUnlock();
@@ -3842,7 +3886,7 @@ function checkEvolveUnlock(){
 
 // ══ 동물 배정 (교사/관리자) ══
 function resetAllSpecies(){
-  if(!confirm('모든 학생의 동물 캐릭터 선택을 초기화할까요?\n학생들은 모두 🥚 알 상태로 돌아가서 처음부터 다시 동물을 고르게 돼요.\n(레벨/XP/직업 등 다른 데이터는 그대로 유지돼요)'))return;
+  if(!confirm('모든 학생의 동물 캐릭터 선택을 초기화할까요?\n학생들은 모두 🥚 알 상태로 돌아가서 처음부터 다시 동물을 고르고, 동물 바꾸기 기회도 '+SPECIES_CHANGE_LIMIT+'번으로 다시 채워져요.\n(레벨/XP/직업 등 다른 데이터는 그대로 유지돼요)'))return;
   speciesRef.remove();
   showToast('🥚 전체 학생의 동물 캐릭터가 초기화됐어요!','t-success');
 }
@@ -4069,7 +4113,13 @@ function renderStudentMyPage(){
     +'<div style="font-size:.72rem;color:var(--tl);">🎯 활동</div></div></div></div>'
     +'<div class="card"><div class="card-title">🎨 내 카드</div>'
     +'<div id="cardPreviewWrap" style="padding:10px;"></div>'
-    +'<div style="padding:0 10px 10px;"><button class="btn btn-primary btn-sm" onclick="openSpeciesSelectModal()" style="width:100%;">🐾 내 동물 바꾸기</button></div></div>';
+    +'<div style="padding:0 10px 10px;">'+(function(){
+      const left=getSpeciesChangesLeft(me);
+      if(left<=0){
+        return '<button class="btn btn-outline btn-sm" disabled style="width:100%;opacity:.5;cursor:not-allowed;">🐾 동물 바꾸기 기회 소진 (0/'+SPECIES_CHANGE_LIMIT+')</button>';
+      }
+      return '<button class="btn btn-primary btn-sm" onclick="openSpeciesSelectModal()" style="width:100%;">🐾 내 동물 바꾸기 (남은 기회 '+left+'/'+SPECIES_CHANGE_LIMIT+')</button>';
+    })()+'</div></div>';
   renderCardPreview();
   renderClassmateMiniGrid();
 }

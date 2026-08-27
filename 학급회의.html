@@ -935,6 +935,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   <div class="card" style="border-left:5px solid #16A34A;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);">
     <div class="card-title">🐾 동물 배정 <span class="teacher-badge">선생님 전용</span></div>
     <div style="font-size:.82rem;color:var(--tl);margin-bottom:12px;">학생이 직접 고르지 않았거나 바꿔주고 싶을 때 여기서 배정할 수 있어요.</div>
+    <button class="btn btn-outline btn-sm" style="width:100%;color:var(--red);border-color:var(--red);margin-bottom:12px;" onclick="resetAllSpecies()">🥚 전체 학생 동물 초기화 (모두 알로 되돌리기)</button>
     <div id="speciesAssignmentPanel"></div>
   </div>
 
@@ -3840,6 +3841,11 @@ function checkEvolveUnlock(){
 }
 
 // ══ 동물 배정 (교사/관리자) ══
+function resetAllSpecies(){
+  if(!confirm('모든 학생의 동물 캐릭터 선택을 초기화할까요?\n학생들은 모두 🥚 알 상태로 돌아가서 처음부터 다시 동물을 고르게 돼요.\n(레벨/XP/직업 등 다른 데이터는 그대로 유지돼요)'))return;
+  speciesRef.remove();
+  showToast('🥚 전체 학생의 동물 캐릭터가 초기화됐어요!','t-success');
+}
 function renderSpeciesAssignment(){
   const el=document.getElementById('speciesAssignmentPanel');if(!el)return;
   let html='';

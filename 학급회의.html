@@ -927,6 +927,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
         <button class="admin-danger-btn" onclick="resetCurrentMeeting()">🔄 이번 회의 초기화</button>
         <button class="admin-danger-btn" onclick="resetMonthly()">📅 이번 달 기록 삭제</button>
         <button class="admin-danger-btn" style="background:#FEE2E2;border-color:#F87171;" onclick="resetAll()">⚠️ 전체 초기화</button>
+        <button class="admin-danger-btn" onclick="resetDragonAvatarOwners()">🐲 드래곤 아바타 선택 초기화</button>
       </div>
     </div>
   </div>
@@ -1646,7 +1647,7 @@ const SHOP_ITEMS=[
   {id:'av_fox',   type:'avatar', name:'여우',      emoji:'🦊', v:'🦊', cost:15,  desc:'영리한 여우 아바타'},
   {id:'av_rabbit',type:'avatar', name:'토끼',      emoji:'🐰', v:'🐰', cost:20,  desc:'빠른 토끼 아바타'},
   {id:'av_lion',  type:'avatar', name:'사자',      emoji:'🦁', v:'🦁', cost:30,  desc:'용감한 사자 아바타'},
-  {id:'av_dragon',type:'avatar', name:'드래곤',    emoji:'🐲', v:'🐲', cost:50,  desc:'전설의 드래곤 아바타'},
+  {id:'av_dragon',type:'avatar', name:'드래곤',    emoji:'🐲', v:'🐲', cost:50,  desc:'전설의 드래곤 아바타', delisted:true}, // 진짜 히든 캐릭터 '드래곤'(Lv.50 진화)과 헷갈려서 상점 판매 중단. 이미 산 학생은 계속 사용 가능.
   {id:'av_star',  type:'avatar', name:'별빛 요정', emoji:'🧚', v:'🧚', cost:40,  desc:'반짝이는 별빛 요정'},
   // 배경 테마
   {id:'th_ocean', type:'color',  name:'바다',      v:'🌊', cost:20,  desc:'시원한 바다 테마',   bg:'linear-gradient(135deg,#0EA5E9,#06B6D4)'},
@@ -3993,6 +3994,23 @@ function resetAllSpecies(){
   speciesRef.remove();
   showToast('🥚 전체 학생의 동물 캐릭터가 초기화됐어요!','t-success');
 }
+// 상점에서 판매 중단된 "드래곤" 아바타를 이미 산/장착한 학생의 선택을 초기화 (보유 목록에서 제거 + 장착 해제)
+function resetDragonAvatarOwners(){
+  if(!confirm('이미 "드래곤" 아바타를 사거나 장착한 학생이 있으면 선택을 초기화할까요?\n보유 목록에서 빠지고 장착도 해제돼요.\n(다른 아이템·XP 등은 그대로 유지돼요)'))return;
+  const affected=[];
+  STUDENTS.forEach(function(name){
+    const sd=shopData[name]||{};
+    const owned=sd.owned||[];
+    const hasIt=owned.indexOf('av_dragon')>=0||sd.equipped==='av_dragon';
+    if(!hasIt)return;
+    const upd={owned:owned.filter(function(id){return id!=='av_dragon';})};
+    if(sd.equipped==='av_dragon')upd.equipped='';
+    shopRef.child(name).update(upd);
+    affected.push(name);
+  });
+  if(!affected.length){showToast('✅ 드래곤 아바타를 보유한 학생이 없어요','t-success');return;}
+  showToast('🐲 '+affected.length+'명의 드래곤 아바타 선택을 초기화했어요: '+affected.join(', '),'t-warn',5000);
+}
 function renderSpeciesAssignment(){
   const el=document.getElementById('speciesAssignmentPanel');if(!el)return;
   let html='';
@@ -4259,7 +4277,8 @@ function renderShop(){
   const equippedTheme=(shopData[me]||{}).equippedTheme||'';
   const equippedAcc=(shopData[me]||{}).equippedAcc||'';
   const curTab=_shopTab||'avatar';
-  const items=SHOP_ITEMS.filter(function(i){return i.type===curTab;});
+  // delisted(판매 중단) 아이템은 이미 소유한 학생 화면에만 계속 보여줌 (새로 구매는 불가)
+  const items=SHOP_ITEMS.filter(function(i){return i.type===curTab&&(!i.delisted||ownedArr.indexOf(i.id)>=0);});
   el.innerHTML=items.map(function(item){
     const owned=ownedArr.indexOf(item.id)>=0;
     const isEq=(item.type==='avatar'&&equipped===item.id)||(item.type==='color'&&equippedTheme===item.id)||(item.type==='acc'&&equippedAcc===item.id);
@@ -4285,6 +4304,7 @@ function switchShopTab(tab,btn){
 function buyShopItem(itemId){
   const item=SHOP_ITEMS.find(function(i){return i.id===itemId;});
   if(!item||!me||me==='선생님')return;
+  if(item.delisted){showToast('현재 구매할 수 없는 아이템이에요','t-warn');return;} // 판매 중단 아이템 방어
   const myPts=(xpData[me]||{}).total||0;
   if(myPts<item.cost){showToast('⭐ 점수가 부족해요!','t-warn');return;}
   if(!confirm('"'+item.name+'"을(를) '+item.cost+'⭐로 구매할까요?'))return;

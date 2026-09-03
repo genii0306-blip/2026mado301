@@ -1791,6 +1791,7 @@ meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
   renderVoteArea();renderVoteResultArea();renderConfirmedInfo();renderTeacherConfirmPanel();
+  renderRaiseHandGrid();
 });
 classScoreRef.on('value',snap=>{
   const d=snap.val();if(d)classScore=d;
@@ -2562,6 +2563,7 @@ function revealVotes(){
   const updates={voteRevealed:true};
   if(top&&topCnt>0){
     updates.confirmedId=top.id;
+    updates.opened=false; // 안건이 확정되면 발표 신청도 다시 닫아요
     proposalsRef.child(top.id).update({confirmed:true});
   }
   meetFlowRef.update(updates);
@@ -2575,7 +2577,7 @@ function confirmAgenda(propId){
   if(prev&&prev!==propId)proposalsRef.child(prev).update({confirmed:false});
   // 새 확정
   proposalsRef.child(propId).update({confirmed:true});
-  meetFlowRef.update({confirmedId:propId});
+  meetFlowRef.update({confirmedId:propId,opened:false}); // 안건이 확정되면 발표 신청도 다시 닫아요
 }
 function renderConfirmedInfo(){
   const el=document.getElementById('confirmedAgendaInfo');if(!el)return;
@@ -2585,14 +2587,27 @@ function renderConfirmedInfo(){
 }
 
 // ══ Raise Hand / Speak ══
+function canOpenMeeting(){return me==='선생님'||isPresident();}
+function openSpeakSession(){
+  if(!canOpenMeeting()){alert('회장/선생님만 개회할 수 있어요!');return;}
+  meetFlowRef.update({opened:true});
+  showToast('🔔 발표 신청이 열렸어요!','t-success');
+}
+function closeSpeakSession(){
+  if(!canOpenMeeting()){alert('회장/선생님만 종료할 수 있어요!');return;}
+  meetFlowRef.update({opened:false});
+  showToast('🔕 발표 신청이 닫혔어요','t-warn');
+}
 function raiseHand(name){
   if(name!==me){alert('내 이름만 신청할 수 있어요!');return;}
+  if(!meetFlow.opened){alert('아직 회장이 회의를 개회하지 않았어요!');return;}
   const already=speakRequests[name];
   if(already){speakReqRef.child(name).remove();}
   else{speakReqRef.child(name).set(Date.now());}
 }
 function grantSpeaker(name){
   if(!isGranter()){alert('회장/부회장만 발언 기회를 줄 수 있어요!');return;}
+  if(!meetFlow.opened){alert('먼저 회장이 회의를 개회해야 발표 기회를 줄 수 있어요!');return;}
   speakReqRef.child(name).remove();
   const cur=speakCount[name]||0;
   speakCountRef.child(name).set(cur+1);
@@ -2608,10 +2623,29 @@ function renderRaiseHandGrid(){
   const isRaising=!!speakRequests[me];
   const isSpeaking=me===currentSpeaker&&timerRun;
   const canGrant=isGranter();
+  const opened=!!meetFlow.opened;
+  const canOpen=canOpenMeeting();
 
-  // 손들기 버튼 (학생 본인용)
   let html='';
-  if(me!=='선생님'){
+
+  // 개회 상태 표시 / 개회·종료 버튼
+  if(canGrant){
+    if(opened){
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#ECFDF5;border-radius:10px;margin-bottom:8px;">
+        <span style="font-size:.82rem;font-weight:800;color:#065F46;">🔔 발표 신청 개회 중</span>
+        ${canOpen?`<button class="btn btn-outline btn-sm" onclick="closeSpeakSession()" style="padding:4px 10px;font-size:.75rem;">🔕 종료</button>`:''}
+      </div>`;
+    }else if(canOpen){
+      html+=`<button class="btn btn-primary btn-sm" onclick="openSpeakSession()" style="width:100%;padding:12px;font-size:.95rem;margin-bottom:8px;">🔔 회의 개회하기</button>`;
+    }else{
+      html+=`<div style="text-align:center;padding:10px;background:#F8FAFC;border-radius:12px;font-size:.82rem;color:var(--tl);margin-bottom:8px;">🔒 회장이 아직 개회하지 않았어요</div>`;
+    }
+  }else if(!opened){
+    html+=`<div style="text-align:center;padding:10px;background:#F8FAFC;border-radius:12px;font-size:.82rem;color:var(--tl);">🔒 회장이 개회하면 발표 신청을 할 수 있어요</div>`;
+  }
+
+  // 손들기 버튼 (학생 본인용) — 개회 중일 때만
+  if(me!=='선생님'&&opened){
     if(isSpeaking){
       html+=`<div style="text-align:center;padding:10px;background:linear-gradient(135deg,#EEF2FF,#E4EEFF);border-radius:12px;font-weight:800;color:var(--primary);">🎤 발표 중...</div>`;
     }else if(isRaising){
@@ -2621,8 +2655,8 @@ function renderRaiseHandGrid(){
     }
   }
 
-  // 선생님·회장·부회장: 직접 발언 부여용 학생 목록 (소형)
-  if(canGrant){
+  // 선생님·회장·부회장: 직접 발언 부여용 학생 목록 (소형) — 개회 중일 때만
+  if(canGrant&&opened){
     const cnt=countProposals();
     html+=`<div style="margin-top:10px;"><div class="lbl" style="margin-bottom:6px;">✋ 직접 발언 부여</div>
     <div class="s-grid">${STUDENTS.map(n=>{

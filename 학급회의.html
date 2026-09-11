@@ -1786,7 +1786,7 @@ proposalsRef.on('value',snap=>{
     if(activeTab==='admin')renderAdminProposals();
   });
 });
-evalRef.on('value',snap=>{evalData=snap.val()||{};debounceRender('eval',()=>renderEvalResult());});
+evalRef.on('value',snap=>{evalData=snap.val()||{};debounceRender('eval',()=>{renderEvalResult();showMyEvalArea();});});
 meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
@@ -2360,6 +2360,9 @@ function showMyEvalArea(){
   if(myEval!==undefined){
     el.innerHTML=`<div style="padding:10px;background:#F0FDF4;border-radius:8px;font-weight:700;color:#166534;">✅ ${me}님 제출 완료: ${myEval}점</div>`;
   }else{
+    // 이미 슬라이더가 떠 있고 조작 중이면 다시 그리지 않음 (다른 학생 활동으로 드래그 중 초기화되는 것 방지)
+    const existingSlider=document.getElementById('evalSlider');
+    if(existingSlider&&document.activeElement===existingSlider)return;
     el.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
       <span id="evalValLbl" style="font-size:1.6rem;font-weight:900;color:var(--primary);min-width:36px;">5</span>
       <input type="range" class="eval-slider" id="evalSlider" min="0" max="10" value="5" oninput="evalChange(this.value)">
@@ -3717,6 +3720,7 @@ function finishMeeting(){
   if(!confirm('회의를 마치고 기록을 저장할까요?'))return;
   const record={date:todayStr(),month:nowYM(),proposals:Object.values(proposals),evalData,stepActions,confirmedId:meetFlow.confirmedId};
   history2.unshift(record);localStorage.setItem('meetingHistory2',JSON.stringify(history2.slice(0,50)));
+  evalRef.remove(); // 다음 회의에서 "지난 회의 돌아보기" 점수를 새로 적을 수 있도록 초기화
   showToast('🏁 회의 기록이 저장됐어요!','t-success',3000);
 }
 function renderHistory(){
@@ -4146,6 +4150,7 @@ function resetCurrentMeeting(){
   if(!confirm('이번 회의를 초기화할까요?'))return;
   meetFlowRef.set({step:0,timer:{running:false,remaining:600,duration:600}});
   proposalsRef.remove();
+  evalRef.remove(); // "지난 회의 돌아보기" 점수도 함께 초기화 (다음 회의에서 새로 적을 수 있도록)
   showToast('🔄 이번 회의 초기화!','t-info');
 }
 function resetMonthly(){

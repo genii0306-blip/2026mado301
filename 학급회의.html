@@ -499,6 +499,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
         <button class="btn btn-primary btn-sm" onclick="submitEval()">✅ 점수 제출</button>
       </div>
       <div id="evalResult" style="margin-top:10px;"></div>
+      <div id="evalStudentStatus" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -1786,7 +1787,7 @@ proposalsRef.on('value',snap=>{
     if(activeTab==='admin')renderAdminProposals();
   });
 });
-evalRef.on('value',snap=>{evalData=snap.val()||{};debounceRender('eval',()=>{renderEvalResult();showMyEvalArea();});});
+evalRef.on('value',snap=>{evalData=snap.val()||{};debounceRender('eval',()=>{renderEvalResult();showMyEvalArea();renderEvalStudentStatus();});});
 meetFlowRef.on('value',snap=>{
   const d=snap.val();if(d){meetFlow=d;}
   applyStep(meetFlow.step||1);
@@ -1798,7 +1799,7 @@ classScoreRef.on('value',snap=>{
   updateMainScore();
   debounceRender('classScore',()=>{if(activeTab==='score')renderScoreLog();});
 });
-stepActionsRef.on('value',snap=>{stepActions=snap.val()||{};debounceRender('stepActions',()=>renderActionPlanList());});
+stepActionsRef.on('value',snap=>{stepActions=snap.val()||{};debounceRender('stepActions',()=>{renderActionPlanList();renderActionInputWrap();});});
 actionRef.on('value',snap=>{
   const d=snap.val();
   if(d){actionData=d;actionData.students=actionData.students||[];
@@ -2013,7 +2014,7 @@ function go(tab){
   const navBtns=document.querySelectorAll('nav button');
   const idx=tabs.indexOf(tab);
   if(navBtns[idx])navBtns[idx].classList.add('active');
-  if(tab==='flow'){applyStep(meetFlow.step||1);}
+  if(tab==='flow'){applyStep(meetFlow.step||1);renderEvalStudentStatus();}
   if(tab==='board'){renderBoardWriterInfo();renderBoard();}
   if(tab==='action'){renderGoal();renderDashboard();renderCheckinSel();renderPracticeBoard();renderReflectCard();}
   if(tab==='score'){renderScoreLog();drawScoreMonthChart();const uc=document.getElementById('classScoreUseCard');if(uc)uc.style.display=me==='선생님'?'block':'none';}
@@ -2232,7 +2233,7 @@ function setMe(name,from){
 }
 function renderAllStudentGrids(){
   renderEvalStudentGrid();renderPropStudentGrid();renderVoteArea();renderVoteResultArea();
-  renderBoardStudentGrid();renderModalStudentGrid();renderActionInputWrap();
+  renderBoardStudentGrid();renderModalStudentGrid();renderActionInputWrap();renderRaiseHandGrid();
 }
 
 // ══ Student Grids ══
@@ -2395,6 +2396,19 @@ function renderEvalResult(){
       classScoreRef.set(d);
     });
   }
+}
+// 선생님용: 학생별 제출 여부를 이름 옆 빨간불/초록불로 표시
+function renderEvalStudentStatus(){
+  const el=document.getElementById('evalStudentStatus');if(!el)return;
+  if(me!=='선생님'){el.innerHTML='';return;}
+  el.innerHTML='<div class="lbl" style="margin-bottom:8px;">👥 제출 현황</div><div class="s-grid">'
+    +STUDENTS.map(function(n){
+      const submitted=evalData[n]!==undefined;
+      return'<div class="s-btn" style="cursor:default;">'+n
+        +'<sub style="width:9px;height:9px;border-radius:50%;background:'+(submitted?'var(--green)':'#F87171')+';display:inline-block;box-shadow:0 0 0 2px #fff;"></sub>'
+        +'</div>';
+    }).join('')
+    +'</div>';
 }
 
 // ══ Proposals ══
@@ -2719,6 +2733,9 @@ function renderActionInputWrap(){
   const el=document.getElementById('actionInputWrap');if(!el)return;
   if(!me||me==='선생님'){el.style.display='none';return;}
   el.style.display='block';
+  // 새 항목 입력칸에 타이핑 중이면 다시 그리지 않음 (입력 내용 보존)
+  const newInp=document.getElementById('newActionInput');
+  if(newInp&&(document.activeElement===newInp||newInp.value.trim()))return;
   const myActions=stepActions[me]||[];
   el.innerHTML=`<div class="lbl">${me}님의 실천 계획</div>
     ${myActions.map((a,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">

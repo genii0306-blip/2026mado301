@@ -4869,30 +4869,46 @@ function toggleMyHomework(idx){
 }
 
 // ══ Suggest ══
+const SUGGEST_CAT_LABEL={app:'📱 앱',class:'🏫 학급',meeting:'🗳️ 회의',other:'✏️ 기타'};
 function renderSuggestList(){
   const el=document.getElementById('suggestList');if(!el)return;
-  const items=Object.values(suggestData||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  let items=Object.values(suggestData||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  if(suggestFilter&&suggestFilter!=='all')items=items.filter(function(s){return (s.category||'other')===suggestFilter;});
   if(!items.length){el.innerHTML='<div style="color:var(--tl);text-align:center;padding:20px;">건의사항이 없어요.</div>';return;}
   el.innerHTML=items.map(function(s){
     const isMine=s.author===me;
+    const nameLbl=isMine?'나':(s.anon?'🙈 익명':(me==='선생님'?s.author:''));
+    const catLbl=SUGGEST_CAT_LABEL[s.category||'other']||'';
     return'<div style="padding:12px 0;border-bottom:1px solid var(--border);">'
+      +(catLbl?'<div style="font-size:.72rem;font-weight:800;color:var(--primary);margin-bottom:3px;">'+catLbl+'</div>':'')
       +'<div style="font-weight:700;margin-bottom:4px;">'+(s.text||s.content||'')+'</div>'
       +'<div style="font-size:.78rem;color:var(--tl);display:flex;justify-content:space-between;">'
-      +'<span>'+(me==='선생님'?s.author:isMine?'나':'')+' '+(s.date||'')+'</span>'
+      +'<span>'+nameLbl+' '+(s.date||'')+'</span>'
       +((me==='선생님'||isMine)?'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.78rem;" onclick="delSuggest(\''+s.id+'\')">삭제</button>':'')
       +'</div></div>';
   }).join('');
   const ot=document.getElementById('suggestOnlyTeacher');
   if(ot)ot.style.display=me==='선생님'?'inline':'none';
 }
-function filterSuggest(f){suggestFilter=f;renderSuggestList();}
+function filterSuggest(f,btn){
+  suggestFilter=f;
+  const row=document.getElementById('suggestFilterRow');
+  if(row)row.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderSuggestList();
+}
 function submitSuggest(){
-  const inp=document.getElementById('suggestInput');if(!inp)return;
+  const inp=document.getElementById('suggestText');if(!inp)return;
   const v=(inp.value||'').trim();
   if(!v){showToast('내용을 입력해주세요!','t-warn');return;}
+  const catEl=document.getElementById('suggestCategory');
+  const anonEl=document.getElementById('suggestAnon');
+  const category=catEl?catEl.value:'other';
+  const isAnon=!!(anonEl&&anonEl.checked);
   const id='s'+Date.now();
-  suggestRef.child(id).set({id:id,text:v,author:me,date:new Date().toLocaleDateString('ko-KR')});
+  suggestRef.child(id).set({id:id,text:v,author:me,anon:isAnon,category:category,date:new Date().toLocaleDateString('ko-KR')});
   inp.value='';
+  if(anonEl)anonEl.checked=false;
   showToast('📮 건의사항을 제출했어요!','t-success');
   if(me&&me!=='선생님')awardXP(me,1,'건의사항 제출');
 }

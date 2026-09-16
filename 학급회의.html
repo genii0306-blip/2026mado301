@@ -2855,7 +2855,9 @@ function reflectItemsLabel(items){
   items=items||{};
   const labels=[];
   if(items.presentation)labels.push('🙋 발표');
-  if(items.homework)labels.push('📚 숙제');
+  if(items.morning)labels.push('🌅 아침활동');
+  if(items.homework===2)labels.push('📚 숙제(Perfect)');
+  else if(items.homework===1)labels.push('📚 숙제(Very Good)');
   if(items.goal)labels.push('🎯 목표실천');
   return labels.join(' · ');
 }
@@ -2893,9 +2895,9 @@ function renderReflectCard(force){
   if(!force){
     const rfNote=document.getElementById('rfNote');
     if(rfNote){
-      const rfP=document.getElementById('rfPresentation'),rfH=document.getElementById('rfHomework'),rfG=document.getElementById('rfGoal');
+      const rfP=document.getElementById('rfPresentation'),rfM=document.getElementById('rfMorning'),rfH=document.getElementById('rfHomework'),rfG=document.getElementById('rfGoal');
       const active=document.activeElement;
-      const isEditing=reflectFormDirty||active===rfNote||active===rfP||active===rfH||active===rfG||(rfNote.value||'').trim()||(rfP&&rfP.checked)||(rfH&&rfH.checked)||(rfG&&rfG.checked);
+      const isEditing=reflectFormDirty||active===rfNote||active===rfP||active===rfM||active===rfH||active===rfG||(rfNote.value||'').trim()||(rfP&&rfP.checked)||(rfM&&rfM.checked)||(rfH&&rfH.value!=='0')||(rfG&&rfG.checked);
       if(isEditing)return;
     }
   }
@@ -2922,7 +2924,15 @@ function renderReflectCard(force){
   el.innerHTML=rejectedBanner
     +'<div style="font-size:.78rem;color:var(--tl);margin-bottom:8px;">오늘 있었던 일을 스스로 체크하고 소감을 적어보세요. 제출하면 선생님 승인 후 점수가 반영돼요. (승인 대기/완료 중에는 재제출 불가, 거절되면 다시 제출 가능)</div>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfPresentation" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 🙋 오늘 발표를 했어요</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfHomework" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 📚 오늘 숙제를 했어요</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfMorning" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 🌅 아침활동을 했어요</label>'
+    +'<div style="padding:8px 4px;">'
+      +'<div style="font-size:.92rem;font-weight:700;margin-bottom:6px;">📚 오늘 숙제</div>'
+      +'<select id="rfHomework" onchange="markReflectDirty()" style="width:100%;">'
+        +'<option value="0">안 했어요</option>'
+        +'<option value="1">Very Good (+1점)</option>'
+        +'<option value="2">Perfect (+2점)</option>'
+      +'</select>'
+    +'</div>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.92rem;font-weight:700;"><input type="checkbox" id="rfGoal" onchange="markReflectDirty()" style="width:18px;height:18px;flex-shrink:0;"> 🎯 학급 목표를 실천했어요</label>'
     +'<textarea id="rfNote" rows="2" placeholder="오늘 하루 소감을 적어보세요 (선택)" oninput="markReflectDirty()" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #DDD6FE;border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;margin:8px 0;"></textarea>'
     +'<button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitReflect()">📤 오늘 돌아보기 제출</button>';
@@ -2933,12 +2943,13 @@ function submitReflect(){
   if(prevSubmitted&&prevSubmitted.status!=='rejected'){showToast('오늘은 이미 제출했어요!','t-warn');return;}
   reflectFormDirty=false;
   const presentation=!!(document.getElementById('rfPresentation')||{}).checked;
-  const homework=!!(document.getElementById('rfHomework')||{}).checked;
+  const morning=!!(document.getElementById('rfMorning')||{}).checked;
+  const homework=parseInt((document.getElementById('rfHomework')||{}).value||'0',10)||0;
   const goal=!!(document.getElementById('rfGoal')||{}).checked;
   const note=((document.getElementById('rfNote')||{}).value||'').trim();
-  const points=(presentation?1:0)+(homework?1:0)+(goal?1:0);
+  const points=(presentation?1:0)+(morning?1:0)+(homework===2?2:homework===1?1:0)+(goal?1:0);
   const id=genId();
-  personalScoreReqRef.child(id).set({id,student:me,kind:'reflect',status:'pending',ts:Date.now(),date:todayStr(),items:{presentation,homework,goal},points,note});
+  personalScoreReqRef.child(id).set({id,student:me,kind:'reflect',status:'pending',ts:Date.now(),date:todayStr(),items:{presentation,morning,homework,goal},points,note});
   showToast('📤 오늘 돌아보기를 제출했어요! 선생님 승인을 기다려주세요.','t-success');
   renderReflectCard(true);
 }

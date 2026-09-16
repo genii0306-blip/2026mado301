@@ -3773,17 +3773,18 @@ function getDailyRegularXP(name,log){
   return(log||[]).filter(function(l){return l.date===today&&l.delta>0&&!l.bonus;})
     .reduce(function(s,l){return s+l.delta;},0);
 }
+const DAILY_XP_CAP=6; // 하루에 받을 수 있는 일반 XP 최대치 (보너스 XP는 별도)
 function awardXP(name,delta,reason,isBonus){
   isBonus=isBonus||false;
   if(typeof delta!=='number'||isNaN(delta))return; // 잘못된 값(undefined 등)으로 XP가 깨지는 것 방지
   const ref=xpRef.child(name);
   ref.once('value',snap=>{
     const d=snap.val()||{total:0,log:[]};
-    // 일일 상한 적용 (일반 XP만, 상한 4점)
+    // 일일 상한 적용 (일반 XP만, 상한 DAILY_XP_CAP점)
     if(delta>0&&!isBonus){
       const todayXP=getDailyRegularXP(name,d.log||[]);
-      if(todayXP>=4)return; // 이미 상한 도달
-      delta=Math.min(delta,4-todayXP);
+      if(todayXP>=DAILY_XP_CAP)return; // 이미 상한 도달
+      delta=Math.min(delta,DAILY_XP_CAP-todayXP);
       if(delta<=0)return;
     }
     const prevLv=getLevel(d.total||0).lv;

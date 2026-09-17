@@ -2858,6 +2858,7 @@ function reflectItemsLabel(items){
   if(items.morning)labels.push('🌅 아침활동');
   if(items.homework===3)labels.push('📚 숙제(Perfect)');
   else if(items.homework===2)labels.push('📚 숙제(Very Good)');
+  else if(items.homework===1)labels.push('📚 숙제(Good)');
   if(items.goal)labels.push('🎯 목표실천');
   return labels.join(' · ');
 }
@@ -2929,6 +2930,7 @@ function renderReflectCard(force){
       +'<div style="font-size:.92rem;font-weight:700;margin-bottom:6px;">📚 오늘 숙제</div>'
       +'<select id="rfHomework" onchange="markReflectDirty()" style="width:100%;">'
         +'<option value="0">안 했어요</option>'
+        +'<option value="1">Good (+1점)</option>'
         +'<option value="2">Very Good (+2점)</option>'
         +'<option value="3">Perfect (+3점)</option>'
       +'</select>'
@@ -2945,7 +2947,7 @@ function submitReflect(){
   const presentation=!!(document.getElementById('rfPresentation')||{}).checked;
   const morning=!!(document.getElementById('rfMorning')||{}).checked;
   const hwRaw=parseInt((document.getElementById('rfHomework')||{}).value||'0',10)||0;
-  const homework=(hwRaw===3?3:hwRaw===2?2:0); // 안함0 / Very Good2 / Perfect3 외 값은 무시
+  const homework=(hwRaw===3?3:hwRaw===2?2:hwRaw===1?1:0); // 안함0 / Good1 / Very Good2 / Perfect3 외 값은 무시
   const goal=!!(document.getElementById('rfGoal')||{}).checked;
   const note=((document.getElementById('rfNote')||{}).value||'').trim();
   const points=(presentation?1:0)+(morning?1:0)+homework+(goal?1:0);

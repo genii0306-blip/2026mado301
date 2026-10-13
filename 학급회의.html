@@ -3477,7 +3477,12 @@ function renderPsUseItems(){
   const myXP=(xpData[me]||{}).total||0;
   const ITEMS=[
     {name:'1일 자리바꾸기권',icon:'🪑',cost:50,note:'상대방의 동의 후 사용 가능',color:'#10B981',light:'#ECFDF5',border:'#6EE7B7'},
-    {name:'1일 실탄 면제권',icon:'🛡️',cost:50,note:'',color:'#EF4444',light:'#FEF2F2',border:'#FCA5A5'}
+    {name:'1일 실탄 면제권',icon:'🛡️',cost:50,note:'',color:'#EF4444',light:'#FEF2F2',border:'#FCA5A5'},
+    {name:'점심시간 노래 5곡 듣기권',icon:'🎵',cost:40,note:'',color:'#8B5CF6',light:'#F5F3FF',border:'#C4B5FD'},
+    {name:'쉬는시간 간식 1개 교환권',icon:'🍬',cost:60,note:'',color:'#F59E0B',light:'#FFFBEB',border:'#FDE68A'},
+    {name:'쉬는시간 보드게임/놀이 선택권',icon:'🎲',cost:30,note:'',color:'#3B82F6',light:'#EFF6FF',border:'#BFDBFE'},
+    {name:'숙제 면제권',icon:'📚',cost:50,note:'',color:'#EC4899',light:'#FDF2F8',border:'#FBCFE8'},
+    {name:'급식 줄 맨앞 서기권',icon:'🥇',cost:20,note:'',color:'#06B6D4',light:'#ECFEFF',border:'#A5F3FC'}
   ];
   el.innerHTML=ITEMS.map(item=>{
     const usedWeek=isUsedThisWeek(me,item.name);

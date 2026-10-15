@@ -4911,7 +4911,12 @@ function toggleMyHomework(idx){
 const SUGGEST_CAT_LABEL={app:'📱 앱',class:'🏫 학급',meeting:'🗳️ 회의',other:'✏️ 기타'};
 function renderSuggestList(){
   const el=document.getElementById('suggestList');if(!el)return;
-  let items=Object.values(suggestData||{}).sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  // id는 항상 's'+Date.now() 형태라서, 그 안의 숫자로 정확한 작성 시각 순 정렬 가능 (날짜 문자열만으로는 같은 날 작성한 글들의 순서를 구분할 수 없었음)
+  let items=Object.values(suggestData||{}).sort(function(a,b){
+    const ta=parseInt((a.id||'0').slice(1),10)||0;
+    const tb=parseInt((b.id||'0').slice(1),10)||0;
+    return tb-ta;
+  });
   if(suggestFilter&&suggestFilter!=='all')items=items.filter(function(s){return (s.category||'other')===suggestFilter;});
   if(!items.length){el.innerHTML='<div style="color:var(--tl);text-align:center;padding:20px;">건의사항이 없어요.</div>';return;}
   el.innerHTML=items.map(function(s){

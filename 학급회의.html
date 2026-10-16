@@ -3799,11 +3799,18 @@ function repairApprovedReflectXP(){
 
 // ══ History ══
 function finishMeeting(){
-  if(!confirm('회의를 마치고 기록을 저장할까요?'))return;
-  const record={date:todayStr(),month:nowYM(),proposals:Object.values(proposals),evalData,stepActions,confirmedId:meetFlow.confirmedId};
+  if(!confirm('회의를 마치고 기록을 저장할까요?\n저장 후 발표 횟수·안건 제안·실천 계획 등 이번 회의 내용은 모두 초기화돼요. (이미 반영된 점수는 그대로 유지됩니다)'))return;
+  const record={date:todayStr(),month:nowYM(),proposals:Object.values(proposals),evalData,stepActions,speakCount,confirmedId:meetFlow.confirmedId};
   history2.unshift(record);localStorage.setItem('meetingHistory2',JSON.stringify(history2.slice(0,50)));
-  evalRef.remove(); // 다음 회의에서 "지난 회의 돌아보기" 점수를 새로 적을 수 있도록 초기화
-  showToast('🏁 회의 기록이 저장됐어요!','t-success',3000);
+  // 점수(XP·학급 점수)는 이미 실시간으로 반영되어 있으므로 그대로 두고,
+  // 다음 회의에서 학생들이 새로 기록할 수 있도록 이번 회의 관련 내용만 모두 초기화
+  evalRef.remove(); // 지난 회의 돌아보기 점수
+  proposalsRef.remove(); // 안건 제안 + 투표
+  stepActionsRef.remove(); // 개인 실천 계획 (확정 안건이 바뀌므로 함께 초기화)
+  speakCountRef.remove(); // 발표 횟수
+  speakReqRef.remove(); // 남아있는 발언(손들기) 신청
+  meetFlowRef.set({step:0,timer:{running:false,remaining:600,duration:600}}); // 단계·타이머·확정안건·개회상태 초기화
+  showToast('🏁 회의 기록이 저장되고 다음 회의를 위해 초기화됐어요!','t-success',3500);
 }
 function renderHistory(){
   const el=document.getElementById('historyList');if(!el)return;

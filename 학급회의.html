@@ -2322,6 +2322,11 @@ function moveStep(dir){
     const s=Math.max(1,Math.min(4,(meetFlow.step||1)+dir));
     setStep(s);
   }else{
+    // 1단계(지난 회의 돌아보기)에서 다음 단계로 넘어가려면 점수를 먼저 제출해야 함
+    if(dir>0&&localFlowStep===1&&evalData[me]===undefined){
+      alert('제출 버튼을 눌러주세요');
+      return;
+    }
     // 모든 학생: 1-2단계 로컬 이동만 (다른 사람 화면 영향 없음)
     localFlowStep=Math.max(1,Math.min(2,localFlowStep+dir));
     _renderFlowDisplay(localFlowStep);

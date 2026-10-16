@@ -509,11 +509,10 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
     <div class="card">
       <div class="card-title">📝 단계 2 · 안건 제안하기</div>
       <div id="proposalFormWrap">
-        <div class="lbl">안건 제목</div>
-        <input type="text" id="propTitle" placeholder="예: 쉬는 시간 활용 방법" style="margin-bottom:8px;">
         <div class="lbl">내용</div>
         <textarea id="propText" rows="5" placeholder="주장: &#10;까닭: &#10;기대 효과: &#10;예상 문제점 및 해결 방법: " style="margin-bottom:8px;font-size:.93rem;"></textarea>
-        <button class="btn btn-primary btn-sm" onclick="submitProposal()">📨 제안 올리기</button>
+        <button class="btn btn-primary btn-sm" id="propSubmitBtn" onclick="submitProposal()">📨 제안 올리기</button>
+        <button class="btn btn-outline btn-sm" id="propCancelBtn" onclick="cancelEditProposal()" style="display:none;margin-left:6px;">✕ 취소</button>
       </div>
     </div>
     <div class="card">
@@ -2420,15 +2419,43 @@ function renderEvalStudentStatus(){
 }
 
 // ══ Proposals ══
+let editingProposalId=null; // 수정 중인 안건 id (내 화면에서만 쓰는 로컬 상태, 작성 중인 글을 덮어쓰지 않음)
+function deriveProposalTitle(text){
+  // 제목 칸을 따로 안 쓰므로, 본문 첫 줄을 안건 목록/투표 등에서 쓰는 짧은 제목으로 자동 생성
+  const firstLine=(text.split('\n')[0]||'').trim()||text.trim();
+  return firstLine.length>30?firstLine.slice(0,30)+'…':firstLine;
+}
 function submitProposal(){
-  const title=document.getElementById('propTitle').value.trim();
   const text=document.getElementById('propText').value.trim();
-  if(!title){showToast('안건 제목을 입력하세요!','t-warn');return;}
+  if(!text){showToast('안건 내용을 입력하세요!','t-warn');return;}
+  const title=deriveProposalTitle(text);
+  if(editingProposalId){
+    const p=proposals[editingProposalId];
+    if(!p||p.author!==me){showToast('수정할 수 없는 안건이에요.','t-warn');cancelEditProposal();return;}
+    proposalsRef.child(editingProposalId).update({title,text});
+    showToast('✏️ 안건을 수정했어요!','t-success');
+    cancelEditProposal();
+    return;
+  }
   const id=genId();
   proposalsRef.child(id).set({id,title,text,author:me,date:todayStr(),votes:{},confirmed:false});
-  document.getElementById('propTitle').value='';
   document.getElementById('propText').value='';
   if(me&&me!=='선생님')awardXP(me,1,'안건 제안');
+}
+function editProposal(id){
+  const p=proposals[id];
+  if(!p||p.author!==me){showToast('내가 쓴 안건만 수정할 수 있어요.','t-warn');return;}
+  editingProposalId=id;
+  document.getElementById('propText').value=p.text||'';
+  const btn=document.getElementById('propSubmitBtn');if(btn)btn.textContent='✅ 수정 완료';
+  const cancelBtn=document.getElementById('propCancelBtn');if(cancelBtn)cancelBtn.style.display='inline-flex';
+  document.getElementById('propText').focus();
+}
+function cancelEditProposal(){
+  editingProposalId=null;
+  document.getElementById('propText').value='';
+  const btn=document.getElementById('propSubmitBtn');if(btn)btn.textContent='📨 제안 올리기';
+  const cancelBtn=document.getElementById('propCancelBtn');if(cancelBtn)cancelBtn.style.display='none';
 }
 function renderProposalList(){
   const el=document.getElementById('proposalList');if(!el)return;
@@ -2439,7 +2466,10 @@ function renderProposalList(){
     const b=getBadge(cnt[p.author]||0);
     const voteCount=Object.values(p.votes||{}).filter(v=>v).length;
     return`<div class="prop-card${p.confirmed?' confirmed':''}">
-      <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">${p.confirmed?'✅ ':''}${p.title}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">${p.confirmed?'✅ ':''}${p.title}</div>
+        ${(p.author===me&&me!=='선생님')?`<button class="btn btn-outline btn-sm" style="padding:2px 10px;font-size:.75rem;flex-shrink:0;" onclick="editProposal('${p.id}')">✏️ 수정</button>`:''}
+      </div>
       <div style="font-size:.82rem;color:var(--tl);margin-bottom:6px;">${me==='선생님'?p.author+(b?b.icon:'')+'·':(p.author===me?`<span style="color:var(--primary);font-weight:800;">나 · Lv.${getLevel((xpData[me]||{}).total||0).lv}</span>`:'')}&nbsp;${p.date||''}</div>
       <div style="font-size:.88rem;white-space:pre-wrap;margin-bottom:8px;">${p.text||''}</div>
       <div style="font-size:.82rem;color:var(--primary);font-weight:700;">🗳️ ${voteCount}표</div>

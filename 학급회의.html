@@ -743,8 +743,7 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
       <span style="font-size:1.3rem;font-weight:900;color:var(--primary);" id="shopMyPts">0</span>
     </div>
     <div class="shop-tabs">
-      <button class="shop-tab-btn active" onclick="switchShopTab('avatar',this)">🎭 아바타</button>
-      <button class="shop-tab-btn" onclick="switchShopTab('color',this)">🌈 테마</button>
+      <button class="shop-tab-btn active" onclick="switchShopTab('color',this)">🌈 테마</button>
       <button class="shop-tab-btn" onclick="switchShopTab('acc',this)">🎩 액세서리</button>
     </div>
     <div id="shopGrid" class="shop-grid"></div>
@@ -1639,17 +1638,18 @@ let suggestFilter='all';
 let characterData={};
 let personalScore={};
 let shopData={};
-let _shopTab='avatar';
+let _shopTab='color'; // 2026-10-16: 아바타 탭(시각 효과 없음) 제거 → 기본 탭을 테마로 변경
 const SHOP_ITEMS=[
-  // 아바타
-  {id:'av_cat',   type:'avatar', name:'고양이',    emoji:'🐱', v:'🐱', cost:10,  desc:'귀여운 고양이 아바타'},
-  {id:'av_dog',   type:'avatar', name:'강아지',    emoji:'🐶', v:'🐶', cost:10,  desc:'씩씩한 강아지 아바타'},
-  {id:'av_bear',  type:'avatar', name:'곰돌이',    emoji:'🐻', v:'🐻', cost:15,  desc:'포근한 곰돌이 아바타'},
-  {id:'av_fox',   type:'avatar', name:'여우',      emoji:'🦊', v:'🦊', cost:15,  desc:'영리한 여우 아바타'},
-  {id:'av_rabbit',type:'avatar', name:'토끼',      emoji:'🐰', v:'🐰', cost:20,  desc:'빠른 토끼 아바타'},
-  {id:'av_lion',  type:'avatar', name:'사자',      emoji:'🦁', v:'🦁', cost:30,  desc:'용감한 사자 아바타'},
+  // 아바타 — 2026-10-16: 동물 캐릭터 도입 이후 종족 선택 시 항상 실제 동물 이미지가 우선 표시되어
+  // 아바타 아이템은 시각적으로 반영되지 않음. 새 구매는 중단하고(delisted) 이미 구매한 학생 데이터만 유지.
+  {id:'av_cat',   type:'avatar', name:'고양이',    emoji:'🐱', v:'🐱', cost:10,  desc:'귀여운 고양이 아바타', delisted:true},
+  {id:'av_dog',   type:'avatar', name:'강아지',    emoji:'🐶', v:'🐶', cost:10,  desc:'씩씩한 강아지 아바타', delisted:true},
+  {id:'av_bear',  type:'avatar', name:'곰돌이',    emoji:'🐻', v:'🐻', cost:15,  desc:'포근한 곰돌이 아바타', delisted:true},
+  {id:'av_fox',   type:'avatar', name:'여우',      emoji:'🦊', v:'🦊', cost:15,  desc:'영리한 여우 아바타', delisted:true},
+  {id:'av_rabbit',type:'avatar', name:'토끼',      emoji:'🐰', v:'🐰', cost:20,  desc:'빠른 토끼 아바타', delisted:true},
+  {id:'av_lion',  type:'avatar', name:'사자',      emoji:'🦁', v:'🦁', cost:30,  desc:'용감한 사자 아바타', delisted:true},
   {id:'av_dragon',type:'avatar', name:'드래곤',    emoji:'🐲', v:'🐲', cost:50,  desc:'전설의 드래곤 아바타', delisted:true}, // 진짜 히든 캐릭터 '드래곤'(Lv.50 진화)과 헷갈려서 상점 판매 중단. 이미 산 학생은 계속 사용 가능.
-  {id:'av_star',  type:'avatar', name:'별빛 요정', emoji:'🧚', v:'🧚', cost:40,  desc:'반짝이는 별빛 요정'},
+  {id:'av_star',  type:'avatar', name:'별빛 요정', emoji:'🧚', v:'🧚', cost:40,  desc:'반짝이는 별빛 요정', delisted:true},
   // 배경 테마
   {id:'th_ocean', type:'color',  name:'바다',      v:'🌊', cost:20,  desc:'시원한 바다 테마',   bg:'linear-gradient(135deg,#0EA5E9,#06B6D4)'},
   {id:'th_forest',type:'color',  name:'숲',        v:'🌲', cost:20,  desc:'싱그러운 숲 테마',   bg:'linear-gradient(135deg,#16A34A,#4ADE80)'},
@@ -1657,11 +1657,12 @@ const SHOP_ITEMS=[
   {id:'th_purple',type:'color',  name:'우주',      v:'🌌', cost:30,  desc:'신비로운 우주 테마',  bg:'linear-gradient(135deg,#7C3AED,#4F46E5)'},
   {id:'th_pink',  type:'color',  name:'벚꽃',      v:'🌸', cost:25,  desc:'예쁜 벚꽃 테마',     bg:'linear-gradient(135deg,#EC4899,#F9A8D4)'},
   {id:'th_gold',  type:'color',  name:'황금',      v:'✨', cost:50,  desc:'빛나는 황금 테마',   bg:'linear-gradient(135deg,#D97706,#FDE68A)'},
-  // 악세서리
-  {id:'ac_crown', type:'acc',    name:'왕관',      emoji:'👑', v:'👑', cost:30,  desc:'특별한 왕관 장식'},
-  {id:'ac_star2', type:'acc',    name:'별 머리띠', emoji:'⭐', v:'⭐', cost:15,  desc:'반짝이는 별 머리띠'},
-  {id:'ac_wings', type:'acc',    name:'날개',      emoji:'🪽', v:'🪽', cost:40,  desc:'천사의 날개'},
-  {id:'ac_hat',   type:'acc',    name:'마법사 모자',emoji:'🎩',v:'🎩', cost:20,  desc:'멋진 마법사 모자'},
+  // 악세서리 — 캐릭터 카드에 실제로 그려짐. anchor:'head'는 캐릭터 머리 위, anchor:'back'은 캐릭터 뒤쪽에 위치.
+  // 위치는 고정 좌표가 아니라 매번 실제 캐릭터 이미지의 크기(투명 영역을 제외한 실루엣 범위)를 분석해 계산됨.
+  {id:'ac_crown', type:'acc',    name:'왕관',      emoji:'👑', v:'👑', cost:30,  desc:'특별한 왕관 장식', anchor:'head'},
+  {id:'ac_star2', type:'acc',    name:'별 머리띠', emoji:'⭐', v:'⭐', cost:15,  desc:'반짝이는 별 머리띠', anchor:'head'},
+  {id:'ac_wings', type:'acc',    name:'날개',      emoji:'🪽', v:'🪽', cost:40,  desc:'천사의 날개', anchor:'back'},
+  {id:'ac_hat',   type:'acc',    name:'마법사 모자',emoji:'🎩',v:'🎩', cost:20,  desc:'멋진 마법사 모자', anchor:'head'},
 ];
 let personalScoreReq={};
 let studentAlerts={};  // {studentName: {alertId: {type,reqType,executeDate,ts,read}}}
@@ -1832,7 +1833,7 @@ characterRef.on('value',snap=>{
 });
 shopRef.on('value',snap=>{
   shopData=snap.val()||{};
-  debounceRender('shop',()=>{if(activeTab==='mypage')renderShop();if(activeTab==='admin')renderAdminCharGrid();});
+  debounceRender('shop',()=>{if(activeTab==='mypage'){renderShop();renderCardPreview();}if(activeTab==='admin')renderAdminCharGrid();});
 });
 personalScoreRef.on('value',snap=>{
   personalScore=snap.val()||{};
@@ -4413,7 +4414,7 @@ function renderShop(){
   const equipped=(shopData[me]||{}).equipped||'';
   const equippedTheme=(shopData[me]||{}).equippedTheme||'';
   const equippedAcc=(shopData[me]||{}).equippedAcc||'';
-  const curTab=_shopTab||'avatar';
+  const curTab=_shopTab||'color';
   // delisted(판매 중단) 아이템은 이미 소유한 학생 화면에만 계속 보여줌 (새로 구매는 불가)
   const items=SHOP_ITEMS.filter(function(i){return i.type===curTab&&(!i.delisted||ownedArr.indexOf(i.id)>=0);});
   el.innerHTML=items.map(function(item){
@@ -4546,6 +4547,43 @@ function renderCardPreview(){
     ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;ctx.fillStyle='rgba(255,255,255,.95)';
     ctx.fillText(item.emoji,pos.x,pos.y);ctx.shadowBlur=0;
   }
+  // 2026-10-16: 상점 액세서리(ac_crown/ac_star2/ac_wings/ac_hat)를 실제 캐릭터 카드에 그리기 위한 헬퍼.
+  // 고정 좌표표(CARD_ITEM_POS)를 쓰지 않고, 매번 실제로 그려질 캐릭터 이미지의 투명하지 않은 픽셀 범위(실루엣)를
+  // 분석해서 "그 캐릭터의 머리 위/뒤쪽"에 해당하는 위치를 계산한다 — 종/성장단계마다 비율이 달라도 항상 맞게 자리잡음.
+  function _opaqueBBoxFrac(img){
+    try{
+      var sw=Math.min(img.naturalWidth||100,140); // 분석용으로 축소(성능)
+      var sh=Math.max(1,Math.round(sw*(img.naturalHeight||100)/(img.naturalWidth||100)));
+      var oc=document.createElement('canvas');oc.width=sw;oc.height=sh;
+      var ox=oc.getContext('2d');ox.drawImage(img,0,0,sw,sh);
+      var data=ox.getImageData(0,0,sw,sh).data;
+      var minX=sw,minY=sh,maxX=-1,maxY=-1;
+      for(var y=0;y<sh;y++){
+        for(var x=0;x<sw;x++){
+          if(data[(y*sw+x)*4+3]>20){
+            if(x<minX)minX=x;if(x>maxX)maxX=x;
+            if(y<minY)minY=y;if(y>maxY)maxY=y;
+          }
+        }
+      }
+      if(maxX<0)return null; // 완전 투명 이미지
+      return{left:minX/sw,top:minY/sh,right:(maxX+1)/sw,bottom:(maxY+1)/sh};
+    }catch(e){return null;} // 캔버스 보안 제약 등으로 분석 불가하면 null → 전체 박스로 대체
+  }
+  function _drawAccEmoji(item,box){
+    if(!box||!item)return;
+    var w=box.rightX-box.leftX,h=box.bottomY-box.topY,cx=(box.leftX+box.rightX)/2;
+    var size,y;
+    if(item.anchor==='back'){ // 날개류: 캐릭터 뒤쪽, 몸통 중간 높이에 넓게
+      size=Math.max(30,w*0.95);y=box.topY+h*0.42;
+    }else{ // head: 왕관/머리띠/모자 — 캐릭터 머리 꼭대기 바로 위
+      size=Math.max(22,w*0.4);y=box.topY+h*0.02;
+    }
+    ctx.font=Math.round(size)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=5;
+    ctx.fillText(item.v||item.emoji,cx,y);
+    ctx.shadowBlur=0;
+  }
   (async function drawCard(){
     const baseImg=await _loadImg('card/char_'+charNum+'_bg_'+bgPad+'.png');
     if(baseImg)ctx.drawImage(baseImg,0,0,400,540);else{ctx.fillStyle='#4F6EF7';ctx.fillRect(0,0,400,540);}
@@ -4554,19 +4592,33 @@ function renderCardPreview(){
     var cardSp=getStudentSpecies(me);
     var cardStage=getAnimalStage(lvInfo.lv);
     var animalImg=cardSp?(await _loadImg('animals/'+cardSp.id+'/stage'+String(cardStage).padStart(2,'0')+'.png')):null;
+    // 장착 중인 액세서리 (캐릭터 상점에서 구매+장착한 것만 — ownedShop 검증은 equipShopItem에서 이미 보장됨)
+    var accId=(shopData[me]||{}).equippedAcc||'';
+    var accItem=accId?SHOP_ITEMS.find(function(i){return i.id===accId&&i.type==='acc';}):null;
+    var silBox=null; // 캐릭터 실루엣의 카드 내 좌표 범위 — 종/성장단계별로 매번 다시 계산
     if(animalImg){
       var CH=351,CW=Math.round(animalImg.naturalWidth*CH/animalImg.naturalHeight);
-      ctx.drawImage(animalImg,Math.round((400-CW)/2),184,CW,CH);
+      var dx=Math.round((400-CW)/2),dy=184;
+      var frac=_opaqueBBoxFrac(animalImg);
+      silBox=frac?{leftX:dx+frac.left*CW,topY:dy+frac.top*CH,rightX:dx+frac.right*CW,bottomY:dy+frac.bottom*CH}
+                 :{leftX:dx,topY:dy,rightX:dx+CW,bottomY:dy+CH};
+      if(accItem&&accItem.anchor==='back')_drawAccEmoji(accItem,silBox); // 날개는 캐릭터보다 먼저 그려서 뒤에 깔림
+      ctx.drawImage(animalImg,dx,dy,CW,CH);
+      if(accItem&&accItem.anchor!=='back')_drawAccEmoji(accItem,silBox); // 왕관/모자/머리띠는 캐릭터 위에
     }else if(cardSp){
       var acx=200,acy=345,ar=54+cardStage*11;
+      silBox={leftX:acx-ar,topY:acy-ar,rightX:acx+ar,bottomY:acy+ar};
+      if(accItem&&accItem.anchor==='back')_drawAccEmoji(accItem,silBox);
       ctx.beginPath();ctx.arc(acx,acy,ar,0,Math.PI*2);ctx.fillStyle=cardSp.color+'2A';ctx.fill();
       ctx.lineWidth=4;ctx.strokeStyle=cardSp.color;ctx.stroke();
       ctx.font=Math.round(ar*1.1)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText(cardSp.emoji,acx,acy);
+      if(accItem&&accItem.anchor!=='back')_drawAccEmoji(accItem,silBox);
     }else{
       ctx.font='64px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🥚',200,320);
       ctx.font='600 15px "Noto Sans KR",sans-serif';ctx.fillStyle='rgba(255,255,255,.95)';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
       ctx.fillText('아직 동물을 선택하지 않았어요',200,378);ctx.shadowBlur=0;
+      // 동물을 아직 고르지 않은 상태에선 액세서리를 올려둘 캐릭터가 없으므로 그리지 않음
     }
     var grad=ctx.createLinearGradient(0,430,0,540);
     grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'rgba(0,0,0,.75)');
@@ -4621,10 +4673,12 @@ function setCCTab(tab){
   if(tab==='equip'){
     const shopAccs=SHOP_ITEMS.filter(function(i){return i.type==='acc'&&ownedShop.indexOf(i.id)>=0;});
     if(shopAccs.length){
+      // 2026-10-16: 상점의 '장착하기'와 동일한 상태(shopData[me].equippedAcc)를 사용 — 카드에 실제로 그려짐
+      var curAcc=(shopData[me]||{}).equippedAcc||'';
       html+='<div style="font-size:.75rem;color:var(--tl);margin:10px 0 4px;width:100%;flex-basis:100%;">🏪 구매한 액세서리</div>';
       html+=shopAccs.map(function(item){
-        const sel=ch['shopAcc']===item.id;
-        return'<div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:12px;border:2px solid '+(sel?'var(--primary)':'var(--border)')+';background:'+(sel?'#EEF2FF':'#fff')+';cursor:pointer;min-width:72px;" onclick="selectCCItem(\'shopAcc\',\''+item.id+'\')">'
+        const sel=curAcc===item.id;
+        return'<div style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:12px;border:2px solid '+(sel?'var(--primary)':'var(--border)')+';background:'+(sel?'#EEF2FF':'#fff')+';cursor:pointer;min-width:72px;" onclick="equipShopItem(\''+item.id+'\',\'acc\')">'
           +'<div style="font-size:2rem;">'+item.v+'</div>'
           +'<div style="font-size:.72rem;font-weight:700;">'+item.name+'</div></div>';
       }).join('');

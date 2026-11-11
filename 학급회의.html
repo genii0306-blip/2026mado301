@@ -765,10 +765,24 @@ main{padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
   <div class="card" id="hwStudentPanel">
     <div class="card-title">📚 숙제 현황</div>
     <div style="margin-bottom:12px;">
-      <div class="lbl">학생을 클릭하면 월별 성장 그래프를 볼 수 있어요 📈</div>
+      <div class="lbl">내 월별 성장 그래프를 볼 수 있어요 📈</div>
       <div class="s-grid" id="hwStudentGrid"></div>
     </div>
     <div id="hwStudentList"><div class="empty-state"><div class="ei">📚</div><div>아직 숙제가 없어요</div></div></div>
+  </div>
+  <!-- 📊 활동 리포트: 하루 되돌아보기(발표/아침활동/숙제/목표실천) 항목별·월별 리포트.
+       선생님은 전체 학생 비교 + 학생별 전체 항목 보기, 학생은 자기 자신의 리포트만 본다. -->
+  <div class="card" id="hwReportPanel">
+    <div class="card-title">📊 활동 리포트 <span id="hwReportTeacherBadge" class="teacher-badge" style="display:none;">선생님 전용 보기</span></div>
+    <div id="hwReportTeacherControls" style="display:none;">
+      <div class="lbl">하루 되돌아보기에서 승인된 항목을 월별로 모아봤어요. 항목을 골라 학생들을 비교해보세요.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;" id="hwReportCatTabs"></div>
+      <div id="hwReportCompareChart"></div>
+      <div style="margin:18px 0 8px;font-size:.85rem;font-weight:800;color:var(--text);">👤 학생별 전체 항목 보기</div>
+      <select id="hwReportStudentSelect" onchange="renderHwReportStudentChart(this.value)" style="margin-bottom:10px;"></select>
+      <div id="hwReportStudentChart"></div>
+    </div>
+    <div id="hwReportSelfChart"></div>
   </div>
 </div>
 
@@ -1849,6 +1863,7 @@ personalScoreReqRef.on('value',snap=>{
   updateBellBadge();
   if(document.getElementById('bellModal').classList.contains('active')||document.getElementById('bellModal').style.display==='flex')renderBellModal();
   if(activeTab==='action')renderReflectCard();
+  if(activeTab==='homework')renderHwReport();
 });
 studentAlertsRef.on('value',snap=>{
   studentAlerts=snap.val()||{};
@@ -4731,6 +4746,7 @@ function renderHomework(){
     renderHomeworkStudentGrid();
     renderHomeworkStudentList();
   }
+  renderHwReport();
 }
 function renderHomeworkTeacher(){
   renderHwScoreGrid();
@@ -4838,7 +4854,9 @@ function hwClearScore(name,idx){
 }
 function renderHomeworkStudentGrid(){
   const el=document.getElementById('hwStudentGrid');if(!el)return;
-  el.innerHTML=STUDENTS.map(function(n){
+  // 2026-11-11: 학생은 자기 자신의 숙제·월별 그래프만 볼 수 있어야 함 (다른 학생 클릭해서 보는 것 방지)
+  const visible=(me==='선생님')?STUDENTS:(me?[me]:[]);
+  el.innerHTML=visible.map(function(n){
     const myHw=homeworkData[n]||{};
     const list=homeworkData._list||[];
     const done=list.filter(function(_,i){return myHw[i]>0;}).length;
@@ -5001,6 +5019,143 @@ function toggleMyHomework(idx){
   homeworkRef.child(me).update(upd);
   awardXP(me,1,'숙제 제출');
   showToast('숙제 제출 완료! 선생님이 점수를 확인해요 📚','t-success');
+}
+
+// ══ 📊 활동 리포트 (하루 되돌아보기 항목별·월별) ══
+// 2026-11-11: 하루 되돌아보기(발표/아침활동/숙제/목표실천)에서 승인된 기록을
+// 항목별·학생별·월별 꺾은선 그래프로 볼 수 있게 함. 선생님은 전체 학생을 비교할 수 있고,
+// 학생은 자기 자신의 리포트만 볼 수 있음.
+const HW_REPORT_CATS=[
+  {key:'presentation',label:'🙋 발표',color:'#F59E0B'},
+  {key:'morning',    label:'🌅 아침활동',color:'#06B6D4'},
+  {key:'homework',   label:'📚 숙제',color:'#7C3AED'},
+  {key:'goal',       label:'🎯 목표실천',color:'#16A34A'}
+];
+const HW_STUDENT_COLORS=['#4F6EF7','#F59E0B','#16A34A','#EC4899','#06B6D4','#8B5CF6','#EF4444','#0EA5E9','#D97706','#10B981'];
+let _hwReportCat='presentation';
+// 현재 학기(3월~12월) 월 목록 — renderHwChart()와 동일한 기준
+function getSchoolYearMonths(){
+  const now=new Date();
+  const schoolYear=(now.getMonth()<2)?now.getFullYear()-1:now.getFullYear();
+  const months=[];
+  for(let m=3;m<=12;m++){months.push(schoolYear+'-'+String(m).padStart(2,'0'));}
+  return months;
+}
+// 한 학생의 한 항목(cat)에 대해, 승인된 "하루 되돌아보기" 기록만 모아 월별 합계를 구함
+// (presentation/morning/goal은 체크 시 1점, homework는 0~3점 그대로 합산 — submitReflect()의 점수 계산과 동일한 기준)
+function getReflectMonthlyByCategory(name,cat,months){
+  const recs=Object.values(personalScoreReq).filter(function(r){
+    return(r.kind==='reflect'||r.items)&&r.student===name&&r.status==='approved';
+  });
+  return months.map(function(ym){
+    return recs.filter(function(r){return(r.date||'').slice(0,7)===ym;})
+      .reduce(function(s,r){
+        const it=r.items||{};
+        if(cat==='homework')return s+(it.homework||0);
+        return s+(it[cat]?1:0);
+      },0);
+  });
+}
+// 여러 시리즈(학생별 또는 항목별)를 하나의 꺾은선 그래프 SVG로 그림
+function renderMultiLineSVG(series,months,opts){
+  opts=opts||{};
+  const W=opts.w||320,H=opts.h||180,PL=30,PR=10,PT=16,PB=24;
+  const IW=W-PL-PR,IH=H-PT-PB;
+  const allVals=[0].concat(series.reduce(function(a,s){return a.concat(s.points);},[]));
+  const maxV=Math.max.apply(null,allVals.concat([1]));
+  const px=function(i){return PL+(i/Math.max(months.length-1,1))*IW;};
+  const py=function(v){return PT+(1-v/maxV)*IH;};
+  const hasData=series.some(function(s){return s.points.some(function(v){return v>0;});});
+  if(!hasData)return'<div style="text-align:center;padding:18px;color:var(--tl);font-size:.82rem;">아직 승인된 기록이 없어요</div>';
+  const gridLines=[0,.5,1].map(function(r){
+    return'<line x1="'+PL+'" y1="'+(PT+r*IH)+'" x2="'+(W-PR)+'" y2="'+(PT+r*IH)+'" stroke="#E5E7EB" stroke-width="1"/>';
+  }).join('');
+  const yLabels=[0,.5,1].map(function(r){
+    return'<text x="'+(PL-4)+'" y="'+(PT+(1-r)*IH+3)+'" text-anchor="end" font-size="8" fill="#9CA3AF">'+Math.round(maxV*r)+'</text>';
+  }).join('');
+  const xLabels=months.map(function(m,i){
+    return'<text x="'+px(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="8" fill="#9CA3AF">'+m.slice(5)+'월</text>';
+  }).join('');
+  const lines=series.map(function(s){
+    const pathD=s.points.map(function(v,i){return(i===0?'M':'L')+px(i)+','+py(v);}).join(' ');
+    const dots=s.points.map(function(v,i){
+      return v>0?('<circle cx="'+px(i)+'" cy="'+py(v)+'" r="2.6" fill="'+s.color+'"/>'):'';
+    }).join('');
+    return'<path d="'+pathD+'" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+dots;
+  }).join('');
+  const legend=series.map(function(s){
+    return'<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;font-size:.72rem;color:var(--tl);"><span style="width:9px;height:9px;border-radius:50%;background:'+s.color+';display:inline-block;"></span>'+s.label+'</span>';
+  }).join('');
+  return'<div style="display:flex;flex-wrap:wrap;margin-bottom:4px;">'+legend+'</div>'
+    +'<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">'
+    +gridLines+yLabels+xLabels+lines+'</svg>';
+}
+function renderHwReportCatTabs(){
+  const el=document.getElementById('hwReportCatTabs');if(!el)return;
+  el.innerHTML=HW_REPORT_CATS.map(function(c){
+    const active=_hwReportCat===c.key;
+    return'<button class="shop-tab-btn'+(active?' active':'')+'" onclick="switchHwReportCat(\''+c.key+'\')">'+c.label+'</button>';
+  }).join('');
+}
+function switchHwReportCat(cat){
+  _hwReportCat=cat;
+  renderHwReportCatTabs();
+  renderHwReportCompareChart();
+}
+// 선생님용: 선택한 항목 하나를 모든 학생이 비교되는 꺾은선 그래프로
+function renderHwReportCompareChart(){
+  const el=document.getElementById('hwReportCompareChart');if(!el)return;
+  const months=getSchoolYearMonths();
+  const cat=HW_REPORT_CATS.find(function(c){return c.key===_hwReportCat;})||HW_REPORT_CATS[0];
+  const series=STUDENTS.map(function(n,i){
+    return{label:n,color:HW_STUDENT_COLORS[i%HW_STUDENT_COLORS.length],points:getReflectMonthlyByCategory(n,cat.key,months)};
+  });
+  el.innerHTML=renderMultiLineSVG(series,months,{h:200});
+}
+function renderHwReportStudentSelect(){
+  const sel=document.getElementById('hwReportStudentSelect');if(!sel)return;
+  const cur=(sel.value&&STUDENTS.indexOf(sel.value)>=0)?sel.value:(STUDENTS[0]||'');
+  sel.innerHTML=STUDENTS.map(function(n){return'<option value="'+n+'"'+(n===cur?' selected':'')+'>'+n+'</option>';}).join('');
+}
+// 선생님용: 학생 한 명을 골라 그 학생의 모든 항목(발표/아침활동/숙제/목표실천)을 한 그래프에서 월별로
+function renderHwReportStudentChart(name){
+  const el=document.getElementById('hwReportStudentChart');if(!el)return;
+  const sel=document.getElementById('hwReportStudentSelect');
+  const target=name||(sel&&sel.value)||STUDENTS[0];
+  if(!target){el.innerHTML='';return;}
+  const months=getSchoolYearMonths();
+  const series=HW_REPORT_CATS.map(function(c){
+    return{label:c.label,color:c.color,points:getReflectMonthlyByCategory(target,c.key,months)};
+  });
+  el.innerHTML=renderMultiLineSVG(series,months,{h:200});
+}
+// 학생용: 자기 자신의 모든 항목을 한 그래프에서 월별로 (다른 학생은 볼 수 없음)
+function renderHwReportSelfChart(){
+  const el=document.getElementById('hwReportSelfChart');if(!el||!me||me==='선생님')return;
+  const months=getSchoolYearMonths();
+  const series=HW_REPORT_CATS.map(function(c){
+    return{label:c.label,color:c.color,points:getReflectMonthlyByCategory(me,c.key,months)};
+  });
+  el.innerHTML='<div class="lbl">하루 되돌아보기에서 승인된 항목을 월별로 모아봤어요.</div>'+renderMultiLineSVG(series,months,{h:200});
+}
+function renderHwReport(){
+  const teacherWrap=document.getElementById('hwReportTeacherControls');
+  const badge=document.getElementById('hwReportTeacherBadge');
+  const selfEl=document.getElementById('hwReportSelfChart');
+  if(me==='선생님'){
+    if(teacherWrap)teacherWrap.style.display='block';
+    if(badge)badge.style.display='inline-block';
+    if(selfEl){selfEl.style.display='none';selfEl.innerHTML='';}
+    renderHwReportCatTabs();
+    renderHwReportCompareChart();
+    renderHwReportStudentSelect();
+    renderHwReportStudentChart();
+  }else{
+    if(teacherWrap)teacherWrap.style.display='none';
+    if(badge)badge.style.display='none';
+    if(selfEl)selfEl.style.display='block';
+    renderHwReportSelfChart();
+  }
 }
 
 // ══ Suggest ══
